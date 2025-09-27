@@ -13,6 +13,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { FileUpload } from "@/components/ui/file-upload";
 import { useToast } from "@/hooks/use-toast";
+import { SidebarLayout } from "@/components/layout/sidebar-layout";
 
 interface LegalSearchForm {
   query: string;
@@ -28,7 +29,6 @@ interface RiskAnalysisForm {
 export default function AISearch() {
   const { tab } = useParams<{ tab?: string }>();
   const activeTab = tab || 'legal-research';
-  const { user, logoutMutation } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -129,322 +129,271 @@ export default function AISearch() {
     riskAnalysisMutation.mutate(data);
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="ghost" 
-                onClick={() => setLocation("/")}
-                className="text-muted-foreground hover:text-foreground"
-                data-testid="button-back"
-              >
-                <i className="fas fa-arrow-left"></i>
-              </Button>
-              <i className="fas fa-balance-scale text-2xl text-primary"></i>
-              <h1 className="text-xl font-semibold text-foreground">LawHub</h1>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <button className="text-muted-foreground hover:text-foreground" data-testid="button-notifications">
-                <i className="fas fa-bell text-lg"></i>
-              </button>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-primary-foreground text-sm font-medium" data-testid="text-user-initials">
-                    {user?.name ? getInitials(user.name) : "U"}
-                  </span>
-                </div>
-                <span className="text-sm font-medium text-foreground" data-testid="text-username">
-                  {user?.name || "User"}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Title */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-foreground mb-2">AI-Powered Legal Research</h2>
-          <p className="text-muted-foreground">Advanced legal research and analysis tools powered by artificial intelligence</p>
-        </div>
-
+    <SidebarLayout>
+      <div className="p-6">
         {/* Tab Navigation */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="border-b border-border">
-            <nav className="flex space-x-8">
-              <Button
-                variant="ghost"
-                className={`border-b-2 py-4 px-1 text-sm font-medium ${
-                  activeTab === 'legal-research' 
-                    ? 'border-primary text-primary' 
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300'
-                }`}
+            <nav className="-mb-px flex space-x-8">
+              <button
                 onClick={() => switchTab('legal-research')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'legal-research'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
+                }`}
                 data-testid="tab-legal-research"
               >
                 <i className="fas fa-search mr-2"></i>
                 AI Legal Research
-              </Button>
-              <Button
-                variant="ghost"
-                className={`border-b-2 py-4 px-1 text-sm font-medium ${
-                  activeTab === 'brief-summarizer' 
-                    ? 'border-primary text-primary' 
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300'
-                }`}
+              </button>
+              
+              <button
                 onClick={() => switchTab('brief-summarizer')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'brief-summarizer'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
+                }`}
                 data-testid="tab-brief-summarizer"
               >
                 <i className="fas fa-file-text mr-2"></i>
                 Brief Summarizer
-              </Button>
-              <Button
-                variant="ghost"
-                className={`border-b-2 py-4 px-1 text-sm font-medium ${
-                  activeTab === 'risk-analysis' 
-                    ? 'border-primary text-primary' 
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300'
-                }`}
+              </button>
+              
+              <button
                 onClick={() => switchTab('risk-analysis')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'risk-analysis'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
+                }`}
                 data-testid="tab-risk-analysis"
               >
                 <i className="fas fa-chart-line mr-2"></i>
                 Risk Analysis
-              </Button>
+              </button>
             </nav>
           </div>
         </div>
 
-        {/* AI Legal Research Tab */}
-        {activeTab === 'legal-research' && (
-          <div className="space-y-8">
-            <Card>
-              <CardContent className="p-8">
-                <div className="max-w-4xl mx-auto">
-                  <div className="text-center mb-8">
-                    <h3 className="text-2xl font-semibold text-foreground mb-2">Search Legal Database</h3>
-                    <p className="text-muted-foreground">Search U.S. statutes, case law, and regulations using natural language or legal citations</p>
-                  </div>
-
+        {/* Tab Content */}
+        <div className="space-y-6">
+          {activeTab === 'legal-research' && (
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Search Form */}
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">AI Legal Research</h2>
+                  <p className="text-muted-foreground mb-6">
+                    Search U.S. statutes, case law, and regulations using AI-powered analysis.
+                  </p>
+                  
                   <Form {...legalSearchForm}>
-                    <form onSubmit={legalSearchForm.handleSubmit(handleLegalSearch)} className="space-y-6">
+                    <form onSubmit={legalSearchForm.handleSubmit(handleLegalSearch)} className="space-y-4">
                       <FormField
                         control={legalSearchForm.control}
                         name="query"
                         render={({ field }) => (
                           <FormItem>
+                            <FormLabel>Legal Query</FormLabel>
                             <FormControl>
-                              <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                  <i className="fas fa-search text-muted-foreground"></i>
-                                </div>
-                                <Input 
-                                  className="w-full pl-10 pr-4 py-4 text-lg"
-                                  placeholder="e.g., 'What are the elements of negligence in tort law?' or 'USC Title 15 Section 1'"
-                                  data-testid="input-legal-search"
-                                  {...field} 
-                                />
-                                <Button 
-                                  type="submit"
-                                  className="absolute inset-y-0 right-0 mr-2 my-1"
-                                  disabled={legalSearchMutation.isPending}
-                                  data-testid="button-search"
-                                >
-                                  {legalSearchMutation.isPending ? "Searching..." : "Search"}
-                                </Button>
-                              </div>
+                              <Textarea
+                                placeholder="Enter your legal research question (e.g., 'contract breach remedies in California')"
+                                className="min-h-[100px]"
+                                data-testid="input-legal-query"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={legalSearchMutation.isPending}
+                        data-testid="button-search"
+                      >
+                        {legalSearchMutation.isPending ? (
+                          <>
+                            <i className="fas fa-spinner fa-spin mr-2"></i>
+                            Searching...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-search mr-2"></i>
+                            Search Legal Database
+                          </>
+                        )}
+                      </Button>
                     </form>
                   </Form>
+                </CardContent>
+              </Card>
 
-                  {/* Search Filters */}
-                  <div className="flex flex-wrap gap-2 mt-6">
-                    <Button variant="secondary" size="sm" className="text-sm">
-                      Case Law
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-sm">
-                      Federal Statutes
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-sm">
-                      State Laws
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-sm">
-                      Regulations
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-sm">
-                      Supreme Court
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Search Results */}
-            {searchResults && (
-              <div className="space-y-6">
-                {searchResults.results?.map((result: any, index: number) => (
-                  <Card key={index} data-testid={`search-result-${index}`}>
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h4 className="text-lg font-semibold text-foreground mb-1">{result.title}</h4>
-                          <p className="text-sm text-muted-foreground">{result.type} • {result.citation}</p>
-                        </div>
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                          {result.relevance}% Relevance
-                        </span>
-                      </div>
-                      <p className="text-muted-foreground mb-4">{result.summary}</p>
-                      <div className="flex items-center space-x-4">
-                        <Button variant="link" size="sm" className="text-primary hover:underline p-0">
-                          <i className="fas fa-external-link-alt mr-1"></i>
-                          View Full Case
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground p-0">
-                          <i className="fas fa-bookmark mr-1"></i>
-                          Save
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Brief Summarizer Tab */}
-        {activeTab === 'brief-summarizer' && (
-          <div className="space-y-8">
-            <Card>
-              <CardContent className="p-8">
-                <div className="max-w-4xl mx-auto text-center">
-                  <h3 className="text-2xl font-semibold text-foreground mb-2">Document Summarizer</h3>
-                  <p className="text-muted-foreground mb-8">Upload legal documents and get AI-generated summaries with key points and legal implications</p>
-
-                  <FileUpload
-                    onFileChange={handleFileUpload}
-                    accept=".pdf,.doc,.docx"
-                    multiple={false}
-                    disabled={documentSummaryMutation.isPending}
-                    className="mb-6"
-                    data-testid="file-upload-document"
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <Card className="border border-border">
-                      <CardContent className="p-4 text-center">
-                        <i className="fas fa-bolt text-primary text-xl mb-2"></i>
-                        <h5 className="font-medium text-foreground mb-1">Quick Summary</h5>
-                        <p className="text-sm text-muted-foreground">Key points and main arguments</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="border border-border">
-                      <CardContent className="p-4 text-center">
-                        <i className="fas fa-list text-primary text-xl mb-2"></i>
-                        <h5 className="font-medium text-foreground mb-1">Detailed Analysis</h5>
-                        <p className="text-sm text-muted-foreground">Comprehensive breakdown with citations</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="border border-border">
-                      <CardContent className="p-4 text-center">
-                        <i className="fas fa-gavel text-primary text-xl mb-2"></i>
-                        <h5 className="font-medium text-foreground mb-1">Legal Implications</h5>
-                        <p className="text-sm text-muted-foreground">Precedent analysis and risks</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Summary Results */}
-            {summaryResults && (
-              <Card data-testid="summary-results">
+              {/* Search Results */}
+              <Card>
                 <CardContent className="p-6">
-                  <div className="mb-6">
-                    <h4 className="text-lg font-semibold text-foreground mb-2">Document Summary</h4>
-                    <p className="text-sm text-muted-foreground">{summaryResults.documentType} • Processed just now</p>
-                  </div>
-
-                  <div className="space-y-6">
-                    {summaryResults.keyPoints && (
-                      <div>
-                        <h5 className="font-medium text-foreground mb-2">Key Points</h5>
-                        <ul className="space-y-2 text-muted-foreground">
-                          {summaryResults.keyPoints.map((point: string, index: number) => (
-                            <li key={index} className="flex items-start space-x-2">
-                              <span className="text-primary mt-1">•</span>
-                              <span>{point}</span>
-                            </li>
-                          ))}
-                        </ul>
+                  <h3 className="text-lg font-semibold mb-4">Search Results</h3>
+                  {searchResults ? (
+                    <div className="space-y-4" data-testid="search-results">
+                      <div className="text-sm text-muted-foreground mb-4">
+                        Found {searchResults.totalResults || 0} results in {searchResults.searchTime || "0"} seconds
                       </div>
-                    )}
-
-                    {summaryResults.legalImplications && summaryResults.legalImplications.length > 0 && (
-                      <div>
-                        <h5 className="font-medium text-foreground mb-2">Legal Implications</h5>
-                        {summaryResults.legalImplications.map((implication: any, index: number) => (
-                          <div key={index} className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-2">
-                            <p className="text-amber-800 text-sm">
-                              ⚠️ {implication.type.toUpperCase()}: {implication.message}
-                            </p>
+                      {searchResults.results?.map((result: any, index: number) => (
+                        <div key={index} className="border border-border rounded-lg p-4" data-testid={`result-${index}`}>
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium text-foreground">{result.title}</h4>
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                              {result.relevance}% match
+                            </span>
                           </div>
-                        ))}
-                      </div>
-                    )}
+                          <p className="text-sm text-primary mb-2">{result.type} • {result.citation}</p>
+                          <p className="text-sm text-muted-foreground mb-3">{result.summary}</p>
+                          {result.keyPoints && (
+                            <div className="mb-3">
+                              <p className="text-xs font-medium text-foreground mb-1">Key Points:</p>
+                              <ul className="text-xs text-muted-foreground space-y-1">
+                                {result.keyPoints.map((point: string, i: number) => (
+                                  <li key={i} className="flex items-start">
+                                    <span className="mr-2">•</span>
+                                    <span>{point}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {result.url && (
+                            <Button variant="link" size="sm" className="p-0 h-auto text-xs">
+                              <i className="fas fa-external-link-alt mr-1"></i>
+                              View Full Document
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <i className="fas fa-search text-4xl text-muted-foreground mb-4"></i>
+                      <p className="text-muted-foreground">Enter a legal query to start searching</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-                    <div className="flex items-center space-x-4">
-                      <Button className="flex items-center gap-2" data-testid="button-download-summary">
-                        <i className="fas fa-download"></i>
-                        Download Summary
-                      </Button>
-                      <Button variant="ghost" className="flex items-center gap-1" data-testid="button-save-summary">
-                        <i className="fas fa-bookmark"></i>
-                        Save to Library
-                      </Button>
+          {activeTab === 'brief-summarizer' && (
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Upload Form */}
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">Brief Summarizer</h2>
+                  <p className="text-muted-foreground mb-6">
+                    Upload legal documents for AI-powered analysis and summarization.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Upload Document</Label>
+                      <FileUpload
+                        onFileChange={handleFileUpload}
+                        accept=".pdf,.doc,.docx,.txt"
+                        data-testid="file-upload"
+                      />
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Supported formats: PDF, DOC, DOCX, TXT (Max 50MB)
+                      </p>
+                    </div>
+
+                    <div className="text-center">
+                      {documentSummaryMutation.isPending && (
+                        <div className="flex items-center justify-center space-x-2 text-muted-foreground">
+                          <i className="fas fa-spinner fa-spin"></i>
+                          <span>Analyzing document...</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            )}
-          </div>
-        )}
 
-        {/* Risk Analysis Tab */}
-        {activeTab === 'risk-analysis' && (
-          <div className="space-y-8">
-            <Card>
-              <CardContent className="p-8">
-                <div className="max-w-4xl mx-auto">
-                  <div className="text-center mb-8">
-                    <h3 className="text-2xl font-semibold text-foreground mb-2">Legal Risk Analysis</h3>
-                    <p className="text-muted-foreground">Predict success probability and identify potential risks based on historical case data and precedents</p>
-                  </div>
+              {/* Summary Results */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Document Analysis</h3>
+                  {summaryResults ? (
+                    <div className="space-y-4" data-testid="summary-results">
+                      <div className="border border-border rounded-lg p-4">
+                        <h4 className="font-medium text-foreground mb-2">Document Type</h4>
+                        <p className="text-sm text-muted-foreground">{summaryResults.documentType}</p>
+                      </div>
+                      
+                      <div className="border border-border rounded-lg p-4">
+                        <h4 className="font-medium text-foreground mb-2">Summary</h4>
+                        <p className="text-sm text-muted-foreground">{summaryResults.summary}</p>
+                      </div>
+                      
+                      {summaryResults.keyPoints && (
+                        <div className="border border-border rounded-lg p-4">
+                          <h4 className="font-medium text-foreground mb-2">Key Points</h4>
+                          <ul className="text-sm text-muted-foreground space-y-1">
+                            {summaryResults.keyPoints.map((point: string, index: number) => (
+                              <li key={index} className="flex items-start">
+                                <span className="mr-2 text-primary">•</span>
+                                <span>{point}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {summaryResults.legalImplications && (
+                        <div className="border border-border rounded-lg p-4">
+                          <h4 className="font-medium text-foreground mb-2">Legal Implications</h4>
+                          <div className="space-y-2">
+                            {summaryResults.legalImplications.map((implication: any, index: number) => (
+                              <div key={index} className="flex items-start space-x-2">
+                                <span className={`inline-block w-2 h-2 rounded-full mt-2 ${
+                                  implication.severity === 'high' ? 'bg-red-500' :
+                                  implication.severity === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                                }`}></span>
+                                <div>
+                                  <p className="text-sm font-medium text-foreground capitalize">{implication.type}</p>
+                                  <p className="text-sm text-muted-foreground">{implication.message}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <i className="fas fa-file-text text-4xl text-muted-foreground mb-4"></i>
+                      <p className="text-muted-foreground">Upload a document to get started</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
+          {activeTab === 'risk-analysis' && (
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Analysis Form */}
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">Risk Analysis</h2>
+                  <p className="text-muted-foreground mb-6">
+                    Predict legal success chances based on case details and precedent data.
+                  </p>
+                  
                   <Form {...riskAnalysisForm}>
-                    <form onSubmit={riskAnalysisForm.handleSubmit(handleRiskAnalysis)} className="space-y-6">
+                    <form onSubmit={riskAnalysisForm.handleSubmit(handleRiskAnalysis)} className="space-y-4">
                       <FormField
                         control={riskAnalysisForm.control}
                         name="caseType"
@@ -458,18 +407,21 @@ export default function AISearch() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="contract-dispute">Contract Dispute</SelectItem>
+                                <SelectItem value="contract">Contract Dispute</SelectItem>
                                 <SelectItem value="personal-injury">Personal Injury</SelectItem>
-                                <SelectItem value="employment-law">Employment Law</SelectItem>
+                                <SelectItem value="employment">Employment Law</SelectItem>
                                 <SelectItem value="intellectual-property">Intellectual Property</SelectItem>
-                                <SelectItem value="corporate-law">Corporate Law</SelectItem>
+                                <SelectItem value="real-estate">Real Estate</SelectItem>
+                                <SelectItem value="family">Family Law</SelectItem>
+                                <SelectItem value="criminal">Criminal Defense</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-
+                      
                       <FormField
                         control={riskAnalysisForm.control}
                         name="description"
@@ -477,197 +429,189 @@ export default function AISearch() {
                           <FormItem>
                             <FormLabel>Case Description</FormLabel>
                             <FormControl>
-                              <Textarea 
-                                className="h-32"
-                                placeholder="Describe your case, including key facts, parties involved, and legal issues..."
-                                data-testid="textarea-case-description"
-                                {...field} 
+                              <Textarea
+                                placeholder="Describe the key facts and legal issues of your case"
+                                className="min-h-[120px]"
+                                data-testid="input-case-description"
+                                {...field}
                               />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={riskAnalysisForm.control}
-                          name="jurisdiction"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Jurisdiction</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger data-testid="select-jurisdiction">
-                                    <SelectValue placeholder="Select jurisdiction" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="federal">Federal Court</SelectItem>
-                                  <SelectItem value="california">California</SelectItem>
-                                  <SelectItem value="new-york">New York</SelectItem>
-                                  <SelectItem value="texas">Texas</SelectItem>
-                                  <SelectItem value="florida">Florida</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={riskAnalysisForm.control}
-                          name="caseValue"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Case Value</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  placeholder="e.g., $100,000"
-                                  data-testid="input-case-value"
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
+                      
+                      <FormField
+                        control={riskAnalysisForm.control}
+                        name="jurisdiction"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Jurisdiction</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="e.g., California, Federal, New York"
+                                data-testid="input-jurisdiction"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={riskAnalysisForm.control}
+                        name="caseValue"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Case Value (Optional)</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="e.g., $50,000, $1M+"
+                                data-testid="input-case-value"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
                       <Button 
                         type="submit" 
-                        className="w-full flex items-center gap-2" 
+                        className="w-full"
                         disabled={riskAnalysisMutation.isPending}
-                        data-testid="button-analyze-risk"
+                        data-testid="button-analyze"
                       >
-                        <i className="fas fa-chart-line"></i>
-                        {riskAnalysisMutation.isPending ? "Analyzing..." : "Analyze Risk"}
+                        {riskAnalysisMutation.isPending ? (
+                          <>
+                            <i className="fas fa-spinner fa-spin mr-2"></i>
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-chart-line mr-2"></i>
+                            Analyze Risk
+                          </>
+                        )}
                       </Button>
                     </form>
                   </Form>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* Risk Analysis Results */}
-            {riskResults && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Success Probability */}
-                <Card data-testid="success-probability">
-                  <CardContent className="p-6">
-                    <h4 className="text-lg font-semibold text-foreground mb-4">Success Probability</h4>
-                    <div className="text-center mb-6">
-                      <div className="text-4xl font-bold text-green-600 mb-2">{riskResults.successProbability}%</div>
-                      <p className="text-muted-foreground">Chance of favorable outcome</p>
-                    </div>
-
-                    {riskResults.precedentAnalysis && (
-                      <div className="space-y-4">
-                        <div>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="text-foreground">Similar Cases Won</span>
-                            <span className="text-muted-foreground">
-                              {Math.round(riskResults.precedentAnalysis.similarCases * riskResults.precedentAnalysis.successRate / 100)}/{riskResults.precedentAnalysis.similarCases}
-                            </span>
-                          </div>
-                          <div className="w-full bg-secondary rounded-full h-2">
-                            <div 
-                              className="bg-green-500 h-2 rounded-full" 
-                              style={{ width: `${riskResults.successProbability}%` }}
-                            ></div>
-                          </div>
+              {/* Analysis Results */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Risk Assessment</h3>
+                  {riskResults ? (
+                    <div className="space-y-4" data-testid="risk-results">
+                      {/* Success Probability */}
+                      <div className="border border-border rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <h4 className="font-medium text-foreground">Success Probability</h4>
+                          <span className="text-2xl font-bold text-primary">{riskResults.successProbability}%</span>
                         </div>
-
-                        <div>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="text-foreground">Jurisdiction Success Rate</span>
-                            <span className="text-muted-foreground">{riskResults.precedentAnalysis.successRate}%</span>
-                          </div>
-                          <div className="w-full bg-secondary rounded-full h-2">
-                            <div 
-                              className="bg-blue-500 h-2 rounded-full" 
-                              style={{ width: `${riskResults.precedentAnalysis.successRate}%` }}
-                            ></div>
-                          </div>
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div 
+                            className="bg-primary h-2 rounded-full" 
+                            style={{ width: `${riskResults.successProbability}%` }}
+                          ></div>
                         </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Confidence: {riskResults.confidenceLevel}%
+                        </p>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
 
-                {/* Risk Factors */}
-                <Card data-testid="risk-factors">
-                  <CardContent className="p-6">
-                    <h4 className="text-lg font-semibold text-foreground mb-4">Risk Factors</h4>
-                    
-                    <div className="space-y-4">
-                      {riskResults.riskFactors?.map((risk: any, index: number) => (
-                        <div key={index} className="flex items-start space-x-3">
-                          <div className={`w-2 h-2 rounded-full mt-2 ${
-                            risk.severity === 'high' ? 'bg-red-500' :
-                            risk.severity === 'medium' ? 'bg-amber-500' :
-                            'bg-green-500'
-                          }`}></div>
-                          <div>
-                            <p className="font-medium text-foreground capitalize">{risk.severity}</p>
-                            <p className="text-sm text-muted-foreground">{risk.factor}</p>
-                          </div>
-                        </div>
-                      ))}
-
-                      {riskResults.strengths && (
-                        <div className="mt-6">
-                          <p className="font-medium text-foreground mb-2">Strengths</p>
-                          {riskResults.strengths.map((strength: string, index: number) => (
-                            <div key={index} className="flex items-start space-x-3 mb-2">
-                              <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                              <p className="text-sm text-muted-foreground">{strength}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Recommendations */}
-                <Card className="lg:col-span-2" data-testid="recommendations">
-                  <CardContent className="p-6">
-                    <h4 className="text-lg font-semibold text-foreground mb-4">Recommendations</h4>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {riskResults.recommendations && (
-                        <div>
-                          <h5 className="font-medium text-foreground mb-2">Strengthen Your Case</h5>
-                          <ul className="space-y-2 text-sm text-muted-foreground">
-                            {riskResults.recommendations.immediate?.map((rec: string, index: number) => (
-                              <li key={index} className="flex items-start space-x-2">
-                                <i className="fas fa-check-circle text-green-500 mt-0.5"></i>
-                                <span>{rec}</span>
-                              </li>
+                      {/* Risk Factors */}
+                      {riskResults.riskFactors && (
+                        <div className="border border-border rounded-lg p-4">
+                          <h4 className="font-medium text-foreground mb-2">Risk Factors</h4>
+                          <div className="space-y-2">
+                            {riskResults.riskFactors.map((factor: any, index: number) => (
+                              <div key={index} className="flex items-start space-x-2">
+                                <span className={`inline-block w-2 h-2 rounded-full mt-2 ${
+                                  factor.severity === 'high' ? 'bg-red-500' :
+                                  factor.severity === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                                }`}></span>
+                                <div>
+                                  <p className="text-sm font-medium text-foreground">{factor.factor}</p>
+                                  <p className="text-sm text-muted-foreground">{factor.impact}</p>
+                                </div>
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         </div>
                       )}
-                      
+
+                      {/* Recommendations */}
+                      {riskResults.recommendations && (
+                        <div className="border border-border rounded-lg p-4">
+                          <h4 className="font-medium text-foreground mb-2">Recommendations</h4>
+                          <div className="space-y-3">
+                            {riskResults.recommendations.immediate && (
+                              <div>
+                                <p className="text-sm font-medium text-foreground mb-1">Immediate Actions:</p>
+                                <ul className="text-sm text-muted-foreground space-y-1">
+                                  {riskResults.recommendations.immediate.map((action: string, index: number) => (
+                                    <li key={index} className="flex items-start">
+                                      <span className="mr-2 text-primary">•</span>
+                                      <span>{action}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {riskResults.recommendations.longterm && (
+                              <div>
+                                <p className="text-sm font-medium text-foreground mb-1">Long-term Strategy:</p>
+                                <ul className="text-sm text-muted-foreground space-y-1">
+                                  {riskResults.recommendations.longterm.map((strategy: string, index: number) => (
+                                    <li key={index} className="flex items-start">
+                                      <span className="mr-2 text-primary">•</span>
+                                      <span>{strategy}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Settlement Range */}
                       {riskResults.settlementRange && (
-                        <div>
-                          <h5 className="font-medium text-foreground mb-2">Settlement Considerations</h5>
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <p className="text-blue-800 text-sm">
-                              💡 Consider settlement between {riskResults.settlementRange.low} - {riskResults.settlementRange.high} based on similar case outcomes
-                            </p>
+                        <div className="border border-border rounded-lg p-4">
+                          <h4 className="font-medium text-foreground mb-2">Settlement Estimate</h4>
+                          <div className="grid grid-cols-3 gap-2 text-center">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Low</p>
+                              <p className="font-medium">{riskResults.settlementRange.low}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Recommended</p>
+                              <p className="font-medium text-primary">{riskResults.settlementRange.recommended}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">High</p>
+                              <p className="font-medium">{riskResults.settlementRange.high}</p>
+                            </div>
                           </div>
                         </div>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </div>
-        )}
-      </main>
-    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <i className="fas fa-chart-line text-4xl text-muted-foreground mb-4"></i>
+                      <p className="text-muted-foreground">Enter case details to get risk analysis</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+      </div>
+    </SidebarLayout>
   );
 }
