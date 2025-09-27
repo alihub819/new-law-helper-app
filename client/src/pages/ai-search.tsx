@@ -26,6 +26,14 @@ interface RiskAnalysisForm {
   caseValue: string;
 }
 
+interface LawAgentForm {
+  question: string;
+}
+
+interface WebSearchForm {
+  query: string;
+}
+
 export default function AISearch() {
   const { tab } = useParams<{ tab?: string }>();
   const [, setLocation] = useLocation();
@@ -43,6 +51,8 @@ export default function AISearch() {
   const [searchResults, setSearchResults] = useState<any>(null);
   const [summaryResults, setSummaryResults] = useState<any>(null);
   const [riskResults, setRiskResults] = useState<any>(null);
+  const [lawAgentResults, setLawAgentResults] = useState<any>(null);
+  const [webSearchResults, setWebSearchResults] = useState<any>(null);
 
   const legalSearchForm = useForm<LegalSearchForm>({
     defaultValues: { query: "" }
@@ -55,6 +65,14 @@ export default function AISearch() {
       jurisdiction: "",
       caseValue: ""
     }
+  });
+
+  const lawAgentForm = useForm<LawAgentForm>({
+    defaultValues: { question: "" }
+  });
+
+  const webSearchForm = useForm<WebSearchForm>({
+    defaultValues: { query: "" }
   });
 
   const legalSearchMutation = useMutation({
@@ -137,6 +155,48 @@ export default function AISearch() {
     riskAnalysisMutation.mutate(data);
   };
 
+  const lawAgentMutation = useMutation({
+    mutationFn: async (data: LawAgentForm) => {
+      const res = await apiRequest("POST", "/api/law-agent", data);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setLawAgentResults(data);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Law agent query failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const webSearchMutation = useMutation({
+    mutationFn: async (data: WebSearchForm) => {
+      const res = await apiRequest("POST", "/api/web-search", data);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setWebSearchResults(data);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Web search failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleLawAgentQuestion = (data: LawAgentForm) => {
+    lawAgentMutation.mutate(data);
+  };
+
+  const handleWebSearch = (data: WebSearchForm) => {
+    webSearchMutation.mutate(data);
+  };
+
   return (
     <SidebarLayout>
       <div className="p-6">
@@ -181,6 +241,32 @@ export default function AISearch() {
               >
                 <i className="fas fa-chart-line mr-2"></i>
                 Risk Analysis
+              </button>
+              
+              <button
+                onClick={() => switchTab('law-agent')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'law-agent'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
+                }`}
+                data-testid="tab-law-agent"
+              >
+                <i className="fas fa-gavel mr-2"></i>
+                Law Agent
+              </button>
+              
+              <button
+                onClick={() => switchTab('web-search')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'web-search'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
+                }`}
+                data-testid="tab-web-search"
+              >
+                <i className="fas fa-globe mr-2"></i>
+                Web Search
               </button>
             </nav>
           </div>
@@ -612,6 +698,210 @@ export default function AISearch() {
                     <div className="text-center py-8">
                       <i className="fas fa-chart-line text-4xl text-muted-foreground mb-4"></i>
                       <p className="text-muted-foreground">Enter case details to get risk analysis</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'law-agent' && (
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Law Agent Form */}
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">Law Agent</h2>
+                  <p className="text-muted-foreground mb-6">
+                    Ask any legal question and get comprehensive answers with references and citations.
+                  </p>
+                  
+                  <Form {...lawAgentForm}>
+                    <form onSubmit={lawAgentForm.handleSubmit(handleLawAgentQuestion)} className="space-y-4">
+                      <FormField
+                        control={lawAgentForm.control}
+                        name="question"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Legal Question</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Ask any legal question (e.g., 'What are the requirements for a valid contract in New York?')"
+                                className="min-h-[120px]"
+                                data-testid="input-law-question"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={lawAgentMutation.isPending}
+                        data-testid="button-ask-law-agent"
+                      >
+                        {lawAgentMutation.isPending ? (
+                          <>
+                            <i className="fas fa-spinner fa-spin mr-2"></i>
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-gavel mr-2"></i>
+                            Ask Law Agent
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+
+              {/* Law Agent Results */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Legal Answer</h3>
+                  {lawAgentResults ? (
+                    <div className="space-y-4" data-testid="law-agent-results">
+                      <div className="border border-border rounded-lg p-4">
+                        <h4 className="font-medium text-foreground mb-2">Answer</h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{lawAgentResults.answer}</p>
+                      </div>
+                      
+                      {lawAgentResults.references && (
+                        <div className="border border-border rounded-lg p-4">
+                          <h4 className="font-medium text-foreground mb-2">References & Citations</h4>
+                          <div className="space-y-2">
+                            {lawAgentResults.references.map((ref: any, index: number) => (
+                              <div key={index} className="border-l-2 border-primary pl-3">
+                                <p className="text-sm font-medium text-foreground">{ref.title}</p>
+                                <p className="text-xs text-primary">{ref.citation}</p>
+                                <p className="text-xs text-muted-foreground mt-1">{ref.summary}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {lawAgentResults.keyPoints && (
+                        <div className="border border-border rounded-lg p-4">
+                          <h4 className="font-medium text-foreground mb-2">Key Legal Points</h4>
+                          <ul className="text-sm text-muted-foreground space-y-1">
+                            {lawAgentResults.keyPoints.map((point: string, index: number) => (
+                              <li key={index} className="flex items-start">
+                                <span className="mr-2 text-primary">•</span>
+                                <span>{point}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <i className="fas fa-gavel text-4xl text-muted-foreground mb-4"></i>
+                      <p className="text-muted-foreground">Ask a legal question to get started</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'web-search' && (
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Web Search Form */}
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">Legal Web Search</h2>
+                  <p className="text-muted-foreground mb-6">
+                    Search the web for legal information, cases, and current legal news.
+                  </p>
+                  
+                  <Form {...webSearchForm}>
+                    <form onSubmit={webSearchForm.handleSubmit(handleWebSearch)} className="space-y-4">
+                      <FormField
+                        control={webSearchForm.control}
+                        name="query"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Search Query</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter your legal search query (e.g., 'latest employment law changes 2024')"
+                                data-testid="input-web-search"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={webSearchMutation.isPending}
+                        data-testid="button-web-search"
+                      >
+                        {webSearchMutation.isPending ? (
+                          <>
+                            <i className="fas fa-spinner fa-spin mr-2"></i>
+                            Searching...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-globe mr-2"></i>
+                            Search Web
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+
+              {/* Web Search Results */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Search Results</h3>
+                  {webSearchResults ? (
+                    <div className="space-y-4" data-testid="web-search-results">
+                      <div className="text-sm text-muted-foreground mb-4">
+                        Found {webSearchResults.totalResults || 0} results
+                      </div>
+                      {webSearchResults.results?.map((result: any, index: number) => (
+                        <div key={index} className="border border-border rounded-lg p-4" data-testid={`web-result-${index}`}>
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium text-foreground hover:text-primary">
+                              <a href={result.url} target="_blank" rel="noopener noreferrer">
+                                {result.title}
+                              </a>
+                            </h4>
+                            <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
+                              {result.domain}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-3">{result.snippet}</p>
+                          {result.date && (
+                            <p className="text-xs text-muted-foreground">Published: {result.date}</p>
+                          )}
+                        </div>
+                      ))}
+                      
+                      {webSearchResults.summary && (
+                        <div className="border border-primary rounded-lg p-4 bg-primary/5">
+                          <h4 className="font-medium text-foreground mb-2">AI Summary</h4>
+                          <p className="text-sm text-muted-foreground leading-relaxed">{webSearchResults.summary}</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <i className="fas fa-globe text-4xl text-muted-foreground mb-4"></i>
+                      <p className="text-muted-foreground">Enter a search query to find legal information</p>
                     </div>
                   )}
                 </CardContent>

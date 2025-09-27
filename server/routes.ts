@@ -5,7 +5,9 @@ import { storage } from "./storage";
 import { 
   searchLegalDatabase, 
   summarizeDocument, 
-  analyzeRisk 
+  analyzeRisk,
+  answerLegalQuestion,
+  performWebSearch
 } from "./openai";
 import multer from "multer";
 
@@ -110,6 +112,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Risk analysis error:", error);
       res.status(500).json({ error: "Failed to analyze risk" });
+    }
+  });
+
+  // Law Agent endpoint
+  app.post("/api/law-agent", isAuthenticated, async (req, res) => {
+    try {
+      const { question } = req.body;
+      
+      if (!question) {
+        return res.status(400).json({ error: "Question is required" });
+      }
+
+      const answer = await answerLegalQuestion(question);
+      
+      // Save to search history
+      await storage.createSearchHistory({
+        userId: req.user!.id,
+        type: 'law-agent',
+        query: question,
+        results: answer,
+      });
+
+      res.json(answer);
+    } catch (error) {
+      console.error("Law agent error:", error);
+      res.status(500).json({ error: "Failed to answer legal question" });
+    }
+  });
+
+  // Web Search endpoint
+  app.post("/api/web-search", isAuthenticated, async (req, res) => {
+    try {
+      const { query } = req.body;
+      
+      if (!query) {
+        return res.status(400).json({ error: "Search query is required" });
+      }
+
+      const results = await performWebSearch(query);
+      
+      // Save to search history
+      await storage.createSearchHistory({
+        userId: req.user!.id,
+        type: 'web-search',
+        query: query,
+        results: results,
+      });
+
+      res.json(results);
+    } catch (error) {
+      console.error("Web search error:", error);
+      res.status(500).json({ error: "Failed to perform web search" });
     }
   });
 

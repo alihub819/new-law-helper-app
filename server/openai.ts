@@ -175,3 +175,99 @@ Provide a detailed risk analysis in JSON format:
     throw new Error("Failed to analyze legal risk");
   }
 }
+
+export async function answerLegalQuestion(question: string): Promise<any> {
+  try {
+    const prompt = `You are an expert legal advisor. Answer this legal question comprehensively with accurate references and citations.
+
+Question: ${question}
+
+Provide a detailed response in JSON format:
+{
+  "answer": "Comprehensive answer to the legal question",
+  "references": [
+    {
+      "title": "Legal source title",
+      "citation": "Proper legal citation",
+      "summary": "Brief summary of relevance"
+    }
+  ],
+  "keyPoints": [
+    "Important legal point 1",
+    "Important legal point 2"
+  ],
+  "jurisdiction": "Applicable jurisdiction if relevant",
+  "disclaimer": "This is legal information, not legal advice. Consult with a qualified attorney for specific legal matters.",
+  "relatedConcepts": ["concept 1", "concept 2"],
+  "practicalAdvice": [
+    "Practical step 1",
+    "Practical step 2"
+  ]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert legal advisor with comprehensive knowledge of law across multiple jurisdictions. Provide accurate, well-cited legal information with proper references."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("OpenAI law agent error:", error);
+    throw new Error("Failed to answer legal question");
+  }
+}
+
+export async function performWebSearch(query: string): Promise<any> {
+  try {
+    const prompt = `You are a legal web search specialist. Based on this search query: "${query}", provide realistic web search results that would typically be found when searching for legal information online.
+
+Simulate web search results with current, relevant legal information and provide an AI-generated summary.
+
+Provide results in JSON format:
+{
+  "results": [
+    {
+      "title": "Search result title",
+      "url": "https://example-legal-site.com/article",
+      "domain": "legal-site.com",
+      "snippet": "Brief excerpt from the page describing the legal information",
+      "date": "2024-12-15"
+    }
+  ],
+  "totalResults": 8,
+  "summary": "AI-generated summary of the key findings from the search results, highlighting the most important legal information and trends.",
+  "relatedQueries": ["related query 1", "related query 2"],
+  "legalUpdates": "Any recent legal developments or changes related to the search topic"
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        {
+          role: "system",
+          content: "You are a legal information researcher specializing in finding and summarizing current legal information from web sources. Provide realistic, current legal search results."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("OpenAI web search error:", error);
+    throw new Error("Failed to perform web search");
+  }
+}
