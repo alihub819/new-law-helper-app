@@ -1,76 +1,150 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { insertUserSchema } from "@shared/schema";
-import { z } from "zod";
-
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(1, "Password is required"),
-});
-
-const registerSchema = insertUserSchema.extend({
-  confirmPassword: z.string().min(1, "Please confirm your password"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
-
-type LoginForm = z.infer<typeof loginSchema>;
-type RegisterForm = z.infer<typeof registerSchema>;
+import { useToast } from "@/hooks/use-toast";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const { user, loginMutation, registerMutation } = useAuth();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
-  const loginForm = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
+  // Login form state
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
 
-  const registerForm = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
+  // Registration form state
+  const [registerName, setRegisterName] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
 
+  // Form validation and submission states
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Redirect if already logged in (using useEffect to avoid breaking hooks rules)
+  // Redirect if already logged in
   useEffect(() => {
     if (user) {
       setLocation("/");
     }
   }, [user, setLocation]);
 
-  const handleLogin = (data: LoginForm) => {
+  // Handle authentication errors
+  useEffect(() => {
+    if (loginMutation.error) {
+      toast({
+        title: "Login Failed",
+        description: loginMutation.error.message || "Invalid email or password",
+        variant: "destructive",
+      });
+    }
+  }, [loginMutation.error, toast]);
+
+  useEffect(() => {
+    if (registerMutation.error) {
+      toast({
+        title: "Registration Failed", 
+        description: registerMutation.error.message || "Unable to create account",
+        variant: "destructive",
+      });
+    }
+  }, [registerMutation.error, toast]);
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateLoginForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!loginEmail) {
+      newErrors.loginEmail = "Email is required";
+    } else if (!validateEmail(loginEmail)) {
+      newErrors.loginEmail = "Please enter a valid email";
+    }
+
+    if (!loginPassword) {
+      newErrors.loginPassword = "Password is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateRegisterForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!registerName.trim()) {
+      newErrors.registerName = "Full name is required";
+    }
+
+    if (!registerEmail) {
+      newErrors.registerEmail = "Email is required";
+    } else if (!validateEmail(registerEmail)) {
+      newErrors.registerEmail = "Please enter a valid email";
+    }
+
+    if (!registerPassword) {
+      newErrors.registerPassword = "Password is required";
+    }
+
+    if (!confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (registerPassword !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords don't match";
+    }
+
+    if (!acceptTerms) {
+      newErrors.acceptTerms = "You must accept the terms and conditions";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleLogin = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (!validateLoginForm()) {
+      return;
+    }
+
     loginMutation.mutate({
-      email: data.email,
-      password: data.password,
+      email: loginEmail,
+      password: loginPassword,
     });
   };
 
-  const handleRegister = (data: RegisterForm) => {
+  const handleRegister = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (!validateRegisterForm()) {
+      return;
+    }
+
     registerMutation.mutate({
-      name: data.name,
-      email: data.email,
-      password: data.password,
+      name: registerName.trim(),
+      email: registerEmail,
+      password: registerPassword,
     });
+  };
+
+  const clearErrors = () => setErrors({});
+
+  const switchToLogin = () => {
+    setIsLogin(true);
+    clearErrors();
+  };
+
+  const switchToRegister = () => {
+    setIsLogin(false);
+    clearErrors();
   };
 
   return (
@@ -106,80 +180,65 @@ export default function AuthPage() {
         <div className="w-full lg:w-1/2 flex items-center justify-center px-8">
           <div className="w-full max-w-md">
             {isLogin ? (
+              /* LOGIN FORM */
               <Card className="bg-card rounded-lg shadow-lg">
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl font-semibold">Welcome Back</CardTitle>
                   <CardDescription>Sign in to your LawHub account</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-6">
-                      <FormField
-                        control={loginForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="email" 
-                                placeholder="Enter your email" 
-                                data-testid="input-email"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                  <form onSubmit={handleLogin} className="space-y-6">
+                    <div className="space-y-2">
+                      <label htmlFor="login-email" className="text-sm font-medium">
+                        Email
+                      </label>
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                        data-testid="input-email"
+                        className={errors.loginEmail ? "border-red-500" : ""}
                       />
-                      
-                      <FormField
-                        control={loginForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="password" 
-                                placeholder="Enter your password" 
-                                data-testid="input-password"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                      {errors.loginEmail && (
+                        <p className="text-sm text-red-500">{errors.loginEmail}</p>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="login-password" className="text-sm font-medium">
+                        Password
+                      </label>
+                      <Input
+                        id="login-password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        data-testid="input-password"
+                        className={errors.loginPassword ? "border-red-500" : ""}
                       />
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="remember" />
-                          <label htmlFor="remember" className="text-sm text-muted-foreground">
-                            Remember me
-                          </label>
-                        </div>
-                        <button type="button" className="text-sm text-primary hover:underline">
-                          Forgot password?
-                        </button>
-                      </div>
-                      
-                      <Button 
-                        type="submit" 
-                        className="w-full" 
-                        disabled={loginMutation.isPending}
-                        data-testid="button-signin"
-                      >
-                        {loginMutation.isPending ? "Signing In..." : "Sign In"}
-                      </Button>
-                    </form>
-                  </Form>
+                      {errors.loginPassword && (
+                        <p className="text-sm text-red-500">{errors.loginPassword}</p>
+                      )}
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={loginMutation.isPending}
+                      data-testid="button-signin"
+                    >
+                      {loginMutation.isPending ? "Signing In..." : "Sign In"}
+                    </Button>
+                  </form>
                   
                   <div className="mt-6 text-center">
                     <p className="text-muted-foreground">
                       Don't have an account?{" "}
                       <button 
-                        onClick={() => setIsLogin(false)} 
+                        onClick={switchToRegister}
                         className="text-primary hover:underline font-medium"
                         data-testid="link-signup"
                       >
@@ -190,128 +249,123 @@ export default function AuthPage() {
                 </CardContent>
               </Card>
             ) : (
+              /* REGISTRATION FORM */
               <Card className="bg-card rounded-lg shadow-lg">
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl font-semibold">Create Account</CardTitle>
                   <CardDescription>Join LawHub today</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-6">
-                      <FormField
-                        control={registerForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Full Name</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="text" 
-                                placeholder="Enter your full name" 
-                                data-testid="input-name"
-                                value={field.value}
-                                onChange={(e) => field.onChange(e.target.value)}
-                                onBlur={field.onBlur}
-                                name={field.name}
-                                ref={field.ref}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                  <form onSubmit={handleRegister} className="space-y-6">
+                    <div className="space-y-2">
+                      <label htmlFor="register-name" className="text-sm font-medium">
+                        Full Name
+                      </label>
+                      <Input
+                        id="register-name"
+                        type="text"
+                        placeholder="Enter your full name"
+                        value={registerName}
+                        onChange={(e) => setRegisterName(e.target.value)}
+                        data-testid="input-name"
+                        className={errors.registerName ? "border-red-500" : ""}
                       />
-                      
-                      <FormField
-                        control={registerForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="email" 
-                                placeholder="Enter your email" 
-                                data-testid="input-email"
-                                value={field.value}
-                                onChange={(e) => field.onChange(e.target.value)}
-                                onBlur={field.onBlur}
-                                name={field.name}
-                                ref={field.ref}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                      {errors.registerName && (
+                        <p className="text-sm text-red-500">{errors.registerName}</p>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="register-email" className="text-sm font-medium">
+                        Email
+                      </label>
+                      <Input
+                        id="register-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={registerEmail}
+                        onChange={(e) => setRegisterEmail(e.target.value)}
+                        data-testid="input-email"
+                        className={errors.registerEmail ? "border-red-500" : ""}
                       />
-                      
-                      <FormField
-                        control={registerForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="password" 
-                                placeholder="Create a password" 
-                                data-testid="input-password"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                      {errors.registerEmail && (
+                        <p className="text-sm text-red-500">{errors.registerEmail}</p>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="register-password" className="text-sm font-medium">
+                        Password
+                      </label>
+                      <Input
+                        id="register-password"
+                        type="password"
+                        placeholder="Create a password"
+                        value={registerPassword}
+                        onChange={(e) => setRegisterPassword(e.target.value)}
+                        data-testid="input-password"
+                        className={errors.registerPassword ? "border-red-500" : ""}
                       />
-                      
-                      <FormField
-                        control={registerForm.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Confirm Password</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="password" 
-                                placeholder="Confirm your password" 
-                                data-testid="input-confirm-password"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                      {errors.registerPassword && (
+                        <p className="text-sm text-red-500">{errors.registerPassword}</p>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="confirm-password" className="text-sm font-medium">
+                        Confirm Password
+                      </label>
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        placeholder="Confirm your password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        data-testid="input-confirm-password"
+                        className={errors.confirmPassword ? "border-red-500" : ""}
                       />
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="terms" required />
-                        <label htmlFor="terms" className="text-sm text-muted-foreground">
-                          I agree to the{" "}
-                          <button type="button" className="text-primary hover:underline">
-                            Terms of Service
-                          </button>{" "}
-                          and{" "}
-                          <button type="button" className="text-primary hover:underline">
-                            Privacy Policy
-                          </button>
-                        </label>
-                      </div>
-                      
-                      <Button 
-                        type="submit" 
-                        className="w-full" 
-                        disabled={registerMutation.isPending}
-                        data-testid="button-create-account"
-                      >
-                        {registerMutation.isPending ? "Creating Account..." : "Create Account"}
-                      </Button>
-                    </form>
-                  </Form>
+                      {errors.confirmPassword && (
+                        <p className="text-sm text-red-500">{errors.confirmPassword}</p>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="terms" 
+                        checked={acceptTerms}
+                        onCheckedChange={(checked) => setAcceptTerms(checked === true)}
+                        className={errors.acceptTerms ? "border-red-500" : ""}
+                      />
+                      <label htmlFor="terms" className="text-sm text-muted-foreground">
+                        I agree to the{" "}
+                        <button type="button" className="text-primary hover:underline">
+                          Terms of Service
+                        </button>{" "}
+                        and{" "}
+                        <button type="button" className="text-primary hover:underline">
+                          Privacy Policy
+                        </button>
+                      </label>
+                    </div>
+                    {errors.acceptTerms && (
+                      <p className="text-sm text-red-500">{errors.acceptTerms}</p>
+                    )}
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={registerMutation.isPending}
+                      data-testid="button-create-account"
+                    >
+                      {registerMutation.isPending ? "Creating Account..." : "Create Account"}
+                    </Button>
+                  </form>
                   
                   <div className="mt-6 text-center">
                     <p className="text-muted-foreground">
                       Already have an account?{" "}
                       <button 
-                        onClick={() => setIsLogin(true)} 
+                        onClick={switchToLogin}
                         className="text-primary hover:underline font-medium"
                         data-testid="link-signin"
                       >
