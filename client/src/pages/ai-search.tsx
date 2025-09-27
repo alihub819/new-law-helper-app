@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -28,9 +28,17 @@ interface RiskAnalysisForm {
 
 export default function AISearch() {
   const { tab } = useParams<{ tab?: string }>();
-  const activeTab = tab || 'legal-research';
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  // Redirect to default tab if no tab specified
+  useEffect(() => {
+    if (!tab) {
+      setLocation('/ai-search/legal-research');
+    }
+  }, [tab, setLocation]);
+  
+  const activeTab = tab || 'legal-research';
 
   const [searchResults, setSearchResults] = useState<any>(null);
   const [summaryResults, setSummaryResults] = useState<any>(null);

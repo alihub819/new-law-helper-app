@@ -27,7 +27,7 @@ const navigationItems: NavigationItem[] = [
     id: "ai-search",
     label: "AI Search",
     icon: "fas fa-search",
-    path: "/ai-search",
+    path: "/ai-search/legal-research",
     testId: "nav-ai-search"
   }
 ];
