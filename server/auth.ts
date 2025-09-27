@@ -78,21 +78,41 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/register", async (req, res, next) => {
-    const existingUser = await storage.getUserByEmail(req.body.email);
-    if (existingUser) {
-      return res.status(400).send("Email already exists");
+    console.log(`[AUTH] Registration attempt for email: ${req.body.email}`);
+    console.log(`[AUTH] Registration body:`, { name: req.body.name, email: req.body.email, password: req.body.password ? '[PROVIDED]' : '[MISSING]' });
+    
+    try {
+      const existingUser = await storage.getUserByEmail(req.body.email);
+      console.log(`[AUTH] Existing user check: ${existingUser ? 'EXISTS' : 'NEW'}`);
+      
+      if (existingUser) {
+        console.log(`[AUTH] Email already exists: ${req.body.email}`);
+        return res.status(400).send("Email already exists");
+      }
+
+      console.log(`[AUTH] Creating new user...`);
+      const hashedPassword = await hashPassword(req.body.password);
+      console.log(`[AUTH] Password hashed successfully`);
+      
+      const user = await storage.createUser({
+        name: req.body.name,
+        email: req.body.email,
+        password: hashedPassword,
+      });
+      console.log(`[AUTH] User created successfully:`, { id: user.id, email: user.email });
+
+      req.login(user, (err) => {
+        if (err) {
+          console.error(`[AUTH] Login after registration failed:`, err);
+          return next(err);
+        }
+        console.log(`[AUTH] User logged in successfully after registration`);
+        res.status(201).json(user);
+      });
+    } catch (error) {
+      console.error(`[AUTH] Registration error:`, error);
+      res.status(500).json({ error: 'Registration failed' });
     }
-
-    const user = await storage.createUser({
-      name: req.body.name,
-      email: req.body.email,
-      password: await hashPassword(req.body.password),
-    });
-
-    req.login(user, (err) => {
-      if (err) return next(err);
-      res.status(201).json(user);
-    });
   });
 
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
