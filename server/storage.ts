@@ -11,13 +11,13 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   createSearchHistory(search: InsertSearchHistory): Promise<SearchHistory>;
   getSearchHistoryByUserId(userId: string): Promise<SearchHistory[]>;
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private searchHistories: Map<string, SearchHistory>;
-  public sessionStore: session.SessionStore;
+  public sessionStore: session.Store;
 
   constructor() {
     this.users = new Map();
@@ -54,6 +54,7 @@ export class MemStorage implements IStorage {
       ...insertSearch,
       id,
       createdAt: new Date(),
+      results: insertSearch.results || null,
     };
     this.searchHistories.set(id, search);
     return search;

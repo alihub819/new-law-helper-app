@@ -58,7 +58,7 @@ export default function AuthPage() {
 
   const handleLogin = (data: LoginForm) => {
     loginMutation.mutate({
-      username: data.email, // Backend expects username but we use email
+      email: data.email,
       password: data.password,
     });
   };

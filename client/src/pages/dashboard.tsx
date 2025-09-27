@@ -146,7 +146,7 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
             <div className="space-y-4">
-              {searchHistory && searchHistory.length > 0 ? (
+              {searchHistory && Array.isArray(searchHistory) && searchHistory.length > 0 ? (
                 searchHistory.map((item: any, index: number) => (
                   <div key={item.id} className="flex items-center space-x-3 py-2" data-testid={`activity-item-${index}`}>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
