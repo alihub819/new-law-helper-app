@@ -6,12 +6,13 @@ import { useToast } from "@/hooks/use-toast";
 import { SidebarLayout } from "@/components/layout/sidebar-layout";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Upload, FileText, AlertCircle, CheckCircle, TrendingUp, AlertTriangle, Lightbulb, Star, Scale, Wand2, Copy, X } from "lucide-react";
+import { Upload, FileText, AlertCircle, CheckCircle, TrendingUp, AlertTriangle, Lightbulb, Star, Scale, Wand2, Copy, X, GripVertical } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 interface DocumentAnalysis {
   documentTitle: string;
@@ -402,216 +403,229 @@ export default function DocumentAnalyzer() {
               </Card>
             </div>
           ) : (
-            /* Split Screen Analysis View */
-            <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left Side - Document Content */}
-              <Card className="h-full flex flex-col">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Document Content
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {uploadedFile?.name} ({Math.round((uploadedFile?.size || 0) / 1024)} KB)
-                  </p>
-                </CardHeader>
-                <CardContent className="flex-1 overflow-hidden">
-                  <div 
-                    className="h-full overflow-auto bg-white p-6 rounded-lg border shadow-sm"
-                    style={{ fontFamily: 'Times, "Times New Roman", serif' }}
-                    data-testid="document-content"
-                  >
-                    {documentContent ? (
-                      <div className="document-preview">
-                        <div className="mb-4 pb-2 border-b border-gray-200">
-                          <h3 className="text-lg font-semibold text-gray-800">
-                            {uploadedFile?.name || "Document Preview"}
-                          </h3>
-                          <p className="text-sm text-gray-500">
-                            {uploadedFile?.type} • {Math.round((uploadedFile?.size || 0) / 1024)} KB
-                          </p>
-                        </div>
-                        <div 
-                          className="prose prose-sm max-w-none leading-relaxed text-gray-900"
-                          style={{
-                            fontSize: '14px',
-                            lineHeight: '1.6',
-                            fontFamily: 'Times, "Times New Roman", serif'
-                          }}
-                          dangerouslySetInnerHTML={{
-                            __html: formatDocumentContent(documentContent)
-                          }}
-                        />
+            /* Split Screen Analysis View with Resizable Panels */
+            <div className="h-full">
+              <PanelGroup direction="horizontal" className="h-full">
+                {/* Left Panel - Document Content */}
+                <Panel defaultSize={50} minSize={25} className="h-full">
+                  <Card className="h-full flex flex-col mr-2">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Document Content
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        {uploadedFile?.name} ({Math.round((uploadedFile?.size || 0) / 1024)} KB)
+                      </p>
+                    </CardHeader>
+                    <CardContent className="flex-1 overflow-hidden">
+                      <div 
+                        className="h-full overflow-auto bg-white p-6 rounded-lg border shadow-sm"
+                        style={{ fontFamily: 'Times, "Times New Roman", serif' }}
+                        data-testid="document-content"
+                      >
+                        {documentContent ? (
+                          <div className="document-preview">
+                            <div className="mb-4 pb-2 border-b border-gray-200">
+                              <h3 className="text-lg font-semibold text-gray-800">
+                                {uploadedFile?.name || "Document Preview"}
+                              </h3>
+                              <p className="text-sm text-gray-500">
+                                {uploadedFile?.type} • {Math.round((uploadedFile?.size || 0) / 1024)} KB
+                              </p>
+                            </div>
+                            <div 
+                              className="prose prose-sm max-w-none leading-relaxed text-gray-900"
+                              style={{
+                                fontSize: '14px',
+                                lineHeight: '1.6',
+                                fontFamily: 'Times, "Times New Roman", serif'
+                              }}
+                              dangerouslySetInnerHTML={{
+                                __html: formatDocumentContent(documentContent)
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-gray-500">
+                            <div className="text-center">
+                              <FileText className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                              <p>Document content will appear here...</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-gray-500">
-                        <div className="text-center">
-                          <FileText className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                          <p>Document content will appear here...</p>
-                        </div>
-                      </div>
-                    )}
+                    </CardContent>
+                  </Card>
+                </Panel>
+
+                {/* Resize Handle */}
+                <PanelResizeHandle className="w-2 bg-border hover:bg-accent transition-colors flex items-center justify-center group" data-testid="panel-resize-handle">
+                  <div className="w-1 h-16 bg-border rounded-full group-hover:bg-accent-foreground transition-colors">
+                    <GripVertical className="h-4 w-4 text-muted-foreground mx-auto mt-6 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                </CardContent>
-              </Card>
+                </PanelResizeHandle>
 
-              {/* Right Side - AI Analysis */}
-              <Card className="h-full flex flex-col">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    AI Legal Analysis
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 overflow-auto space-y-6">
-                  {analysis && (
-                    <>
-                      {/* Overall Quality Assessment */}
-                      <div className={`p-4 rounded-lg border ${getQualityColor(analysis.overallQuality.score)}`}>
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold">Overall Quality Assessment</h3>
-                          <Badge variant="secondary" className="text-lg px-3 py-1">
-                            {analysis.overallQuality.grade}
-                          </Badge>
-                        </div>
-                        <div className="mb-3">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium">Score:</span>
-                            <span className="text-lg font-bold">{analysis.overallQuality.score}/100</span>
-                          </div>
-                          <Progress value={analysis.overallQuality.score} className="w-full" />
-                        </div>
-                        <p className="text-sm">{analysis.overallQuality.summary}</p>
-                      </div>
-
-                      {/* Strong Points */}
-                      <div>
-                        <h3 className="font-semibold text-green-700 mb-3 flex items-center gap-2">
-                          <CheckCircle className="h-5 w-5" />
-                          Strong Points ({analysis.strongPoints.length})
-                        </h3>
-                        <div className="space-y-3">
-                          {analysis.strongPoints.map((point, index) => (
-                            <div key={index} className="border-l-4 border-l-green-500 bg-green-50 p-3 rounded-r-lg">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Star className="h-4 w-4 text-green-600" />
-                                <span className="font-medium text-green-800">{point.point}</span>
-                                <Badge variant="outline" className="text-xs">{point.category}</Badge>
-                              </div>
-                              <p className="text-sm text-green-700 ml-6">{point.explanation}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      {/* Weak Points */}
-                      <div>
-                        <h3 className="font-semibold text-red-700 mb-3 flex items-center gap-2">
-                          <AlertCircle className="h-5 w-5" />
-                          Areas of Concern ({analysis.weakPoints.length})
-                        </h3>
-                        <div className="space-y-3">
-                          {analysis.weakPoints.map((point, index) => (
-                            <div key={index} className={`border-l-4 p-3 rounded-r-lg ${getSeverityColor(point.severity)}`}>
-                              <div className="flex items-center gap-2 mb-1">
-                                <AlertTriangle className="h-4 w-4 text-red-600" />
-                                <span className="font-medium text-red-800">{point.point}</span>
-                                <Badge variant="outline" className="text-xs">{point.category}</Badge>
-                                {getPriorityBadge(point.severity)}
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="ml-auto h-6 px-2 text-xs"
-                                  onClick={() => handleImproveItem('weak-point', point)}
-                                  data-testid={`button-improve-weak-${index}`}
-                                >
-                                  <Wand2 className="h-3 w-3 mr-1" />
-                                  Fix This
-                                </Button>
-                              </div>
-                              <p className="text-sm text-red-700 ml-6">{point.explanation}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      {/* Improvement Suggestions */}
-                      <div>
-                        <h3 className="font-semibold text-blue-700 mb-3 flex items-center gap-2">
-                          <Lightbulb className="h-5 w-5" />
-                          Improvement Suggestions ({analysis.improvements.length})
-                        </h3>
-                        <div className="space-y-3">
-                          {analysis.improvements.map((improvement, index) => (
-                            <div key={index} className="border-l-4 border-l-blue-500 bg-blue-50 p-3 rounded-r-lg">
-                              <div className="flex items-center gap-2 mb-1">
-                                <TrendingUp className="h-4 w-4 text-blue-600" />
-                                <span className="font-medium text-blue-800">{improvement.area}</span>
-                                {getPriorityBadge(improvement.priority)}
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="ml-auto h-6 px-2 text-xs bg-white"
-                                  onClick={() => handleImproveItem('improvement', improvement)}
-                                  data-testid={`button-improve-suggestion-${index}`}
-                                >
-                                  <Wand2 className="h-3 w-3 mr-1" />
-                                  Show Example
-                                </Button>
-                              </div>
-                              <p className="text-sm text-blue-700 ml-6">{improvement.suggestion}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      {/* Legal Insights */}
-                      <div>
-                        <h3 className="font-semibold text-purple-700 mb-3 flex items-center gap-2">
-                          <Scale className="h-5 w-5" />
-                          Legal Professional Insights ({analysis.legalInsights.length})
-                        </h3>
-                        <div className="space-y-3">
-                          {analysis.legalInsights.map((insight, index) => (
-                            <div key={index} className="border border-purple-200 bg-purple-50 p-3 rounded-lg">
-                              <div className="flex items-center gap-2 mb-1">
-                                {getInsightIcon(insight.type)}
-                                <span className="font-medium text-purple-800 capitalize">{insight.type.replace('-', ' ')}</span>
-                              </div>
-                              <p className="text-sm text-purple-900 mb-2 font-medium">{insight.insight}</p>
-                              <p className="text-sm text-purple-700">{insight.explanation}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Recommendations */}
-                      {analysis.recommendations.length > 0 && (
+                {/* Right Panel - AI Analysis */}
+                <Panel defaultSize={50} minSize={25} className="h-full">
+                  <Card className="h-full flex flex-col ml-2">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5" />
+                        AI Legal Analysis
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 overflow-auto space-y-6">
+                      {analysis && (
                         <>
-                          <Separator />
-                          <div>
-                            <h3 className="font-semibold text-gray-700 mb-3">Final Recommendations</h3>
-                            <ul className="space-y-2">
-                              {analysis.recommendations.map((rec, index) => (
-                                <li key={index} className="flex items-start gap-2 text-sm">
-                                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                                  <span>{rec}</span>
-                                </li>
-                              ))}
-                            </ul>
+                          {/* Overall Quality Assessment */}
+                          <div className={`p-4 rounded-lg border ${getQualityColor(analysis.overallQuality.score)}`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <h3 className="font-semibold">Overall Quality Assessment</h3>
+                              <Badge variant="secondary" className="text-lg px-3 py-1">
+                                {analysis.overallQuality.grade}
+                              </Badge>
+                            </div>
+                            <div className="mb-3">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-medium">Score:</span>
+                                <span className="text-lg font-bold">{analysis.overallQuality.score}/100</span>
+                              </div>
+                              <Progress value={analysis.overallQuality.score} className="w-full" />
+                            </div>
+                            <p className="text-sm">{analysis.overallQuality.summary}</p>
                           </div>
+
+                          {/* Strong Points */}
+                          <div>
+                            <h3 className="font-semibold text-green-700 mb-3 flex items-center gap-2">
+                              <CheckCircle className="h-5 w-5" />
+                              Strong Points ({analysis.strongPoints.length})
+                            </h3>
+                            <div className="space-y-3">
+                              {analysis.strongPoints.map((point, index) => (
+                                <div key={index} className="border-l-4 border-l-green-500 bg-green-50 p-3 rounded-r-lg">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Star className="h-4 w-4 text-green-600" />
+                                    <span className="font-medium text-green-800">{point.point}</span>
+                                    <Badge variant="outline" className="text-xs">{point.category}</Badge>
+                                  </div>
+                                  <p className="text-sm text-green-700 ml-6">{point.explanation}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <Separator />
+
+                          {/* Weak Points */}
+                          <div>
+                            <h3 className="font-semibold text-red-700 mb-3 flex items-center gap-2">
+                              <AlertCircle className="h-5 w-5" />
+                              Areas of Concern ({analysis.weakPoints.length})
+                            </h3>
+                            <div className="space-y-3">
+                              {analysis.weakPoints.map((point, index) => (
+                                <div key={index} className={`border-l-4 p-3 rounded-r-lg ${getSeverityColor(point.severity)}`}>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                                    <span className="font-medium text-red-800">{point.point}</span>
+                                    <Badge variant="outline" className="text-xs">{point.category}</Badge>
+                                    {getPriorityBadge(point.severity)}
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="ml-auto h-6 px-2 text-xs"
+                                      onClick={() => handleImproveItem('weak-point', point)}
+                                      data-testid={`button-improve-weak-${index}`}
+                                    >
+                                      <Wand2 className="h-3 w-3 mr-1" />
+                                      Fix This
+                                    </Button>
+                                  </div>
+                                  <p className="text-sm text-red-700 ml-6">{point.explanation}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <Separator />
+
+                          {/* Improvement Suggestions */}
+                          <div>
+                            <h3 className="font-semibold text-blue-700 mb-3 flex items-center gap-2">
+                              <Lightbulb className="h-5 w-5" />
+                              Improvement Suggestions ({analysis.improvements.length})
+                            </h3>
+                            <div className="space-y-3">
+                              {analysis.improvements.map((improvement, index) => (
+                                <div key={index} className="border-l-4 border-l-blue-500 bg-blue-50 p-3 rounded-r-lg">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <TrendingUp className="h-4 w-4 text-blue-600" />
+                                    <span className="font-medium text-blue-800">{improvement.area}</span>
+                                    {getPriorityBadge(improvement.priority)}
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="ml-auto h-6 px-2 text-xs bg-white"
+                                      onClick={() => handleImproveItem('improvement', improvement)}
+                                      data-testid={`button-improve-suggestion-${index}`}
+                                    >
+                                      <Wand2 className="h-3 w-3 mr-1" />
+                                      Show Example
+                                    </Button>
+                                  </div>
+                                  <p className="text-sm text-blue-700 ml-6">{improvement.suggestion}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <Separator />
+
+                          {/* Legal Insights */}
+                          <div>
+                            <h3 className="font-semibold text-purple-700 mb-3 flex items-center gap-2">
+                              <Scale className="h-5 w-5" />
+                              Legal Professional Insights ({analysis.legalInsights.length})
+                            </h3>
+                            <div className="space-y-3">
+                              {analysis.legalInsights.map((insight, index) => (
+                                <div key={index} className="border border-purple-200 bg-purple-50 p-3 rounded-lg">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    {getInsightIcon(insight.type)}
+                                    <span className="font-medium text-purple-800 capitalize">{insight.type.replace('-', ' ')}</span>
+                                  </div>
+                                  <p className="text-sm text-purple-900 mb-2 font-medium">{insight.insight}</p>
+                                  <p className="text-sm text-purple-700">{insight.explanation}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Recommendations */}
+                          {analysis.recommendations.length > 0 && (
+                            <>
+                              <Separator />
+                              <div>
+                                <h3 className="font-semibold text-gray-700 mb-3">Final Recommendations</h3>
+                                <ul className="space-y-2">
+                                  {analysis.recommendations.map((rec, index) => (
+                                    <li key={index} className="flex items-start gap-2 text-sm">
+                                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                      <span>{rec}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </>
+                          )}
                         </>
                       )}
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                </Panel>
+              </PanelGroup>
             </div>
           )}
         </div>
