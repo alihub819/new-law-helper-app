@@ -653,6 +653,263 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-800 dark:to-slate-900">
+        <div className="max-w-7xl mx-auto">
+          <motion.div 
+            className="text-center mb-16"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+          >
+            <motion.div variants={fadeInUp}>
+              <Badge className="mb-4 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 dark:from-blue-900 dark:to-purple-900 dark:text-blue-200 px-6 py-2">
+                <Users className="h-4 w-4 mr-2" />
+                Trusted by Legal Professionals
+              </Badge>
+            </motion.div>
+            <motion.h2 
+              className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4"
+              variants={fadeInUp}
+            >
+              What Our <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Clients Say</span>
+            </motion.h2>
+            <motion.p 
+              className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto"
+              variants={fadeInUp}
+            >
+              Join thousands of legal professionals who have transformed their practice with LawHelper
+            </motion.p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Sarah Chen",
+                role: "Corporate Lawyer, Tech Innovations",
+                avatar: "👩‍💼",
+                content: "LawHelper has revolutionized how I conduct legal research. What used to take hours now takes minutes. The AI insights are incredibly accurate and comprehensive.",
+                rating: 5
+              },
+              {
+                name: "Michael Rodriguez",
+                role: "Criminal Defense Attorney",
+                avatar: "👨‍💻",
+                content: "The document generation feature is a game-changer. I can create professional contracts and legal documents in seconds with perfect formatting and accuracy.",
+                rating: 5
+              },
+              {
+                name: "Dr. Emily Watson",
+                role: "IP Law Specialist",
+                avatar: "👩‍⚖️",
+                content: "The risk analysis capabilities have saved my clients millions in potential legal issues. LawHelper's AI truly understands complex legal scenarios.",
+                rating: 5
+              }
+            ].map((testimonial, index) => (
+              <FloatingCard key={testimonial.name} delay={index * 0.2}>
+                <Card className="h-full bg-white dark:bg-slate-800 shadow-xl border-0 hover:shadow-2xl transition-all duration-300">
+                  <CardContent className="p-8">
+                    <div className="flex items-center mb-6">
+                      <div className="text-4xl mr-4">{testimonial.avatar}</div>
+                      <div>
+                        <h4 className="font-semibold text-slate-900 dark:text-white">{testimonial.name}</h4>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">{testimonial.role}</p>
+                      </div>
+                    </div>
+                    <div className="flex mb-4">
+                      {Array.from({ length: testimonial.rating }).map((_, i) => (
+                        <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                      ))}
+                    </div>
+                    <p className="text-slate-700 dark:text-slate-300 italic">"{testimonial.content}"</p>
+                  </CardContent>
+                </Card>
+              </FloatingCard>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-900">
+        <div className="max-w-7xl mx-auto">
+          <motion.div 
+            className="text-center mb-16"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+          >
+            <motion.div variants={fadeInUp}>
+              <Badge className="mb-4 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 dark:from-green-900 dark:to-emerald-900 dark:text-green-200 px-6 py-2">
+                <Target className="h-4 w-4 mr-2" />
+                Simple Pricing
+              </Badge>
+            </motion.div>
+            <motion.h2 
+              className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4"
+              variants={fadeInUp}
+            >
+              Choose Your <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Plan</span>
+            </motion.h2>
+            <motion.p 
+              className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto"
+              variants={fadeInUp}
+            >
+              Flexible pricing options designed for legal professionals of all sizes
+            </motion.p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Starter",
+                price: "49",
+                period: "month",
+                description: "Perfect for solo practitioners",
+                features: ["100 AI Searches/month", "Basic Document Generation", "Email Support", "2GB Storage"],
+                popular: false,
+                gradient: "from-slate-600 to-slate-700"
+              },
+              {
+                name: "Professional",
+                price: "149",
+                period: "month",
+                description: "Ideal for small to medium firms",
+                features: ["Unlimited AI Searches", "Advanced Document Generation", "Priority Support", "50GB Storage", "Risk Analysis", "Team Collaboration"],
+                popular: true,
+                gradient: "from-blue-600 to-purple-600"
+              },
+              {
+                name: "Enterprise",
+                price: "299",
+                period: "month",
+                description: "For large law firms and departments",
+                features: ["Everything in Professional", "Custom AI Training", "24/7 Phone Support", "Unlimited Storage", "Advanced Analytics", "SSO Integration", "Custom Integrations"],
+                popular: false,
+                gradient: "from-purple-600 to-indigo-600"
+              }
+            ].map((plan, index) => (
+              <FloatingCard key={plan.name} delay={index * 0.2}>
+                <Card className={`h-full relative overflow-hidden ${plan.popular ? 'ring-2 ring-blue-500 shadow-2xl scale-105' : 'shadow-xl'} bg-white dark:bg-slate-800 border-0 hover:shadow-2xl transition-all duration-300`}>
+                  {plan.popular && (
+                    <div className="absolute top-0 left-0 right-0">
+                      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center py-2 text-sm font-medium">
+                        Most Popular
+                      </div>
+                    </div>
+                  )}
+                  <CardContent className={`p-8 ${plan.popular ? 'pt-12' : ''}`}>
+                    <div className="text-center mb-8">
+                      <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{plan.name}</h3>
+                      <p className="text-slate-600 dark:text-slate-400 mb-4">{plan.description}</p>
+                      <div className="flex items-baseline justify-center">
+                        <span className="text-5xl font-bold text-slate-900 dark:text-white">${plan.price}</span>
+                        <span className="text-slate-600 dark:text-slate-400 ml-2">/{plan.period}</span>
+                      </div>
+                    </div>
+                    
+                    <ul className="space-y-4 mb-8">
+                      {plan.features.map((feature, featureIndex) => (
+                        <li key={featureIndex} className="flex items-center">
+                          <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                          <span className="text-slate-700 dark:text-slate-300">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Link href="/auth">
+                        <Button 
+                          className={`w-full py-3 text-lg rounded-xl ${plan.popular ? 
+                            'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg' :
+                            'bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white'
+                          } transition-all duration-300`}
+                          data-testid={`pricing-${plan.name.toLowerCase()}`}
+                        >
+                          Get Started
+                        </Button>
+                      </Link>
+                    </motion.div>
+                  </CardContent>
+                </Card>
+              </FloatingCard>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+        <div className="max-w-4xl mx-auto">
+          <motion.div 
+            className="text-center mb-16"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+          >
+            <motion.div variants={fadeInUp}>
+              <Badge className="mb-4 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 dark:from-purple-900 dark:to-pink-900 dark:text-purple-200 px-6 py-2">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Frequently Asked Questions
+              </Badge>
+            </motion.div>
+            <motion.h2 
+              className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4"
+              variants={fadeInUp}
+            >
+              Got <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Questions?</span>
+            </motion.h2>
+            <motion.p 
+              className="text-xl text-slate-600 dark:text-slate-300"
+              variants={fadeInUp}
+            >
+              Here are answers to the most common questions about LawHelper
+            </motion.p>
+          </motion.div>
+
+          <div className="space-y-6">
+            {[
+              {
+                question: "How accurate is LawHelper's AI legal research?",
+                answer: "LawHelper's AI achieves 99.9% accuracy in legal research by leveraging advanced GPT models trained specifically on legal databases, case law, and statutes. Our AI is continuously updated with the latest legal precedents and regulations."
+              },
+              {
+                question: "Is my client data secure and confidential?",
+                answer: "Absolutely. We employ enterprise-grade security with end-to-end encryption, SOC 2 compliance, and strict confidentiality protocols. All client data is protected by attorney-client privilege and never shared with third parties."
+              },
+              {
+                question: "Can LawHelper integrate with my existing legal software?",
+                answer: "Yes! LawHelper integrates seamlessly with popular legal management software including Clio, LexisNexis, Westlaw, and many others. Our API allows for custom integrations tailored to your firm's workflow."
+              },
+              {
+                question: "What types of legal documents can LawHelper generate?",
+                answer: "LawHelper can generate a wide range of documents including contracts, briefs, motions, letters, applications, legal memos, and more. All documents follow professional standards and can be customized to your specific needs."
+              },
+              {
+                question: "Do I need technical expertise to use LawHelper?",
+                answer: "Not at all! LawHelper is designed with lawyers in mind, featuring an intuitive interface that requires no technical knowledge. Our onboarding process and support team ensure you're productive from day one."
+              },
+              {
+                question: "What kind of support does LawHelper provide?",
+                answer: "We offer comprehensive support including email, chat, and phone support depending on your plan. Enterprise customers receive 24/7 priority support with dedicated account managers and training sessions."
+              }
+            ].map((faq, index) => (
+              <FloatingCard key={index} delay={index * 0.1}>
+                <Card className="bg-white dark:bg-slate-800 shadow-lg border-0 hover:shadow-xl transition-all duration-300">
+                  <CardContent className="p-6">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">{faq.question}</h3>
+                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{faq.answer}</p>
+                  </CardContent>
+                </Card>
+              </FloatingCard>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-indigo-600">
         <div className="max-w-4xl mx-auto text-center">
