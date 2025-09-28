@@ -275,65 +275,149 @@ Provide results in JSON format:
 export async function generateDocument(documentType: string, inputMethod: 'voice' | 'paste' | 'manual', textContent?: string, formData?: Record<string, string>): Promise<any> {
   try {
     let contentDescription = '';
+    let documentSpecificInstructions = '';
     
     // Build content description based on input method
     if (inputMethod === 'voice' || inputMethod === 'paste') {
       contentDescription = textContent || '';
     } else if (inputMethod === 'manual' && formData) {
       contentDescription = Object.entries(formData)
+        .filter(([_, value]) => value && value.trim() !== '')
         .map(([key, value]) => `${key}: ${value}`)
-        .join(', ');
+        .join('\n');
+    }
+
+    // Document-specific formatting instructions
+    switch (documentType) {
+      case 'business-letter':
+        documentSpecificInstructions = `
+BUSINESS LETTER SPECIFIC REQUIREMENTS:
+- Use full block format (all text aligned left)
+- Include sender's letterhead information at top
+- Date should be 2-3 lines below sender info
+- Recipient's address 2 lines below date
+- Subject line format: "Re: [Subject]"
+- Professional salutation: "Dear Mr./Ms. [Last Name]:" or "Dear [Title] [Last Name]:"
+- Body paragraphs with single spacing within, double spacing between
+- Professional closing: "Sincerely," "Best regards," or "Respectfully,"
+- 4 line spaces for signature, then typed name and title`;
+        break;
+      
+      case 'cover-letter':
+        documentSpecificInstructions = `
+COVER LETTER SPECIFIC REQUIREMENTS:
+- Modern cover letter format with applicant info at top
+- Addressed to specific hiring manager if known, otherwise "Dear Hiring Manager:"
+- Opening paragraph: State position and how you learned about it
+- Body paragraph 1: Relevant experience and achievements with specific examples
+- Body paragraph 2: Skills and qualifications that match job requirements  
+- Body paragraph 3: Why you want to work for this specific company
+- Closing paragraph: Call to action and availability for interview
+- Professional closing with "Sincerely," and full name
+- Keep to one page maximum`;
+        break;
+
+      case 'recommendation-letter':
+        documentSpecificInstructions = `
+RECOMMENDATION LETTER SPECIFIC REQUIREMENTS:
+- Academic/Professional letterhead format
+- Date and recipient information (if known)
+- Subject line: "Letter of Recommendation for [Name]"
+- Opening: State relationship to candidate and duration
+- Body paragraph 1: Candidate's strengths and key qualifications
+- Body paragraph 2: Specific examples of achievements and performance
+- Body paragraph 3: Comparison to peers and overall assessment
+- Closing: Clear recommendation level and contact information for follow-up
+- Professional signature with credentials and title`;
+        break;
+
+      case 'service-agreement':
+        documentSpecificInstructions = `
+SERVICE AGREEMENT SPECIFIC REQUIREMENTS:
+- Contract title: "SERVICE AGREEMENT" centered at top
+- Parties section identifying Provider and Client with full legal names
+- Recitals section stating the purpose and background
+- Scope of Services section with detailed service descriptions
+- Term and Termination section with start/end dates
+- Compensation and Payment Terms section
+- Intellectual Property and Confidentiality clauses
+- Governing Law clause specifying state jurisdiction
+- Signature blocks with dates for both parties
+- Include standard contract disclaimers and notices`;
+        break;
+
+      case 'employment-contract':
+        documentSpecificInstructions = `
+EMPLOYMENT CONTRACT SPECIFIC REQUIREMENTS:
+- Contract title: "EMPLOYMENT AGREEMENT" centered at top
+- Parties section: Employer (Company) and Employee with addresses
+- Position and Duties section with job title and responsibilities
+- Compensation section: salary, benefits, payment schedule
+- Term of Employment section with start date and at-will status
+- Confidentiality and Non-Disclosure provisions
+- Intellectual Property assignment clauses
+- Termination and Severance provisions
+- Governing law and dispute resolution clauses
+- Signature blocks with dates for both parties`;
+        break;
+
+      case 'job-application':
+        documentSpecificInstructions = `
+JOB APPLICATION SPECIFIC REQUIREMENTS:
+- Application header: "EMPLOYMENT APPLICATION"
+- Personal Information section with all contact details
+- Position Information: job title, salary expectations, availability
+- Employment History: chronological listing with dates, companies, positions
+- Education section: degrees, institutions, graduation dates
+- Skills and Qualifications relevant to position
+- References section with complete contact information
+- Certification statements and applicant signature with date
+- Equal Opportunity/Non-Discrimination statements
+- Format as official application form with clear sections`;
+        break;
+
+      case 'visa-application':
+        documentSpecificInstructions = `
+VISA APPLICATION SPECIFIC REQUIREMENTS:
+- Official application header with visa type
+- Personal Details section: full legal name, date/place of birth, nationality
+- Passport Information: number, issue/expiry dates, issuing country
+- Travel Information: purpose, duration, planned dates, accommodation
+- Financial Information: funding source, bank statements reference
+- Supporting Documents checklist
+- Declaration and signature section with date
+- Official government application format style
+- Include all required legal disclaimers and warnings
+- Clear section divisions with numbered items where appropriate`;
+        break;
+
+      default:
+        documentSpecificInstructions = `
+GENERAL DOCUMENT REQUIREMENTS:
+- Professional USA business document format
+- Appropriate headers and contact information
+- Clear structure with logical sections
+- Professional tone and language throughout
+- Proper closing and signature sections`;
     }
 
     const prompt = `You are a professional document generation specialist with expertise in USA business and legal document standards. Generate a ${documentType} document following strict USA professional formatting and content standards.
 
 Document Type: ${documentType}
 Input Method: ${inputMethod}
-Content/Requirements: ${contentDescription}
+Content/Requirements:
+${contentDescription}
 
-CRITICAL FORMATTING REQUIREMENTS - USA STANDARDS:
+${documentSpecificInstructions}
 
-1. DOCUMENT HEADER (USA Business Format):
-   - Sender's full name and title on first line
-   - Company/Organization name on second line  
-   - Complete address in proper USA format (Street, Suite/Unit, City, State ZIP)
-   - Phone number in USA format: (XXX) XXX-XXXX
-   - Email address if applicable
-   - Date in USA format: Month DD, YYYY
-
-2. RECIPIENT SECTION (USA Business Format):
-   - Recipient's full name and title
-   - Company/Organization name
-   - Complete address in USA format
-   - Proper salutation: "Dear Mr./Ms./Dr. [Last Name]:" or "Dear Hiring Manager:"
-
-3. DOCUMENT BODY (USA Professional Standards):
-   - Subject line format: "Re: [Subject]" for letters, "Subject: [Subject]" for applications
-   - Professional opening paragraph stating purpose
-   - Clear, concise body paragraphs with specific information
-   - Logical flow and proper transitions between paragraphs
-   - Professional tone throughout
-
-4. CLOSING SECTION (USA Business Standards):
-   - Professional closing: "Sincerely," "Best regards," or "Respectfully,"
-   - Four line spaces for handwritten signature
-   - Typed name
-   - Title/Position if applicable
-   - Enclosures notation if applicable: "Enclosures: [list items]"
-
-5. LEGAL/CONTRACT SPECIFIC (If Applicable):
-   - Governing law clause with specific state
-   - Proper contract clauses and terminology
-   - Signatures section with date lines
-   - Witness lines if required
-   - Notarization section if needed
-
-6. APPLICATION SPECIFIC (If Applicable):
-   - Official application number or reference
-   - Required fields clearly labeled
-   - Government compliance statements
-   - Submission instructions
-   - Required documentation lists
+GENERAL USA FORMATTING STANDARDS:
+- Date format: Month DD, YYYY (e.g., January 15, 2024)
+- Address format: Street Address, Suite/Unit, City, State ZIP
+- Phone format: (XXX) XXX-XXXX
+- Professional language and tone throughout
+- Proper spacing and margins
+- Clear section divisions
+- Consistent formatting
 
 Return the response in JSON format:
 {

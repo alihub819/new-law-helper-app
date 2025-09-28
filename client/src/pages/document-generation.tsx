@@ -35,6 +35,149 @@ interface GeneratedDocument {
   createdAt: Date;
 }
 
+// Document-specific form configurations
+const documentFormConfigs: Record<string, {
+  name: string;
+  category: string;
+  fields: Array<{
+    name: string;
+    label: string;
+    type: 'text' | 'textarea' | 'date' | 'select' | 'email' | 'tel';
+    placeholder?: string;
+    required?: boolean;
+    options?: string[];
+    section: string;
+  }>;
+}> = {
+  'business-letter': {
+    name: 'Business Letter',
+    category: 'letters',
+    fields: [
+      { name: 'senderName', label: 'Your Full Name', type: 'text', placeholder: 'John Smith', required: true, section: 'sender' },
+      { name: 'senderTitle', label: 'Your Title/Position', type: 'text', placeholder: 'Manager', section: 'sender' },
+      { name: 'senderCompany', label: 'Your Company', type: 'text', placeholder: 'ABC Corporation', required: true, section: 'sender' },
+      { name: 'senderAddress', label: 'Your Address', type: 'textarea', placeholder: '123 Main Street\nSuite 100\nNew York, NY 10001', required: true, section: 'sender' },
+      { name: 'senderPhone', label: 'Your Phone', type: 'tel', placeholder: '(555) 123-4567', section: 'sender' },
+      { name: 'senderEmail', label: 'Your Email', type: 'email', placeholder: 'john@company.com', section: 'sender' },
+      { name: 'recipientName', label: 'Recipient Name', type: 'text', placeholder: 'Jane Doe', required: true, section: 'recipient' },
+      { name: 'recipientTitle', label: 'Recipient Title', type: 'text', placeholder: 'Director', section: 'recipient' },
+      { name: 'recipientCompany', label: 'Recipient Company', type: 'text', placeholder: 'XYZ Corp', required: true, section: 'recipient' },
+      { name: 'recipientAddress', label: 'Recipient Address', type: 'textarea', placeholder: '456 Business Ave\nFloor 5\nLos Angeles, CA 90210', required: true, section: 'recipient' },
+      { name: 'subject', label: 'Subject', type: 'text', placeholder: 'Re: Business Proposal', required: true, section: 'content' },
+      { name: 'purpose', label: 'Purpose of Letter', type: 'textarea', placeholder: 'State the main purpose and key points...', required: true, section: 'content' },
+      { name: 'callToAction', label: 'Call to Action', type: 'textarea', placeholder: 'What do you want the recipient to do?', section: 'content' }
+    ]
+  },
+  'cover-letter': {
+    name: 'Cover Letter',
+    category: 'letters',
+    fields: [
+      { name: 'applicantName', label: 'Your Full Name', type: 'text', placeholder: 'John Smith', required: true, section: 'sender' },
+      { name: 'applicantAddress', label: 'Your Address', type: 'textarea', placeholder: '123 Main Street\nNew York, NY 10001', required: true, section: 'sender' },
+      { name: 'applicantPhone', label: 'Your Phone', type: 'tel', placeholder: '(555) 123-4567', required: true, section: 'sender' },
+      { name: 'applicantEmail', label: 'Your Email', type: 'email', placeholder: 'john@email.com', required: true, section: 'sender' },
+      { name: 'hiringManager', label: 'Hiring Manager Name', type: 'text', placeholder: 'Jane Doe', section: 'recipient' },
+      { name: 'companyName', label: 'Company Name', type: 'text', placeholder: 'ABC Corporation', required: true, section: 'recipient' },
+      { name: 'companyAddress', label: 'Company Address', type: 'textarea', placeholder: '456 Business Ave\nLos Angeles, CA 90210', section: 'recipient' },
+      { name: 'jobTitle', label: 'Job Title', type: 'text', placeholder: 'Senior Software Engineer', required: true, section: 'content' },
+      { name: 'jobReference', label: 'Job Reference/ID', type: 'text', placeholder: 'Job #12345', section: 'content' },
+      { name: 'experience', label: 'Relevant Experience', type: 'textarea', placeholder: 'Describe your relevant experience and achievements...', required: true, section: 'content' },
+      { name: 'skills', label: 'Key Skills', type: 'textarea', placeholder: 'List your most relevant skills...', section: 'content' },
+      { name: 'motivation', label: 'Why This Company', type: 'textarea', placeholder: 'Why do you want to work for this company?', section: 'content' }
+    ]
+  },
+  'recommendation-letter': {
+    name: 'Recommendation Letter',
+    category: 'letters',
+    fields: [
+      { name: 'recommenderName', label: 'Your Full Name', type: 'text', placeholder: 'Dr. John Smith', required: true, section: 'sender' },
+      { name: 'recommenderTitle', label: 'Your Title/Position', type: 'text', placeholder: 'Professor of Computer Science', required: true, section: 'sender' },
+      { name: 'recommenderInstitution', label: 'Your Institution/Company', type: 'text', placeholder: 'University of Technology', required: true, section: 'sender' },
+      { name: 'recommenderAddress', label: 'Your Address', type: 'textarea', placeholder: '123 University Ave\nTech City, TX 75001', section: 'sender' },
+      { name: 'recommenderPhone', label: 'Your Phone', type: 'tel', placeholder: '(555) 123-4567', section: 'sender' },
+      { name: 'recommenderEmail', label: 'Your Email', type: 'email', placeholder: 'john.smith@university.edu', required: true, section: 'sender' },
+      { name: 'candidateName', label: 'Person Being Recommended', type: 'text', placeholder: 'Jane Doe', required: true, section: 'content' },
+      { name: 'relationshipLength', label: 'How Long Have You Known Them', type: 'text', placeholder: '3 years', required: true, section: 'content' },
+      { name: 'relationshipContext', label: 'In What Capacity', type: 'text', placeholder: 'Student in my advanced algorithms course', required: true, section: 'content' },
+      { name: 'strengths', label: 'Key Strengths', type: 'textarea', placeholder: 'Describe their main strengths and abilities...', required: true, section: 'content' },
+      { name: 'specificExamples', label: 'Specific Examples', type: 'textarea', placeholder: 'Provide specific examples of their achievements...', section: 'content' },
+      { name: 'recommendation', label: 'Recommendation Level', type: 'select', options: ['Highly Recommend', 'Recommend', 'Recommend with Reservations'], required: true, section: 'content' }
+    ]
+  },
+  'service-agreement': {
+    name: 'Service Agreement',
+    category: 'contracts',
+    fields: [
+      { name: 'providerName', label: 'Service Provider Name', type: 'text', placeholder: 'John Smith Consulting LLC', required: true, section: 'provider' },
+      { name: 'providerAddress', label: 'Provider Address', type: 'textarea', placeholder: '123 Business St\nNew York, NY 10001', required: true, section: 'provider' },
+      { name: 'clientName', label: 'Client Name', type: 'text', placeholder: 'ABC Corporation', required: true, section: 'client' },
+      { name: 'clientAddress', label: 'Client Address', type: 'textarea', placeholder: '456 Corporate Blvd\nLos Angeles, CA 90210', required: true, section: 'client' },
+      { name: 'serviceDescription', label: 'Service Description', type: 'textarea', placeholder: 'Detailed description of services to be provided...', required: true, section: 'terms' },
+      { name: 'contractValue', label: 'Contract Value', type: 'text', placeholder: '$50,000', required: true, section: 'terms' },
+      { name: 'paymentTerms', label: 'Payment Terms', type: 'text', placeholder: 'Net 30 days', required: true, section: 'terms' },
+      { name: 'startDate', label: 'Start Date', type: 'date', required: true, section: 'terms' },
+      { name: 'endDate', label: 'End Date', type: 'date', section: 'terms' },
+      { name: 'deliverables', label: 'Key Deliverables', type: 'textarea', placeholder: 'List main deliverables and milestones...', section: 'terms' },
+      { name: 'governingLaw', label: 'Governing Law (State)', type: 'select', options: ['Alabama', 'California', 'Florida', 'New York', 'Texas', 'Other'], required: true, section: 'legal' }
+    ]
+  },
+  'employment-contract': {
+    name: 'Employment Contract',
+    category: 'contracts',
+    fields: [
+      { name: 'employerName', label: 'Employer/Company Name', type: 'text', placeholder: 'ABC Corporation', required: true, section: 'employer' },
+      { name: 'employerAddress', label: 'Employer Address', type: 'textarea', placeholder: '123 Corporate Ave\nNew York, NY 10001', required: true, section: 'employer' },
+      { name: 'employeeName', label: 'Employee Name', type: 'text', placeholder: 'John Smith', required: true, section: 'employee' },
+      { name: 'employeeAddress', label: 'Employee Address', type: 'textarea', placeholder: '456 Main St\nBrooklyn, NY 11201', required: true, section: 'employee' },
+      { name: 'jobTitle', label: 'Job Title', type: 'text', placeholder: 'Senior Software Engineer', required: true, section: 'position' },
+      { name: 'department', label: 'Department', type: 'text', placeholder: 'Engineering', section: 'position' },
+      { name: 'startDate', label: 'Start Date', type: 'date', required: true, section: 'position' },
+      { name: 'salary', label: 'Annual Salary', type: 'text', placeholder: '$120,000', required: true, section: 'compensation' },
+      { name: 'payFrequency', label: 'Pay Frequency', type: 'select', options: ['Weekly', 'Bi-weekly', 'Monthly'], required: true, section: 'compensation' },
+      { name: 'benefits', label: 'Benefits Package', type: 'textarea', placeholder: 'Health insurance, dental, vision, 401k...', section: 'compensation' },
+      { name: 'vacation', label: 'Vacation/PTO Days', type: 'text', placeholder: '20 days per year', section: 'compensation' },
+      { name: 'workSchedule', label: 'Work Schedule', type: 'text', placeholder: 'Monday-Friday, 9 AM - 5 PM', section: 'position' },
+      { name: 'probationPeriod', label: 'Probation Period', type: 'text', placeholder: '90 days', section: 'position' }
+    ]
+  },
+  'job-application': {
+    name: 'Job Application',
+    category: 'applications',
+    fields: [
+      { name: 'applicantName', label: 'Full Name', type: 'text', placeholder: 'John Smith', required: true, section: 'personal' },
+      { name: 'applicantAddress', label: 'Complete Address', type: 'textarea', placeholder: '123 Main Street\nNew York, NY 10001', required: true, section: 'personal' },
+      { name: 'applicantPhone', label: 'Phone Number', type: 'tel', placeholder: '(555) 123-4567', required: true, section: 'personal' },
+      { name: 'applicantEmail', label: 'Email Address', type: 'email', placeholder: 'john@email.com', required: true, section: 'personal' },
+      { name: 'ssn', label: 'Social Security Number', type: 'text', placeholder: 'XXX-XX-XXXX', section: 'personal' },
+      { name: 'positionApplied', label: 'Position Applied For', type: 'text', placeholder: 'Senior Software Engineer', required: true, section: 'position' },
+      { name: 'salaryExpected', label: 'Expected Salary', type: 'text', placeholder: '$120,000', section: 'position' },
+      { name: 'availableStartDate', label: 'Available Start Date', type: 'date', required: true, section: 'position' },
+      { name: 'education', label: 'Highest Education', type: 'textarea', placeholder: 'Bachelor of Science in Computer Science\nUniversity of Technology, 2020', required: true, section: 'background' },
+      { name: 'workExperience', label: 'Work Experience', type: 'textarea', placeholder: 'List your relevant work experience...', required: true, section: 'background' },
+      { name: 'skills', label: 'Relevant Skills', type: 'textarea', placeholder: 'JavaScript, React, Node.js, Python...', section: 'background' },
+      { name: 'references', label: 'Professional References', type: 'textarea', placeholder: 'Name, Title, Company, Phone, Email for each reference...', section: 'background' }
+    ]
+  },
+  'visa-application': {
+    name: 'Visa Application',
+    category: 'applications',
+    fields: [
+      { name: 'applicantName', label: 'Full Legal Name', type: 'text', placeholder: 'John Smith', required: true, section: 'personal' },
+      { name: 'dateOfBirth', label: 'Date of Birth', type: 'date', required: true, section: 'personal' },
+      { name: 'placeOfBirth', label: 'Place of Birth', type: 'text', placeholder: 'New York, NY, USA', required: true, section: 'personal' },
+      { name: 'nationality', label: 'Nationality', type: 'text', placeholder: 'American', required: true, section: 'personal' },
+      { name: 'passportNumber', label: 'Passport Number', type: 'text', placeholder: '123456789', required: true, section: 'personal' },
+      { name: 'passportExpiry', label: 'Passport Expiry Date', type: 'date', required: true, section: 'personal' },
+      { name: 'currentAddress', label: 'Current Address', type: 'textarea', placeholder: '123 Main Street\nNew York, NY 10001', required: true, section: 'personal' },
+      { name: 'visaType', label: 'Visa Type', type: 'select', options: ['Tourist', 'Business', 'Student', 'Work', 'Transit'], required: true, section: 'visa' },
+      { name: 'purposeOfTravel', label: 'Purpose of Travel', type: 'textarea', placeholder: 'Business meetings and conferences...', required: true, section: 'visa' },
+      { name: 'durationOfStay', label: 'Intended Duration of Stay', type: 'text', placeholder: '2 weeks', required: true, section: 'visa' },
+      { name: 'accommodationDetails', label: 'Accommodation Details', type: 'textarea', placeholder: 'Hotel name and address...', section: 'visa' },
+      { name: 'financialSupport', label: 'Financial Support', type: 'textarea', placeholder: 'Self-funded, monthly income $8,000...', required: true, section: 'visa' }
+    ]
+  }
+};
+
 // Tab metadata for document categories
 const tabsMetadata = {
   'letters': {
@@ -650,345 +793,111 @@ export default function DocumentGeneration() {
                             </Card>
                           )}
 
-                          {inputMethod === 'manual' && (
+                          {inputMethod === 'manual' && selectedDocumentType && (
                             <Card>
                               <CardHeader>
-                                <CardTitle className="text-base">Manual Form Fields - Professional USA Format</CardTitle>
+                                <CardTitle className="text-base">
+                                  {documentFormConfigs[selectedDocumentType]?.name || selectedDocumentType} - Personalized Form
+                                </CardTitle>
                                 <p className="text-sm text-muted-foreground">
-                                  Fill out the fields below to generate a professionally formatted {selectedDocumentType} following USA standards
+                                  Fill out the specific fields below to generate a professionally formatted {documentFormConfigs[selectedDocumentType]?.name || selectedDocumentType} following USA standards
                                 </p>
                               </CardHeader>
                               <CardContent>
-                                <Form {...manualForm}>
-                                  <form onSubmit={manualForm.handleSubmit(handleManualSubmit)} className="space-y-6">
-                                    {/* Document Header Information */}
-                                    <div className="space-y-4">
-                                      <h4 className="font-medium text-sm text-primary">Document Header Information</h4>
-                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <FormField
-                                          control={manualForm.control}
-                                          name="senderName"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Your Full Name *</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="John Smith" data-testid="input-sender-name" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-
-                                        <FormField
-                                          control={manualForm.control}
-                                          name="senderTitle"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Your Title/Position</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Attorney at Law" data-testid="input-sender-title" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-
-                                        <FormField
-                                          control={manualForm.control}
-                                          name="senderCompany"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Your Company/Organization</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Smith & Associates Law Firm" data-testid="input-sender-company" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-
-                                        <FormField
-                                          control={manualForm.control}
-                                          name="senderPhone"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Your Phone Number</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="(555) 123-4567" data-testid="input-sender-phone" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                      </div>
-
-                                      <FormField
-                                        control={manualForm.control}
-                                        name="senderAddress"
-                                        render={({ field }) => (
-                                          <FormItem>
-                                            <FormLabel>Your Complete Address</FormLabel>
-                                            <FormControl>
-                                              <Textarea 
-                                                {...field} 
-                                                placeholder="123 Main Street&#10;Suite 100&#10;New York, NY 10001"
-                                                className="min-h-20"
-                                                data-testid="textarea-sender-address"
-                                              />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                        )}
-                                      />
-                                    </div>
-
-                                    {/* Recipient Information */}
-                                    <div className="space-y-4">
-                                      <h4 className="font-medium text-sm text-primary">Recipient Information</h4>
-                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <FormField
-                                          control={manualForm.control}
-                                          name="recipientName"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Recipient Full Name *</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Jane Doe" data-testid="input-recipient-name" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-
-                                        <FormField
-                                          control={manualForm.control}
-                                          name="recipientTitle"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Recipient Title/Position</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Hiring Manager" data-testid="input-recipient-title" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-
-                                        <FormField
-                                          control={manualForm.control}
-                                          name="recipientCompany"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Recipient Company/Organization</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="ABC Corporation" data-testid="input-recipient-company" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-
-                                        <FormField
-                                          control={manualForm.control}
-                                          name="recipientEmail"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Recipient Email</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="jane.doe@company.com" data-testid="input-recipient-email" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                      </div>
-
-                                      <FormField
-                                        control={manualForm.control}
-                                        name="recipientAddress"
-                                        render={({ field }) => (
-                                          <FormItem>
-                                            <FormLabel>Recipient Complete Address</FormLabel>
-                                            <FormControl>
-                                              <Textarea 
-                                                {...field} 
-                                                placeholder="456 Business Ave&#10;Floor 5&#10;Los Angeles, CA 90210"
-                                                className="min-h-20"
-                                                data-testid="textarea-recipient-address"
-                                              />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                        )}
-                                      />
-                                    </div>
-
-                                    {/* Document Content */}
-                                    <div className="space-y-4">
-                                      <h4 className="font-medium text-sm text-primary">Document Content</h4>
-                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <FormField
-                                          control={manualForm.control}
-                                          name="subject"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Subject/Purpose *</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} placeholder="Re: Application for Senior Attorney Position" data-testid="input-subject" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-
-                                        <FormField
-                                          control={manualForm.control}
-                                          name="documentDate"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel>Document Date</FormLabel>
-                                              <FormControl>
-                                                <Input {...field} type="date" data-testid="input-document-date" />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-                                      </div>
-
-                                      <FormField
-                                        control={manualForm.control}
-                                        name="mainContent"
-                                        render={({ field }) => (
-                                          <FormItem>
-                                            <FormLabel>Main Content/Body *</FormLabel>
-                                            <FormControl>
-                                              <Textarea 
-                                                {...field} 
-                                                placeholder="Describe the main purpose, key points, and any specific details you want to include in this document..."
-                                                className="min-h-32"
-                                                data-testid="textarea-main-content"
-                                              />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                        )}
-                                      />
-
-                                      {/* Contract/Application specific fields */}
-                                      {(activeTab === 'contracts' || activeTab === 'applications') && (
-                                        <>
+                                {documentFormConfigs[selectedDocumentType] ? (
+                                  <Form {...manualForm}>
+                                    <form onSubmit={manualForm.handleSubmit(handleManualSubmit)} className="space-y-6">
+                                      {/* Group fields by section */}
+                                      {Object.entries(
+                                        documentFormConfigs[selectedDocumentType].fields.reduce((sections, field) => {
+                                          if (!sections[field.section]) {
+                                            sections[field.section] = [];
+                                          }
+                                          sections[field.section].push(field);
+                                          return sections;
+                                        }, {} as Record<string, typeof documentFormConfigs[string]['fields']>)
+                                      ).map(([sectionName, fields]) => (
+                                        <div key={sectionName} className="space-y-4">
+                                          <h4 className="font-medium text-sm text-primary capitalize">
+                                            {sectionName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} Information
+                                          </h4>
                                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <FormField
-                                              control={manualForm.control}
-                                              name="effectiveDate"
-                                              render={({ field }) => (
-                                                <FormItem>
-                                                  <FormLabel>Effective Date</FormLabel>
-                                                  <FormControl>
-                                                    <Input {...field} type="date" data-testid="input-effective-date" />
-                                                  </FormControl>
-                                                  <FormMessage />
-                                                </FormItem>
-                                              )}
-                                            />
-
-                                            <FormField
-                                              control={manualForm.control}
-                                              name="jurisdiction"
-                                              render={({ field }) => (
-                                                <FormItem>
-                                                  <FormLabel>Governing State/Jurisdiction</FormLabel>
-                                                  <FormControl>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                      <SelectTrigger data-testid="select-jurisdiction">
-                                                        <SelectValue placeholder="Select State" />
-                                                      </SelectTrigger>
-                                                      <SelectContent>
-                                                        <SelectItem value="AL">Alabama</SelectItem>
-                                                        <SelectItem value="CA">California</SelectItem>
-                                                        <SelectItem value="FL">Florida</SelectItem>
-                                                        <SelectItem value="NY">New York</SelectItem>
-                                                        <SelectItem value="TX">Texas</SelectItem>
-                                                        <SelectItem value="other">Other</SelectItem>
-                                                      </SelectContent>
-                                                    </Select>
-                                                  </FormControl>
-                                                  <FormMessage />
-                                                </FormItem>
-                                              )}
-                                            />
+                                            {fields.map((field) => (
+                                              <div key={field.name} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+                                                <FormField
+                                                  control={manualForm.control}
+                                                  name={field.name}
+                                                  render={({ field: formField }) => (
+                                                    <FormItem>
+                                                      <FormLabel>
+                                                        {field.label}
+                                                        {field.required && ' *'}
+                                                      </FormLabel>
+                                                      <FormControl>
+                                                        {field.type === 'textarea' ? (
+                                                          <Textarea 
+                                                            {...formField} 
+                                                            placeholder={field.placeholder}
+                                                            className="min-h-20"
+                                                            data-testid={`textarea-${field.name}`}
+                                                          />
+                                                        ) : field.type === 'select' ? (
+                                                          <Select onValueChange={formField.onChange} defaultValue={formField.value}>
+                                                            <SelectTrigger data-testid={`select-${field.name}`}>
+                                                              <SelectValue placeholder={`Select ${field.label}`} />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                              {field.options?.map((option) => (
+                                                                <SelectItem key={option} value={option.toLowerCase().replace(/\s+/g, '-')}>
+                                                                  {option}
+                                                                </SelectItem>
+                                                              ))}
+                                                            </SelectContent>
+                                                          </Select>
+                                                        ) : (
+                                                          <Input 
+                                                            {...formField} 
+                                                            type={field.type}
+                                                            placeholder={field.placeholder}
+                                                            data-testid={`input-${field.name}`}
+                                                          />
+                                                        )}
+                                                      </FormControl>
+                                                      <FormMessage />
+                                                    </FormItem>
+                                                  )}
+                                                />
+                                              </div>
+                                            ))}
                                           </div>
+                                        </div>
+                                      ))}
 
-                                          {activeTab === 'contracts' && (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                              <FormField
-                                                control={manualForm.control}
-                                                name="contractValue"
-                                                render={({ field }) => (
-                                                  <FormItem>
-                                                    <FormLabel>Contract Value/Amount</FormLabel>
-                                                    <FormControl>
-                                                      <Input {...field} placeholder="$50,000" data-testid="input-contract-value" />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                  </FormItem>
-                                                )}
-                                              />
-
-                                              <FormField
-                                                control={manualForm.control}
-                                                name="paymentTerms"
-                                                render={({ field }) => (
-                                                  <FormItem>
-                                                    <FormLabel>Payment Terms</FormLabel>
-                                                    <FormControl>
-                                                      <Input {...field} placeholder="Net 30 days" data-testid="input-payment-terms" />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                  </FormItem>
-                                                )}
-                                              />
-                                            </div>
-                                          )}
-                                        </>
-                                      )}
-
-                                      <FormField
-                                        control={manualForm.control}
-                                        name="additionalClauses"
-                                        render={({ field }) => (
-                                          <FormItem>
-                                            <FormLabel>Additional Clauses/Requirements</FormLabel>
-                                            <FormControl>
-                                              <Textarea 
-                                                {...field} 
-                                                placeholder="Any specific clauses, conditions, or additional requirements to include..."
-                                                className="min-h-24"
-                                                data-testid="textarea-additional-clauses"
-                                              />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                        )}
-                                      />
-                                    </div>
-
-                                    <div className="border-t pt-4">
-                                      <Button 
-                                        type="submit" 
-                                        disabled={generateDocumentMutation.isPending}
-                                        className="w-full md:w-auto"
-                                        data-testid="button-generate-manual"
-                                      >
-                                        {generateDocumentMutation.isPending ? "Generating Professional Document..." : "Generate Professional USA Format Document"}
-                                      </Button>
-                                      <p className="text-xs text-muted-foreground mt-2">
-                                        * Required fields. Document will be generated following professional USA business standards.
-                                      </p>
-                                    </div>
-                                  </form>
-                                </Form>
+                                      <div className="border-t pt-4">
+                                        <Button 
+                                          type="submit" 
+                                          disabled={generateDocumentMutation.isPending}
+                                          className="w-full md:w-auto"
+                                          data-testid="button-generate-manual"
+                                        >
+                                          {generateDocumentMutation.isPending ? 
+                                            `Generating ${documentFormConfigs[selectedDocumentType]?.name}...` : 
+                                            `Generate Professional ${documentFormConfigs[selectedDocumentType]?.name}`
+                                          }
+                                        </Button>
+                                        <p className="text-xs text-muted-foreground mt-2">
+                                          * Required fields. Document will be generated following professional USA business standards for {documentFormConfigs[selectedDocumentType]?.name}.
+                                        </p>
+                                      </div>
+                                    </form>
+                                  </Form>
+                                ) : (
+                                  <div className="text-center py-8">
+                                    <p className="text-muted-foreground">
+                                      Personalized form configuration not available for this document type yet.
+                                    </p>
+                                  </div>
+                                )}
                               </CardContent>
                             </Card>
                           )}
