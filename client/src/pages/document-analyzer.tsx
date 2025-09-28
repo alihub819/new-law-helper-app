@@ -6,10 +6,12 @@ import { useToast } from "@/hooks/use-toast";
 import { SidebarLayout } from "@/components/layout/sidebar-layout";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Upload, FileText, AlertCircle, CheckCircle, TrendingUp, AlertTriangle, Lightbulb, Star, Scale } from "lucide-react";
+import { Upload, FileText, AlertCircle, CheckCircle, TrendingUp, AlertTriangle, Lightbulb, Star, Scale, Wand2, Copy, X } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface DocumentAnalysis {
   documentTitle: string;
@@ -53,6 +55,68 @@ export default function DocumentAnalyzer() {
   const [documentContent, setDocumentContent] = useState<string>('');
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  
+  // Improvement modal state
+  const [improvementModal, setImprovementModal] = useState<{
+    isOpen: boolean;
+    type: 'weak-point' | 'improvement' | null;
+    item: any;
+    suggestion: string;
+    isLoading: boolean;
+  }>({
+    isOpen: false,
+    type: null,
+    item: null,
+    suggestion: '',
+    isLoading: false
+  });
+
+  // Document improvement mutation
+  const improvementMutation = useMutation({
+    mutationFn: async ({ type, item, documentContent }: { type: string; item: any; documentContent: string }) => {
+      const res = await fetch("/api/improve-document-section", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type,
+          item,
+          documentContent
+        }),
+        credentials: "include"
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to generate improvement");
+      }
+      
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setImprovementModal(prev => ({
+        ...prev,
+        suggestion: data.improvedText,
+        isLoading: false
+      }));
+      toast({
+        title: "Improvement generated",
+        description: "AI has generated an improved version of this section.",
+      });
+    },
+    onError: (error: Error) => {
+      setImprovementModal(prev => ({
+        ...prev,
+        isLoading: false
+      }));
+      toast({
+        title: "Failed to generate improvement",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   // File upload mutation
   const uploadMutation = useMutation({
@@ -131,9 +195,50 @@ export default function DocumentAnalyzer() {
     setDocumentContent('');
     setAnalysis(null);
     setIsAnalyzing(false);
+    setImprovementModal({
+      isOpen: false,
+      type: null,
+      item: null,
+      suggestion: '',
+      isLoading: false
+    });
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const handleImproveItem = (type: 'weak-point' | 'improvement', item: any) => {
+    setImprovementModal({
+      isOpen: true,
+      type,
+      item,
+      suggestion: '',
+      isLoading: true
+    });
+    
+    improvementMutation.mutate({
+      type,
+      item,
+      documentContent
+    });
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied to clipboard",
+      description: "The improved text has been copied to your clipboard.",
+    });
+  };
+
+  const closeImprovementModal = () => {
+    setImprovementModal({
+      isOpen: false,
+      type: null,
+      item: null,
+      suggestion: '',
+      isLoading: false
+    });
   };
 
   const getQualityColor = (score: number) => {
@@ -342,6 +447,16 @@ export default function DocumentAnalyzer() {
                                 <span className="font-medium text-red-800">{point.point}</span>
                                 <Badge variant="outline" className="text-xs">{point.category}</Badge>
                                 {getPriorityBadge(point.severity)}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="ml-auto h-6 px-2 text-xs"
+                                  onClick={() => handleImproveItem('weak-point', point)}
+                                  data-testid={`button-improve-weak-${index}`}
+                                >
+                                  <Wand2 className="h-3 w-3 mr-1" />
+                                  Fix This
+                                </Button>
                               </div>
                               <p className="text-sm text-red-700 ml-6">{point.explanation}</p>
                             </div>
@@ -364,6 +479,16 @@ export default function DocumentAnalyzer() {
                                 <TrendingUp className="h-4 w-4 text-blue-600" />
                                 <span className="font-medium text-blue-800">{improvement.area}</span>
                                 {getPriorityBadge(improvement.priority)}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="ml-auto h-6 px-2 text-xs bg-white"
+                                  onClick={() => handleImproveItem('improvement', improvement)}
+                                  data-testid={`button-improve-suggestion-${index}`}
+                                >
+                                  <Wand2 className="h-3 w-3 mr-1" />
+                                  Show Example
+                                </Button>
                               </div>
                               <p className="text-sm text-blue-700 ml-6">{improvement.suggestion}</p>
                             </div>
@@ -417,6 +542,83 @@ export default function DocumentAnalyzer() {
             </div>
           )}
         </div>
+
+        {/* Improvement Modal */}
+        <Dialog open={improvementModal.isOpen} onOpenChange={closeImprovementModal}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Wand2 className="h-5 w-5" />
+                AI Document Improvement
+              </DialogTitle>
+              <DialogDescription>
+                {improvementModal.type === 'weak-point' 
+                  ? `AI-generated improvement for: "${improvementModal.item?.point}"`
+                  : `AI example for: "${improvementModal.item?.area}"`
+                }
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {improvementModal.isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <span className="ml-3">Generating improvement...</span>
+                </div>
+              ) : improvementModal.suggestion ? (
+                <div className="space-y-4">
+                  <div className="bg-muted/50 p-4 rounded-lg border">
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      Original Issue:
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {improvementModal.item?.explanation || improvementModal.item?.suggestion}
+                    </p>
+                  </div>
+                  
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-green-800 flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        AI Improved Version:
+                      </h4>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyToClipboard(improvementModal.suggestion)}
+                        data-testid="button-copy-improvement"
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copy
+                      </Button>
+                    </div>
+                    <Textarea
+                      value={improvementModal.suggestion}
+                      readOnly
+                      className="min-h-[200px] resize-none bg-white border-green-300"
+                      data-testid="textarea-improvement"
+                    />
+                  </div>
+                  
+                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-800">
+                      <strong>How to use:</strong> Copy the improved text above and replace the corresponding section in your document. 
+                      Review and modify as needed to match your specific requirements.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={closeImprovementModal} data-testid="button-close-improvement">
+                  <X className="h-4 w-4 mr-1" />
+                  Close
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </SidebarLayout>
   );

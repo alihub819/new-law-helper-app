@@ -487,6 +487,87 @@ Return the response in JSON format:
   }
 }
 
+export async function improveDocumentSection(
+  type: string, 
+  item: any, 
+  documentContent: string
+): Promise<{ improvedText: string; explanation: string }> {
+  try {
+    let prompt = '';
+    
+    if (type === 'weak-point') {
+      prompt = `You are an expert legal document editor. A document has been analyzed and a specific weak point has been identified. Your task is to provide an improved version of the relevant section.
+
+DOCUMENT CONTENT:
+${documentContent}
+
+WEAK POINT IDENTIFIED:
+- Issue: ${item.point}
+- Category: ${item.category}
+- Severity: ${item.severity}
+- Explanation: ${item.explanation}
+
+Please provide an improved version of the specific section or paragraph that addresses this weak point. Your response should:
+
+1. Identify the exact text that needs improvement
+2. Provide a professionally written replacement that fixes the identified issue
+3. Maintain the document's tone and purpose
+4. Use clear, legally appropriate language
+5. Follow USA professional document standards
+
+Respond with ONLY the improved text that can directly replace the problematic section. Do not include explanations or comments - just the clean, improved text that the user can copy and paste into their document.`;
+
+    } else if (type === 'improvement') {
+      prompt = `You are an expert legal document editor. A document has been analyzed and a specific improvement suggestion has been made. Your task is to provide a concrete example of how to implement this improvement.
+
+DOCUMENT CONTENT:
+${documentContent}
+
+IMPROVEMENT SUGGESTION:
+- Area: ${item.area}
+- Priority: ${item.priority}
+- Suggestion: ${item.suggestion}
+
+Please provide a specific example of improved text that implements this suggestion. Your response should:
+
+1. Create a concrete example that addresses the improvement area
+2. Demonstrate best practices for this type of document section
+3. Use professional, legally appropriate language
+4. Follow USA professional document standards
+5. Be directly applicable to the user's document
+
+Respond with ONLY the example improved text that demonstrates how to implement the suggestion. Do not include explanations or comments - just the clean, example text that shows the improvement in action.`;
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert legal document editor and attorney specializing in document improvement and professional writing. Provide only the improved text without any additional commentary or explanations."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ]
+    });
+
+    const improvedText = response.choices[0].message.content || '';
+    
+    return {
+      improvedText: improvedText.trim(),
+      explanation: type === 'weak-point' 
+        ? `Improved version addressing: ${item.point}` 
+        : `Example implementation for: ${item.area}`
+    };
+
+  } catch (error) {
+    console.error("OpenAI document improvement error:", error);
+    throw new Error("Failed to generate document improvement");
+  }
+}
+
 export async function analyzeDocument(documentContent: string, documentTitle: string): Promise<any> {
   try {
     const prompt = `You are an expert legal document analyst with extensive experience in reviewing business documents, contracts, letters, and legal filings. Analyze the following document and provide a comprehensive professional review.

@@ -9,7 +9,8 @@ import {
   answerLegalQuestion,
   performWebSearch,
   generateDocument,
-  analyzeDocument
+  analyzeDocument,
+  improveDocumentSection
 } from "./openai";
 import multer from "multer";
 
@@ -307,6 +308,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Document analysis error:", error);
       res.status(500).json({ error: "Failed to analyze document" });
+    }
+  });
+
+  // Document improvement endpoint
+  app.post("/api/improve-document-section", isAuthenticated, async (req, res) => {
+    try {
+      const { type, item, documentContent } = req.body;
+
+      if (!type || !item || !documentContent) {
+        return res.status(400).json({ error: "Missing required fields: type, item, documentContent" });
+      }
+
+      console.log("[DOCUMENT-IMPROVEMENT] Processing improvement request:", { 
+        type, 
+        itemPoint: item.point || item.area,
+        contentLength: documentContent.length 
+      });
+
+      // Generate improvement using AI
+      const improvement = await improveDocumentSection(type, item, documentContent);
+      
+      console.log("[DOCUMENT-IMPROVEMENT] Improvement generated:", { 
+        improvedTextLength: improvement.improvedText.length,
+        explanation: improvement.explanation
+      });
+
+      // Save to search history
+      await storage.createSearchHistory({
+        userId: req.user!.id,
+        type: 'document-improvement',
+        query: `${type}: ${item.point || item.area}`,
+        results: { improvement, type, item },
+      });
+
+      res.json(improvement);
+    } catch (error) {
+      console.error("Document improvement error:", error);
+      res.status(500).json({ error: "Failed to generate improvement" });
     }
   });
 
