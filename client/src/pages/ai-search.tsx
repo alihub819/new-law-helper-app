@@ -311,16 +311,17 @@ export default function AISearch() {
         {/* Enhanced Tab Navigation with Info Icons */}
         <div className="mb-6">
           <div className="mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">AI Legal Research Platform</h1>
-            <p className="text-muted-foreground text-sm md:text-base">Choose your AI-powered legal tool</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2" id="main-heading">AI Legal Research Platform</h1>
+            <p className="text-muted-foreground text-sm md:text-base" id="platform-description">Choose your AI-powered legal tool</p>
           </div>
           
           <TooltipProvider>
             <div className="border border-border rounded-lg bg-background p-2">
               {/* Mobile: Dropdown-style navigation */}
               <div className="block lg:hidden">
+                <Label htmlFor="mobile-tab-select" className="sr-only">Select a legal research tool</Label>
                 <Select value={activeTab} onValueChange={(value) => switchTab(value)}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full" id="mobile-tab-select" aria-label="Legal research tool selection">
                     <SelectValue>
                       <div className="flex items-center space-x-2">
                         {(() => {
@@ -357,7 +358,7 @@ export default function AISearch() {
 
               {/* Desktop: Tab-style navigation */}
               <div className="hidden lg:block">
-                <nav className="flex flex-wrap gap-1">
+                <nav className="flex flex-wrap gap-1" role="tablist" aria-label="Legal research tools">
                   {Object.values(tabsMetadata).map((tab) => {
                     const IconComponent = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -371,6 +372,10 @@ export default function AISearch() {
                               ? 'bg-primary text-primary-foreground shadow-sm'
                               : 'hover:bg-muted text-muted-foreground hover:text-foreground'
                           }`}
+                          role="tab"
+                          aria-selected={isActive}
+                          aria-controls={`tabpanel-${tab.id}`}
+                          id={`tab-${tab.id}`}
                           data-testid={`tab-${tab.id}`}
                         >
                           <IconComponent className="h-4 w-4" />
@@ -498,12 +503,21 @@ export default function AISearch() {
         {/* Tab Content */}
         <div className="space-y-4 md:space-y-6">
           {activeTab === 'legal-research' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+            <div 
+              className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6"
+              role="tabpanel"
+              id="tabpanel-legal-research"
+              aria-labelledby="tab-legal-research"
+              tabIndex={0}
+            >
               {/* Search Form */}
               <Card>
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg md:text-xl flex items-center space-x-2">
-                    <Search className="h-5 w-5" />
+                  <CardTitle 
+                    className="text-lg md:text-xl flex items-center space-x-2"
+                    id="legal-research-form-heading"
+                  >
+                    <Search className="h-5 w-5" aria-hidden="true" />
                     <span>AI Legal Research</span>
                   </CardTitle>
                   <p className="text-muted-foreground text-sm md:text-base">
@@ -513,22 +527,32 @@ export default function AISearch() {
                 <CardContent className="pt-0">
                   
                   <Form {...legalSearchForm}>
-                    <form onSubmit={legalSearchForm.handleSubmit(handleLegalSearch)} className="space-y-4">
+                    <form 
+                      onSubmit={legalSearchForm.handleSubmit(handleLegalSearch)} 
+                      className="space-y-4"
+                      aria-labelledby="legal-research-form-heading"
+                      role="search"
+                    >
                       <FormField
                         control={legalSearchForm.control}
                         name="query"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Legal Query</FormLabel>
+                            <FormLabel htmlFor="legal-query-input">Legal Query</FormLabel>
                             <FormControl>
                               <Textarea
+                                id="legal-query-input"
                                 placeholder="Enter your legal research question (e.g., 'contract breach remedies in California')"
                                 className="min-h-[100px]"
+                                aria-describedby="legal-query-description"
                                 data-testid="input-legal-query"
                                 {...field}
                               />
                             </FormControl>
-                            <FormMessage />
+                            <p id="legal-query-description" className="sr-only">
+                              Enter your legal research question to search U.S. statutes, case law, and regulations
+                            </p>
+                            <FormMessage role="alert" />
                           </FormItem>
                         )}
                       />
@@ -559,11 +583,22 @@ export default function AISearch() {
               {/* Search Results */}
               <Card>
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg md:text-xl">Search Results</CardTitle>
+                  <CardTitle 
+                    className="text-lg md:text-xl"
+                    id="legal-search-results-heading"
+                  >
+                    Search Results
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   {searchResults ? (
-                    <div className="space-y-4" data-testid="search-results">
+                    <div 
+                      className="space-y-4" 
+                      data-testid="search-results"
+                      role="region"
+                      aria-labelledby="legal-search-results-heading"
+                      aria-live="polite"
+                    >
                       <div className="text-sm text-muted-foreground mb-4">
                         Found {searchResults.totalResults || 0} results in {searchResults.searchTime || "0"} seconds
                       </div>
