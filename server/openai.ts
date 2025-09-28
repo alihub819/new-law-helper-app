@@ -486,3 +486,115 @@ Return the response in JSON format:
     throw new Error("Failed to generate document");
   }
 }
+
+export async function analyzeDocument(documentContent: string, documentTitle: string): Promise<any> {
+  try {
+    const prompt = `You are an expert legal document analyst with extensive experience in reviewing business documents, contracts, letters, and legal filings. Analyze the following document and provide a comprehensive professional review.
+
+DOCUMENT TITLE: ${documentTitle}
+DOCUMENT CONTENT:
+${documentContent}
+
+Provide a detailed analysis in JSON format with the following structure:
+
+{
+  "documentTitle": "${documentTitle}",
+  "documentType": "Determine the type of document (contract, letter, agreement, etc.)",
+  "overallQuality": {
+    "score": 85,
+    "grade": "B+",
+    "summary": "Overall assessment summary"
+  },
+  "strongPoints": [
+    {
+      "point": "Clear and concise language",
+      "explanation": "Detailed explanation of why this is a strength",
+      "category": "Clarity"
+    }
+  ],
+  "weakPoints": [
+    {
+      "point": "Missing essential clause",
+      "explanation": "Detailed explanation of the issue and its implications",
+      "category": "Legal Structure",
+      "severity": "high"
+    }
+  ],
+  "improvements": [
+    {
+      "area": "Termination Clauses",
+      "suggestion": "Specific actionable suggestion for improvement",
+      "priority": "high"
+    }
+  ],
+  "legalInsights": [
+    {
+      "insight": "Professional legal insight",
+      "type": "compliance",
+      "explanation": "Detailed explanation of the legal implication"
+    }
+  ],
+  "recommendations": [
+    "Final recommendation 1",
+    "Final recommendation 2"
+  ]
+}
+
+ANALYSIS GUIDELINES:
+1. STRONG POINTS - Identify what the document does well:
+   - Clear language and structure
+   - Proper legal formatting
+   - Complete information
+   - Good organization
+   - Appropriate tone
+
+2. WEAK POINTS - Identify areas of concern (rate severity as low/medium/high):
+   - Missing critical information
+   - Ambiguous language
+   - Legal vulnerabilities
+   - Formatting issues
+   - Unclear terms
+
+3. IMPROVEMENTS - Specific actionable suggestions (rate priority as low/medium/high):
+   - Add missing clauses
+   - Clarify ambiguous terms
+   - Improve structure
+   - Enhance legal protections
+   - Better formatting
+
+4. LEGAL INSIGHTS - Professional insights categorized as:
+   - compliance: Regulatory or legal compliance matters
+   - risk: Potential legal risks
+   - best-practice: Industry best practices
+   - warning: Important legal warnings
+
+5. QUALITY SCORING:
+   - 90-100: Excellent, professional-grade document
+   - 80-89: Good quality with minor improvements needed
+   - 70-79: Acceptable but needs several improvements
+   - 60-69: Below standard, significant issues
+   - Below 60: Poor quality, major revision needed
+
+Provide practical, actionable feedback that would be valuable to a legal professional or business person.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert legal document analyst and attorney with 20+ years of experience reviewing contracts, legal documents, and business correspondence. Provide thorough, professional analysis with practical insights."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("OpenAI document analysis error:", error);
+    throw new Error("Failed to analyze document");
+  }
+}

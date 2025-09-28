@@ -39,6 +39,13 @@ const navigationItems: NavigationItem[] = [
     icon: "fas fa-file-alt",
     path: "/document-generation/letters",
     testId: "nav-document-generation"
+  },
+  {
+    id: "document-analyzer",
+    label: "Document Analyzer",
+    icon: "fas fa-chart-line",
+    path: "/document-analyzer",
+    testId: "nav-document-analyzer"
   }
 ];
 
