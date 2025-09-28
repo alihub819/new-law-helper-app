@@ -496,16 +496,21 @@ export default function AISearch() {
         </div>
 
         {/* Tab Content */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {activeTab === 'legal-research' && (
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Search Form */}
               <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold mb-4">AI Legal Research</h2>
-                  <p className="text-muted-foreground mb-6">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg md:text-xl flex items-center space-x-2">
+                    <Search className="h-5 w-5" />
+                    <span>AI Legal Research</span>
+                  </CardTitle>
+                  <p className="text-muted-foreground text-sm md:text-base">
                     Search U.S. statutes, case law, and regulations using AI-powered analysis.
                   </p>
+                </CardHeader>
+                <CardContent className="pt-0">
                   
                   <Form {...legalSearchForm}>
                     <form onSubmit={legalSearchForm.handleSubmit(handleLegalSearch)} className="space-y-4">
@@ -553,8 +558,10 @@ export default function AISearch() {
 
               {/* Search Results */}
               <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Search Results</h3>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg md:text-xl">Search Results</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
                   {searchResults ? (
                     <div className="space-y-4" data-testid="search-results">
                       <div className="text-sm text-muted-foreground mb-4">
@@ -604,14 +611,19 @@ export default function AISearch() {
           )}
 
           {activeTab === 'brief-summarizer' && (
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Upload Form */}
               <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold mb-4">Brief Summarizer</h2>
-                  <p className="text-muted-foreground mb-6">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg md:text-xl flex items-center space-x-2">
+                    <FileText className="h-5 w-5" />
+                    <span>Brief Summarizer</span>
+                  </CardTitle>
+                  <p className="text-muted-foreground text-sm md:text-base">
                     Upload legal documents for AI-powered analysis and summarization.
                   </p>
+                </CardHeader>
+                <CardContent className="pt-0">
                   
                   <div className="space-y-4">
                     <div>
@@ -640,8 +652,10 @@ export default function AISearch() {
 
               {/* Summary Results */}
               <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Document Analysis</h3>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg md:text-xl">Document Analysis</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
                   {summaryResults ? (
                     <div className="space-y-4" data-testid="summary-results">
                       <div className="border border-border rounded-lg p-4">
@@ -700,14 +714,19 @@ export default function AISearch() {
           )}
 
           {activeTab === 'risk-analysis' && (
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Analysis Form */}
               <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold mb-4">Risk Analysis</h2>
-                  <p className="text-muted-foreground mb-6">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg md:text-xl flex items-center space-x-2">
+                    <TrendingUp className="h-5 w-5" />
+                    <span>Risk Analysis</span>
+                  </CardTitle>
+                  <p className="text-muted-foreground text-sm md:text-base">
                     Predict legal success chances based on case details and precedent data.
                   </p>
+                </CardHeader>
+                <CardContent className="pt-0">
                   
                   <Form {...riskAnalysisForm}>
                     <form onSubmit={riskAnalysisForm.handleSubmit(handleRiskAnalysis)} className="space-y-4">
@@ -819,8 +838,10 @@ export default function AISearch() {
 
               {/* Analysis Results */}
               <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Risk Assessment</h3>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg md:text-xl">Risk Assessment</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
                   {riskResults ? (
                     <div className="space-y-4" data-testid="risk-results">
                       {/* Success Probability */}
@@ -929,14 +950,19 @@ export default function AISearch() {
           )}
 
           {activeTab === 'law-agent' && (
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Law Agent Form */}
               <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold mb-4">Law Agent</h2>
-                  <p className="text-muted-foreground mb-6">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg md:text-xl flex items-center space-x-2">
+                    <Scale className="h-5 w-5" />
+                    <span>Law Agent</span>
+                  </CardTitle>
+                  <p className="text-muted-foreground text-sm md:text-base">
                     Ask any legal question and get comprehensive answers with references and citations.
                   </p>
+                </CardHeader>
+                <CardContent className="pt-0">
                   
                   <Form {...lawAgentForm}>
                     <form onSubmit={lawAgentForm.handleSubmit(handleLawAgentQuestion)} className="space-y-4">
@@ -984,8 +1010,10 @@ export default function AISearch() {
 
               {/* Law Agent Results */}
               <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Legal Answer</h3>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg md:text-xl">Legal Answer</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
                   {lawAgentResults ? (
                     <div className="space-y-4" data-testid="law-agent-results">
                       <div className="border border-border rounded-lg p-4">
@@ -1034,14 +1062,19 @@ export default function AISearch() {
           )}
 
           {activeTab === 'web-search' && (
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Web Search Form */}
               <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold mb-4">Legal Web Search</h2>
-                  <p className="text-muted-foreground mb-6">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg md:text-xl flex items-center space-x-2">
+                    <Globe className="h-5 w-5" />
+                    <span>Legal Web Search</span>
+                  </CardTitle>
+                  <p className="text-muted-foreground text-sm md:text-base">
                     Search the web for legal information, cases, and current legal news.
                   </p>
+                </CardHeader>
+                <CardContent className="pt-0">
                   
                   <Form {...webSearchForm}>
                     <form onSubmit={webSearchForm.handleSubmit(handleWebSearch)} className="space-y-4">
@@ -1088,8 +1121,10 @@ export default function AISearch() {
 
               {/* Web Search Results */}
               <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Search Results</h3>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg md:text-xl">Search Results</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
                   {webSearchResults ? (
                     <div className="space-y-4" data-testid="web-search-results">
                       <div className="text-sm text-muted-foreground mb-4">
