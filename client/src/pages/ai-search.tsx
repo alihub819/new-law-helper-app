@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useMutation } from "@tanstack/react-query";
@@ -14,6 +17,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { FileUpload } from "@/components/ui/file-upload";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarLayout } from "@/components/layout/sidebar-layout";
+import { Search, FileText, TrendingUp, Scale, Globe, Info } from "lucide-react";
 
 interface LegalSearchForm {
   query: string;
@@ -33,6 +37,110 @@ interface LawAgentForm {
 interface WebSearchForm {
   query: string;
 }
+
+// Tab metadata for comprehensive tool information
+const tabsMetadata = {
+  'legal-research': {
+    id: 'legal-research',
+    title: 'AI Legal Research',
+    icon: Search,
+    shortDescription: 'Search legal databases',
+    description: 'Search through comprehensive U.S. legal databases including case law, statutes, regulations, and Supreme Court decisions.',
+    features: [
+      'Access to federal and state case law',
+      'Comprehensive statute and regulation search',
+      'Supreme Court decision database',
+      'Relevance scoring and citations',
+      'Advanced filtering options'
+    ],
+    useCases: [
+      'Finding relevant case precedents',
+      'Researching specific legal topics',
+      'Analyzing statutory requirements',
+      'Preparing legal briefs'
+    ]
+  },
+  'brief-summarizer': {
+    id: 'brief-summarizer',
+    title: 'Brief Summarizer',
+    icon: FileText,
+    shortDescription: 'AI document analysis',
+    description: 'Upload legal documents and get AI-powered summaries, key point extraction, and risk analysis.',
+    features: [
+      'PDF, DOC, and TXT file support',
+      'Key point extraction',
+      'Party identification',
+      'Financial terms analysis',
+      'Risk assessment'
+    ],
+    useCases: [
+      'Contract review and analysis',
+      'Legal brief summarization',
+      'Due diligence document review',
+      'Quick document understanding'
+    ]
+  },
+  'risk-analysis': {
+    id: 'risk-analysis',
+    title: 'Risk Analysis',
+    icon: TrendingUp,
+    shortDescription: 'Predict case outcomes',
+    description: 'Analyze your legal case and get AI-powered predictions on success probability, risk factors, and strategic recommendations.',
+    features: [
+      'Success probability calculation',
+      'Risk factor identification',
+      'Settlement range estimation',
+      'Strategic recommendations',
+      'Precedent analysis'
+    ],
+    useCases: [
+      'Case evaluation and strategy',
+      'Settlement negotiations',
+      'Litigation risk assessment',
+      'Client consultation preparation'
+    ]
+  },
+  'law-agent': {
+    id: 'law-agent',
+    title: 'Law Agent',
+    icon: Scale,
+    shortDescription: 'Legal Q&A assistant',
+    description: 'Ask any legal question and receive comprehensive answers with proper citations, references, and practical advice.',
+    features: [
+      'Comprehensive legal knowledge',
+      'Proper citations and references',
+      'Jurisdiction-specific guidance',
+      'Practical legal advice',
+      'Related concept suggestions'
+    ],
+    useCases: [
+      'Quick legal research',
+      'Understanding legal concepts',
+      'Getting jurisdictional guidance',
+      'Legal consultation support'
+    ]
+  },
+  'web-search': {
+    id: 'web-search',
+    title: 'Legal Web Search',
+    icon: Globe,
+    shortDescription: 'Current legal information',
+    description: 'Search the web for current legal information, news, updates, and trends with AI-powered summarization.',
+    features: [
+      'Real-time legal news search',
+      'Current legal developments',
+      'AI-generated summaries',
+      'Related query suggestions',
+      'Source credibility indicators'
+    ],
+    useCases: [
+      'Staying updated on legal changes',
+      'Finding recent court decisions',
+      'Researching legal trends',
+      'Current event legal analysis'
+    ]
+  }
+};
 
 export default function AISearch() {
   const { tab } = useParams<{ tab?: string }>();
@@ -199,77 +307,192 @@ export default function AISearch() {
 
   return (
     <SidebarLayout>
-      <div className="p-6">
-        {/* Tab Navigation */}
+      <div className="p-3 md:p-6">
+        {/* Enhanced Tab Navigation with Info Icons */}
         <div className="mb-6">
-          <div className="border-b border-border">
-            <nav className="-mb-px flex space-x-8">
-              <button
-                onClick={() => switchTab('legal-research')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'legal-research'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
-                }`}
-                data-testid="tab-legal-research"
-              >
-                <i className="fas fa-search mr-2"></i>
-                AI Legal Research
-              </button>
-              
-              <button
-                onClick={() => switchTab('brief-summarizer')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'brief-summarizer'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
-                }`}
-                data-testid="tab-brief-summarizer"
-              >
-                <i className="fas fa-file-text mr-2"></i>
-                Brief Summarizer
-              </button>
-              
-              <button
-                onClick={() => switchTab('risk-analysis')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'risk-analysis'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
-                }`}
-                data-testid="tab-risk-analysis"
-              >
-                <i className="fas fa-chart-line mr-2"></i>
-                Risk Analysis
-              </button>
-              
-              <button
-                onClick={() => switchTab('law-agent')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'law-agent'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
-                }`}
-                data-testid="tab-law-agent"
-              >
-                <i className="fas fa-gavel mr-2"></i>
-                Law Agent
-              </button>
-              
-              <button
-                onClick={() => switchTab('web-search')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'web-search'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
-                }`}
-                data-testid="tab-web-search"
-              >
-                <i className="fas fa-globe mr-2"></i>
-                Web Search
-              </button>
-            </nav>
+          <div className="mb-4">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">AI Legal Research Platform</h1>
+            <p className="text-muted-foreground text-sm md:text-base">Choose your AI-powered legal tool</p>
           </div>
+          
+          <TooltipProvider>
+            <div className="border border-border rounded-lg bg-background p-2">
+              {/* Mobile: Dropdown-style navigation */}
+              <div className="block lg:hidden">
+                <Select value={activeTab} onValueChange={(value) => switchTab(value)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      <div className="flex items-center space-x-2">
+                        {(() => {
+                          const tab = tabsMetadata[activeTab as keyof typeof tabsMetadata];
+                          const IconComponent = tab?.icon;
+                          return (
+                            <>
+                              {IconComponent && <IconComponent className="h-4 w-4" />}
+                              <span>{tab?.title}</span>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(tabsMetadata).map((tab) => {
+                      const IconComponent = tab.icon;
+                      return (
+                        <SelectItem key={tab.id} value={tab.id}>
+                          <div className="flex items-center space-x-2">
+                            <IconComponent className="h-4 w-4" />
+                            <div>
+                              <div className="font-medium">{tab.title}</div>
+                              <div className="text-xs text-muted-foreground">{tab.shortDescription}</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Desktop: Tab-style navigation */}
+              <div className="hidden lg:block">
+                <nav className="flex flex-wrap gap-1">
+                  {Object.values(tabsMetadata).map((tab) => {
+                    const IconComponent = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    
+                    return (
+                      <div key={tab.id} className="flex items-center">
+                        <button
+                          onClick={() => switchTab(tab.id)}
+                          className={`flex items-center space-x-2 px-4 py-3 rounded-md font-medium text-sm transition-all ${
+                            isActive
+                              ? 'bg-primary text-primary-foreground shadow-sm'
+                              : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                          }`}
+                          data-testid={`tab-${tab.id}`}
+                        >
+                          <IconComponent className="h-4 w-4" />
+                          <span className="hidden xl:inline">{tab.title}</span>
+                          <span className="xl:hidden">{tab.title.split(' ')[0]}</span>
+                        </button>
+                        
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 ml-1 hover:bg-muted"
+                              data-testid={`info-${tab.id}`}
+                            >
+                              <Info className="h-3 w-3" />
+                              <span className="sr-only">Info about {tab.title}</span>
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-md">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center space-x-2">
+                                <IconComponent className="h-5 w-5" />
+                                <span>{tab.title}</span>
+                              </DialogTitle>
+                              <DialogDescription className="text-left">
+                                {tab.description}
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="font-medium text-sm mb-2">Key Features:</h4>
+                                <ul className="space-y-1">
+                                  {tab.features.map((feature, index) => (
+                                    <li key={index} className="text-sm text-muted-foreground flex items-start">
+                                      <span className="mr-2 text-primary">•</span>
+                                      {feature}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-sm mb-2">Common Use Cases:</h4>
+                                <ul className="space-y-1">
+                                  {tab.useCases.map((useCase, index) => (
+                                    <li key={index} className="text-sm text-muted-foreground flex items-start">
+                                      <span className="mr-2 text-primary">•</span>
+                                      {useCase}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Mobile: Info button for selected tab */}
+              <div className="block lg:hidden mt-2">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      data-testid={`info-mobile-${activeTab}`}
+                    >
+                      <Info className="h-4 w-4 mr-2" />
+                      Learn about {tabsMetadata[activeTab as keyof typeof tabsMetadata]?.title}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-sm">
+                    {(() => {
+                      const tab = tabsMetadata[activeTab as keyof typeof tabsMetadata];
+                      const IconComponent = tab?.icon;
+                      return tab ? (
+                        <>
+                          <DialogHeader>
+                            <DialogTitle className="flex items-center space-x-2">
+                              {IconComponent && <IconComponent className="h-5 w-5" />}
+                              <span>{tab.title}</span>
+                            </DialogTitle>
+                            <DialogDescription className="text-left">
+                              {tab.description}
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <h4 className="font-medium text-sm mb-2">Key Features:</h4>
+                              <ul className="space-y-1">
+                                {tab.features.map((feature, index) => (
+                                  <li key={index} className="text-sm text-muted-foreground flex items-start">
+                                    <span className="mr-2 text-primary">•</span>
+                                    {feature}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-sm mb-2">Common Use Cases:</h4>
+                              <ul className="space-y-1">
+                                {tab.useCases.map((useCase, index) => (
+                                  <li key={index} className="text-sm text-muted-foreground flex items-start">
+                                    <span className="mr-2 text-primary">•</span>
+                                    {useCase}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </>
+                      ) : null;
+                    })()}
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          </TooltipProvider>
         </div>
 
         {/* Tab Content */}
