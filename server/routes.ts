@@ -167,6 +167,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Quick Question endpoint
+  app.post("/api/quick-question", isAuthenticated, async (req, res) => {
+    try {
+      const { question } = req.body;
+      
+      if (!question) {
+        return res.status(400).json({ error: "Question is required" });
+      }
+
+      const answer = await answerLegalQuestion(question);
+      
+      // Save to search history
+      await storage.createSearchHistory({
+        userId: req.user!.id,
+        type: 'quick-question',
+        query: question,
+        results: { answer },
+      });
+
+      res.json({ answer });
+    } catch (error) {
+      console.error("Quick question error:", error);
+      res.status(500).json({ error: "Failed to answer question" });
+    }
+  });
+
   // Get search history
   app.get("/api/search-history", isAuthenticated, async (req, res) => {
     try {
