@@ -23,7 +23,7 @@ const navigationItems: NavigationItem[] = [
     id: "dashboard",
     label: "Dashboard",
     icon: "fas fa-tachometer-alt",
-    path: "/",
+    path: "/dashboard",
     testId: "nav-dashboard"
   },
   {
@@ -68,8 +68,8 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
   };
 
   const isActive = (path: string) => {
-    if (path === "/") {
-      return location === "/";
+    if (path === "/dashboard") {
+      return location === "/dashboard";
     }
     return location.startsWith(path);
   };
@@ -86,7 +86,7 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
       <div className="p-4 md:p-6 border-b border-border">
         <div className="flex items-center space-x-3">
           <i className="fas fa-balance-scale text-xl md:text-2xl text-primary"></i>
-          <h1 className="text-lg md:text-xl font-semibold text-foreground">LawHub</h1>
+          <h1 className="text-lg md:text-xl font-semibold text-foreground">LawHelper</h1>
         </div>
       </div>
 
@@ -182,7 +182,7 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
                 
                 <div>
                   <h2 className="text-base md:text-lg font-semibold text-foreground">
-                    {navigationItems.find(item => isActive(item.path))?.label || "LawHub"}
+                    {navigationItems.find(item => isActive(item.path))?.label || "LawHelper"}
                   </h2>
                   <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
                     AI-powered legal research platform
