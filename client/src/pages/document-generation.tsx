@@ -653,64 +653,88 @@ export default function DocumentGeneration() {
                           {inputMethod === 'manual' && (
                             <Card>
                               <CardHeader>
-                                <CardTitle className="text-base">Manual Form Fields</CardTitle>
+                                <CardTitle className="text-base">Manual Form Fields - Professional USA Format</CardTitle>
+                                <p className="text-sm text-muted-foreground">
+                                  Fill out the fields below to generate a professionally formatted {selectedDocumentType} following USA standards
+                                </p>
                               </CardHeader>
                               <CardContent>
                                 <Form {...manualForm}>
-                                  <form onSubmit={manualForm.handleSubmit(handleManualSubmit)} className="space-y-4">
-                                    {/* Dynamic form fields based on document type */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                      {/* Basic fields for demonstration */}
-                                      <FormField
-                                        control={manualForm.control}
-                                        name="recipientName"
-                                        render={({ field }) => (
-                                          <FormItem>
-                                            <FormLabel>Recipient Name</FormLabel>
-                                            <FormControl>
-                                              <Input {...field} data-testid="input-recipient-name" />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                        )}
-                                      />
+                                  <form onSubmit={manualForm.handleSubmit(handleManualSubmit)} className="space-y-6">
+                                    {/* Document Header Information */}
+                                    <div className="space-y-4">
+                                      <h4 className="font-medium text-sm text-primary">Document Header Information</h4>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <FormField
+                                          control={manualForm.control}
+                                          name="senderName"
+                                          render={({ field }) => (
+                                            <FormItem>
+                                              <FormLabel>Your Full Name *</FormLabel>
+                                              <FormControl>
+                                                <Input {...field} placeholder="John Smith" data-testid="input-sender-name" />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
+
+                                        <FormField
+                                          control={manualForm.control}
+                                          name="senderTitle"
+                                          render={({ field }) => (
+                                            <FormItem>
+                                              <FormLabel>Your Title/Position</FormLabel>
+                                              <FormControl>
+                                                <Input {...field} placeholder="Attorney at Law" data-testid="input-sender-title" />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
+
+                                        <FormField
+                                          control={manualForm.control}
+                                          name="senderCompany"
+                                          render={({ field }) => (
+                                            <FormItem>
+                                              <FormLabel>Your Company/Organization</FormLabel>
+                                              <FormControl>
+                                                <Input {...field} placeholder="Smith & Associates Law Firm" data-testid="input-sender-company" />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
+
+                                        <FormField
+                                          control={manualForm.control}
+                                          name="senderPhone"
+                                          render={({ field }) => (
+                                            <FormItem>
+                                              <FormLabel>Your Phone Number</FormLabel>
+                                              <FormControl>
+                                                <Input {...field} placeholder="(555) 123-4567" data-testid="input-sender-phone" />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
+                                      </div>
 
                                       <FormField
                                         control={manualForm.control}
-                                        name="senderName"
+                                        name="senderAddress"
                                         render={({ field }) => (
                                           <FormItem>
-                                            <FormLabel>Your Name</FormLabel>
+                                            <FormLabel>Your Complete Address</FormLabel>
                                             <FormControl>
-                                              <Input {...field} data-testid="input-sender-name" />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                        )}
-                                      />
-
-                                      <FormField
-                                        control={manualForm.control}
-                                        name="subject"
-                                        render={({ field }) => (
-                                          <FormItem>
-                                            <FormLabel>Subject/Purpose</FormLabel>
-                                            <FormControl>
-                                              <Input {...field} data-testid="input-subject" />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                        )}
-                                      />
-
-                                      <FormField
-                                        control={manualForm.control}
-                                        name="organization"
-                                        render={({ field }) => (
-                                          <FormItem>
-                                            <FormLabel>Organization</FormLabel>
-                                            <FormControl>
-                                              <Input {...field} data-testid="input-organization" />
+                                              <Textarea 
+                                                {...field} 
+                                                placeholder="123 Main Street&#10;Suite 100&#10;New York, NY 10001"
+                                                className="min-h-20"
+                                                data-testid="textarea-sender-address"
+                                              />
                                             </FormControl>
                                             <FormMessage />
                                           </FormItem>
@@ -718,32 +742,251 @@ export default function DocumentGeneration() {
                                       />
                                     </div>
 
-                                    <FormField
-                                      control={manualForm.control}
-                                      name="details"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>Additional Details</FormLabel>
-                                          <FormControl>
-                                            <Textarea 
-                                              {...field} 
-                                              placeholder="Provide any additional details or specific requirements..."
-                                              className="min-h-24"
-                                              data-testid="textarea-details"
-                                            />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
+                                    {/* Recipient Information */}
+                                    <div className="space-y-4">
+                                      <h4 className="font-medium text-sm text-primary">Recipient Information</h4>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <FormField
+                                          control={manualForm.control}
+                                          name="recipientName"
+                                          render={({ field }) => (
+                                            <FormItem>
+                                              <FormLabel>Recipient Full Name *</FormLabel>
+                                              <FormControl>
+                                                <Input {...field} placeholder="Jane Doe" data-testid="input-recipient-name" />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
 
-                                    <Button 
-                                      type="submit" 
-                                      disabled={generateDocumentMutation.isPending}
-                                      data-testid="button-generate-manual"
-                                    >
-                                      {generateDocumentMutation.isPending ? "Generating..." : "Generate Document"}
-                                    </Button>
+                                        <FormField
+                                          control={manualForm.control}
+                                          name="recipientTitle"
+                                          render={({ field }) => (
+                                            <FormItem>
+                                              <FormLabel>Recipient Title/Position</FormLabel>
+                                              <FormControl>
+                                                <Input {...field} placeholder="Hiring Manager" data-testid="input-recipient-title" />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
+
+                                        <FormField
+                                          control={manualForm.control}
+                                          name="recipientCompany"
+                                          render={({ field }) => (
+                                            <FormItem>
+                                              <FormLabel>Recipient Company/Organization</FormLabel>
+                                              <FormControl>
+                                                <Input {...field} placeholder="ABC Corporation" data-testid="input-recipient-company" />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
+
+                                        <FormField
+                                          control={manualForm.control}
+                                          name="recipientEmail"
+                                          render={({ field }) => (
+                                            <FormItem>
+                                              <FormLabel>Recipient Email</FormLabel>
+                                              <FormControl>
+                                                <Input {...field} placeholder="jane.doe@company.com" data-testid="input-recipient-email" />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
+                                      </div>
+
+                                      <FormField
+                                        control={manualForm.control}
+                                        name="recipientAddress"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Recipient Complete Address</FormLabel>
+                                            <FormControl>
+                                              <Textarea 
+                                                {...field} 
+                                                placeholder="456 Business Ave&#10;Floor 5&#10;Los Angeles, CA 90210"
+                                                className="min-h-20"
+                                                data-testid="textarea-recipient-address"
+                                              />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                    </div>
+
+                                    {/* Document Content */}
+                                    <div className="space-y-4">
+                                      <h4 className="font-medium text-sm text-primary">Document Content</h4>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <FormField
+                                          control={manualForm.control}
+                                          name="subject"
+                                          render={({ field }) => (
+                                            <FormItem>
+                                              <FormLabel>Subject/Purpose *</FormLabel>
+                                              <FormControl>
+                                                <Input {...field} placeholder="Re: Application for Senior Attorney Position" data-testid="input-subject" />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
+
+                                        <FormField
+                                          control={manualForm.control}
+                                          name="documentDate"
+                                          render={({ field }) => (
+                                            <FormItem>
+                                              <FormLabel>Document Date</FormLabel>
+                                              <FormControl>
+                                                <Input {...field} type="date" data-testid="input-document-date" />
+                                              </FormControl>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
+                                      </div>
+
+                                      <FormField
+                                        control={manualForm.control}
+                                        name="mainContent"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Main Content/Body *</FormLabel>
+                                            <FormControl>
+                                              <Textarea 
+                                                {...field} 
+                                                placeholder="Describe the main purpose, key points, and any specific details you want to include in this document..."
+                                                className="min-h-32"
+                                                data-testid="textarea-main-content"
+                                              />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+
+                                      {/* Contract/Application specific fields */}
+                                      {(activeTab === 'contracts' || activeTab === 'applications') && (
+                                        <>
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <FormField
+                                              control={manualForm.control}
+                                              name="effectiveDate"
+                                              render={({ field }) => (
+                                                <FormItem>
+                                                  <FormLabel>Effective Date</FormLabel>
+                                                  <FormControl>
+                                                    <Input {...field} type="date" data-testid="input-effective-date" />
+                                                  </FormControl>
+                                                  <FormMessage />
+                                                </FormItem>
+                                              )}
+                                            />
+
+                                            <FormField
+                                              control={manualForm.control}
+                                              name="jurisdiction"
+                                              render={({ field }) => (
+                                                <FormItem>
+                                                  <FormLabel>Governing State/Jurisdiction</FormLabel>
+                                                  <FormControl>
+                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                      <SelectTrigger data-testid="select-jurisdiction">
+                                                        <SelectValue placeholder="Select State" />
+                                                      </SelectTrigger>
+                                                      <SelectContent>
+                                                        <SelectItem value="AL">Alabama</SelectItem>
+                                                        <SelectItem value="CA">California</SelectItem>
+                                                        <SelectItem value="FL">Florida</SelectItem>
+                                                        <SelectItem value="NY">New York</SelectItem>
+                                                        <SelectItem value="TX">Texas</SelectItem>
+                                                        <SelectItem value="other">Other</SelectItem>
+                                                      </SelectContent>
+                                                    </Select>
+                                                  </FormControl>
+                                                  <FormMessage />
+                                                </FormItem>
+                                              )}
+                                            />
+                                          </div>
+
+                                          {activeTab === 'contracts' && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                              <FormField
+                                                control={manualForm.control}
+                                                name="contractValue"
+                                                render={({ field }) => (
+                                                  <FormItem>
+                                                    <FormLabel>Contract Value/Amount</FormLabel>
+                                                    <FormControl>
+                                                      <Input {...field} placeholder="$50,000" data-testid="input-contract-value" />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+
+                                              <FormField
+                                                control={manualForm.control}
+                                                name="paymentTerms"
+                                                render={({ field }) => (
+                                                  <FormItem>
+                                                    <FormLabel>Payment Terms</FormLabel>
+                                                    <FormControl>
+                                                      <Input {...field} placeholder="Net 30 days" data-testid="input-payment-terms" />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+                                            </div>
+                                          )}
+                                        </>
+                                      )}
+
+                                      <FormField
+                                        control={manualForm.control}
+                                        name="additionalClauses"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Additional Clauses/Requirements</FormLabel>
+                                            <FormControl>
+                                              <Textarea 
+                                                {...field} 
+                                                placeholder="Any specific clauses, conditions, or additional requirements to include..."
+                                                className="min-h-24"
+                                                data-testid="textarea-additional-clauses"
+                                              />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                    </div>
+
+                                    <div className="border-t pt-4">
+                                      <Button 
+                                        type="submit" 
+                                        disabled={generateDocumentMutation.isPending}
+                                        className="w-full md:w-auto"
+                                        data-testid="button-generate-manual"
+                                      >
+                                        {generateDocumentMutation.isPending ? "Generating Professional Document..." : "Generate Professional USA Format Document"}
+                                      </Button>
+                                      <p className="text-xs text-muted-foreground mt-2">
+                                        * Required fields. Document will be generated following professional USA business standards.
+                                      </p>
+                                    </div>
                                   </form>
                                 </Form>
                               </CardContent>

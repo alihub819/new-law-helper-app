@@ -285,32 +285,55 @@ export async function generateDocument(documentType: string, inputMethod: 'voice
         .join(', ');
     }
 
-    const prompt = `You are a professional document generation specialist. Generate a ${documentType} document following international USA standards for formatting, structure, and content.
+    const prompt = `You are a professional document generation specialist with expertise in USA business and legal document standards. Generate a ${documentType} document following strict USA professional formatting and content standards.
 
 Document Type: ${documentType}
 Input Method: ${inputMethod}
 Content/Requirements: ${contentDescription}
 
-Generate a complete, professional document that follows these requirements:
+CRITICAL FORMATTING REQUIREMENTS - USA STANDARDS:
 
-1. FORMATTING STANDARDS:
-   - Use proper USA business letter format if applicable
-   - Include appropriate headers, dates, and signatures lines
-   - Use professional spacing and paragraph structure
-   - Follow international business correspondence standards
+1. DOCUMENT HEADER (USA Business Format):
+   - Sender's full name and title on first line
+   - Company/Organization name on second line  
+   - Complete address in proper USA format (Street, Suite/Unit, City, State ZIP)
+   - Phone number in USA format: (XXX) XXX-XXXX
+   - Email address if applicable
+   - Date in USA format: Month DD, YYYY
 
-2. CONTENT REQUIREMENTS:
-   - Professional tone and language
-   - Legally appropriate terminology where applicable
-   - Include all necessary sections and clauses
-   - Ensure compliance with USA document standards
-   - Add proper legal disclaimers if required
+2. RECIPIENT SECTION (USA Business Format):
+   - Recipient's full name and title
+   - Company/Organization name
+   - Complete address in USA format
+   - Proper salutation: "Dear Mr./Ms./Dr. [Last Name]:" or "Dear Hiring Manager:"
 
-3. STRUCTURE REQUIREMENTS:
-   - Clear, logical flow
-   - Proper introduction, body, and conclusion
-   - Professional closing and signature sections
-   - Include date and contact information placeholders
+3. DOCUMENT BODY (USA Professional Standards):
+   - Subject line format: "Re: [Subject]" for letters, "Subject: [Subject]" for applications
+   - Professional opening paragraph stating purpose
+   - Clear, concise body paragraphs with specific information
+   - Logical flow and proper transitions between paragraphs
+   - Professional tone throughout
+
+4. CLOSING SECTION (USA Business Standards):
+   - Professional closing: "Sincerely," "Best regards," or "Respectfully,"
+   - Four line spaces for handwritten signature
+   - Typed name
+   - Title/Position if applicable
+   - Enclosures notation if applicable: "Enclosures: [list items]"
+
+5. LEGAL/CONTRACT SPECIFIC (If Applicable):
+   - Governing law clause with specific state
+   - Proper contract clauses and terminology
+   - Signatures section with date lines
+   - Witness lines if required
+   - Notarization section if needed
+
+6. APPLICATION SPECIFIC (If Applicable):
+   - Official application number or reference
+   - Required fields clearly labeled
+   - Government compliance statements
+   - Submission instructions
+   - Required documentation lists
 
 Return the response in JSON format:
 {
