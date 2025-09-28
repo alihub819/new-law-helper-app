@@ -1,8 +1,8 @@
-# LawHub - AI-Powered Legal Research Platform
+# LawHelper - AI-Powered Legal Research Platform
 
 ## Overview
 
-LawHub is a modern legal research platform that leverages artificial intelligence to provide legal professionals with comprehensive research tools. The application features AI-powered legal search, document analysis, risk assessment, and brief summarization capabilities. Built as a full-stack web application, it combines a React frontend with an Express backend, using PostgreSQL for data persistence and OpenAI's GPT models for legal analysis.
+LawHelper is a modern legal research platform that leverages artificial intelligence to provide legal professionals with comprehensive research tools. The application features AI-powered legal search, document analysis, risk assessment, and brief summarization capabilities. Built as a full-stack web application, it combines a React frontend with an Express backend, using PostgreSQL for data persistence and OpenAI's GPT models for legal analysis.
 
 ## User Preferences
 

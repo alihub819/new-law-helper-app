@@ -155,7 +155,7 @@ export default function AuthPage() {
           <div className="max-w-md">
             <div className="mb-8">
               <i className="fas fa-balance-scale text-4xl text-primary-foreground mb-4"></i>
-              <h1 className="text-4xl font-bold text-primary-foreground mb-4">LawHub</h1>
+              <h1 className="text-4xl font-bold text-primary-foreground mb-4">LawHelper</h1>
               <p className="text-lg text-blue-100">AI-powered legal research platform designed for modern legal professionals</p>
             </div>
             
@@ -184,7 +184,7 @@ export default function AuthPage() {
               <Card className="bg-card rounded-lg shadow-lg">
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl font-semibold">Welcome Back</CardTitle>
-                  <CardDescription>Sign in to your LawHub account</CardDescription>
+                  <CardDescription>Sign in to your LawHelper account</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleLogin} className="space-y-6">
@@ -253,7 +253,7 @@ export default function AuthPage() {
               <Card className="bg-card rounded-lg shadow-lg">
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl font-semibold">Create Account</CardTitle>
-                  <CardDescription>Join LawHub today</CardDescription>
+                  <CardDescription>Join LawHelper today</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleRegister} className="space-y-6">
