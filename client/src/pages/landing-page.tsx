@@ -653,6 +653,161 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* CEO Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-600 via-purple-700 to-blue-800 relative overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0">
+          <motion.div
+            className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.6, 0.3]
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute bottom-10 right-10 w-24 h-24 bg-white/10 rounded-full"
+            animate={{ 
+              scale: [1, 1.3, 1],
+              opacity: [0.2, 0.5, 0.2]
+            }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          />
+        </div>
+
+        <div className="max-w-6xl mx-auto relative z-10">
+          <motion.div
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
+          >
+            {/* Left Column - CEO Image */}
+            <motion.div
+              variants={slideInLeft}
+              className="relative"
+            >
+              <div className="relative">
+                {/* Decorative background circle */}
+                <motion.div 
+                  className="absolute -inset-8 bg-gradient-to-r from-white/20 to-white/10 rounded-full"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                />
+                
+                {/* CEO Image */}
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className="relative z-10"
+                >
+                  <img
+                    src="https://res.cloudinary.com/dsex1a9tu/image/upload/v1759074618/Screenshot_2025-09-28_at_8.44.45_PM_z6gaop.png"
+                    alt="Jasmel Acosta - CEO and AI Entrepreneur"
+                    className="w-80 h-80 lg:w-96 lg:h-96 object-cover rounded-3xl shadow-2xl border-4 border-white/20 mx-auto"
+                  />
+                </motion.div>
+                
+                {/* Floating badges */}
+                <motion.div
+                  className="absolute -top-4 -right-4 bg-white text-blue-600 px-4 py-2 rounded-full shadow-lg font-semibold"
+                  initial={{ opacity: 0, scale: 0 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring" }}
+                >
+                  CEO & Founder
+                </motion.div>
+                
+                <motion.div
+                  className="absolute -bottom-4 -left-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full shadow-lg font-semibold"
+                  initial={{ opacity: 0, scale: 0 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.7, type: "spring" }}
+                >
+                  AI Pioneer
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Right Column - CEO Content */}
+            <motion.div
+              variants={slideInRight}
+              className="text-white space-y-6"
+            >
+              <motion.div variants={fadeInUp}>
+                <Badge className="mb-4 bg-white/20 text-white px-6 py-3 text-base border-white/30">
+                  <Users className="h-5 w-5 mr-2" />
+                  Leadership & Vision
+                </Badge>
+              </motion.div>
+
+              <motion.h2 
+                className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight"
+                variants={fadeInUp}
+              >
+                Meet Our 
+                <span className="block bg-gradient-to-r from-yellow-300 to-orange-400 bg-clip-text text-transparent">
+                  Visionary Leader
+                </span>
+              </motion.h2>
+
+              <motion.div 
+                className="space-y-4"
+                variants={fadeInUp}
+              >
+                <h3 className="text-2xl md:text-3xl font-semibold text-yellow-300">
+                  Jasmel Acosta
+                </h3>
+                <p className="text-lg md:text-xl text-blue-100 font-medium">
+                  AI Expert & Serial Entrepreneur
+                </p>
+              </motion.div>
+
+              <motion.p 
+                className="text-lg md:text-xl text-blue-100 leading-relaxed"
+                variants={fadeInUp}
+              >
+                With over a decade of experience in artificial intelligence and legal technology, 
+                Jasmel has dedicated his career to revolutionizing how legal professionals work. 
+                His vision for LawHelper stems from a deep understanding of both AI capabilities 
+                and the real-world challenges facing modern law practices.
+              </motion.p>
+
+              <motion.div 
+                className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4"
+                variants={fadeInUp}
+              >
+                {[
+                  { number: "10+", label: "Years in AI", icon: Brain },
+                  { number: "50K+", label: "Lawyers Helped", icon: Users },
+                  { number: "15+", label: "Awards Won", icon: Award }
+                ].map((stat, index) => (
+                  <motion.div
+                    key={stat.label}
+                    className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/20"
+                    whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.15)" }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    <stat.icon className="h-8 w-8 text-yellow-300 mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-white">{stat.number}</div>
+                    <div className="text-sm text-blue-200">{stat.label}</div>
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              <motion.blockquote 
+                className="border-l-4 border-yellow-300 pl-6 italic text-lg text-blue-100"
+                variants={fadeInUp}
+              >
+                "Our mission is to democratize access to intelligent legal tools, empowering every lawyer 
+                to deliver exceptional results while focusing on what truly matters - serving their clients."
+              </motion.blockquote>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Testimonials Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-800 dark:to-slate-900">
         <div className="max-w-7xl mx-auto">
