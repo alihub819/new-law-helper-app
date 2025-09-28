@@ -45,6 +45,48 @@ interface DocumentAnalysis {
   recommendations: string[];
 }
 
+// Format document content to preserve formatting
+const formatDocumentContent = (content: string): string => {
+  if (!content) return '';
+  
+  // Split content into lines and preserve formatting
+  const lines = content.split('\n');
+  let formattedContent = '';
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Skip empty lines at the beginning
+    if (!line && formattedContent === '') continue;
+    
+    // Handle different types of content
+    if (line.startsWith('[Document:') && line.endsWith(']')) {
+      // Document header - skip or style differently
+      continue;
+    } else if (line.match(/^[A-Z][A-Z\s]+$/)) {
+      // All caps lines (likely headers)
+      formattedContent += `<h3 style="font-weight: bold; margin: 20px 0 10px 0; text-transform: uppercase; font-size: 16px;">${line}</h3>`;
+    } else if (line.match(/^[A-Z][a-zA-Z\s]+:$/) || line.match(/^\d+\./)) {
+      // Section headers or numbered items
+      formattedContent += `<h4 style="font-weight: bold; margin: 15px 0 8px 0; font-size: 15px;">${line}</h4>`;
+    } else if (line.startsWith('Dear ') || line.startsWith('To:') || line.startsWith('From:') || line.startsWith('Date:') || line.startsWith('Subject:')) {
+      // Letter headers
+      formattedContent += `<p style="margin: 8px 0; font-weight: ${line.startsWith('Dear') ? 'normal' : 'bold'};">${line}</p>`;
+    } else if (line.match(/^\s*[-•]\s/)) {
+      // Bullet points
+      formattedContent += `<p style="margin: 5px 0 5px 20px;">${line}</p>`;
+    } else if (line.length > 0) {
+      // Regular paragraphs
+      formattedContent += `<p style="margin: 12px 0; text-align: justify;">${line}</p>`;
+    } else {
+      // Empty lines for spacing
+      formattedContent += '<br/>';
+    }
+  }
+  
+  return formattedContent || content.replace(/\n/g, '<br/>');
+};
+
 export default function DocumentAnalyzer() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -241,6 +283,7 @@ export default function DocumentAnalyzer() {
     });
   };
 
+
   const getQualityColor = (score: number) => {
     if (score >= 85) return "text-green-600 bg-green-50 border-green-200";
     if (score >= 70) return "text-blue-600 bg-blue-50 border-blue-200";
@@ -374,10 +417,40 @@ export default function DocumentAnalyzer() {
                 </CardHeader>
                 <CardContent className="flex-1 overflow-hidden">
                   <div 
-                    className="h-full overflow-auto bg-muted/20 p-4 rounded-lg border text-sm font-mono leading-relaxed"
+                    className="h-full overflow-auto bg-white p-6 rounded-lg border shadow-sm"
+                    style={{ fontFamily: 'Times, "Times New Roman", serif' }}
                     data-testid="document-content"
                   >
-                    {documentContent || "Document content will appear here..."}
+                    {documentContent ? (
+                      <div className="document-preview">
+                        <div className="mb-4 pb-2 border-b border-gray-200">
+                          <h3 className="text-lg font-semibold text-gray-800">
+                            {uploadedFile?.name || "Document Preview"}
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            {uploadedFile?.type} • {Math.round((uploadedFile?.size || 0) / 1024)} KB
+                          </p>
+                        </div>
+                        <div 
+                          className="prose prose-sm max-w-none leading-relaxed text-gray-900"
+                          style={{
+                            fontSize: '14px',
+                            lineHeight: '1.6',
+                            fontFamily: 'Times, "Times New Roman", serif'
+                          }}
+                          dangerouslySetInnerHTML={{
+                            __html: formatDocumentContent(documentContent)
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-500">
+                        <div className="text-center">
+                          <FileText className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                          <p>Document content will appear here...</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

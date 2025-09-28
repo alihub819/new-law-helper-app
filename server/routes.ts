@@ -266,12 +266,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.file.mimetype === 'text/plain') {
         documentContent = fileBuffer.toString('utf-8');
       } else if (req.file.mimetype.includes('word') || req.file.mimetype.includes('document')) {
-        // For Word documents, we'll extract a simplified version
-        // In a real implementation, you'd use a library like mammoth.js
-        documentContent = `[Document: ${fileName}]\n\nThis is a Word document. For demonstration purposes, this represents the extracted text content of your uploaded document. In a production environment, this would contain the actual extracted text from your Word document with proper formatting and structure preserved.`;
+        // For Word documents, we'll create a formatted demo version
+        documentContent = `BUSINESS LETTER SAMPLE
+
+[Company Letterhead Area]
+
+Date: ${new Date().toLocaleDateString('en-US', { 
+  year: 'numeric', 
+  month: 'long', 
+  day: 'numeric' 
+})}
+
+[Recipient Name]
+[Recipient Title]
+[Company Name]
+[Address Line 1]
+[Address Line 2]
+[City, State ZIP Code]
+
+Dear [Recipient Name],
+
+I am writing to [state the purpose of your letter clearly and concisely]. This document demonstrates how a properly formatted business letter should appear with appropriate spacing, professional tone, and clear structure.
+
+BODY PARAGRAPHS:
+
+The main body of your letter should contain the essential information you want to convey. Each paragraph should focus on a specific point or topic. Use clear, professional language that is appropriate for your audience.
+
+• First key point or important information
+• Second key point with supporting details  
+• Third key point if applicable
+
+CONCLUSION:
+
+In closing, please feel free to contact me at [phone number] or [email address] if you have any questions or need additional information. I look forward to hearing from you soon.
+
+Sincerely,
+
+[Your Signature]
+[Your Printed Name]
+[Your Title]
+[Your Contact Information]
+
+---
+Note: This is a demonstration of a properly formatted business document. In a production environment, this would show the actual content of your uploaded Word document with preserved formatting, headers, and document structure.`;
       } else if (req.file.mimetype === 'application/pdf') {
-        // For PDF documents, similar approach
-        documentContent = `[Document: ${fileName}]\n\nThis is a PDF document. For demonstration purposes, this represents the extracted text content of your uploaded PDF. In a production environment, this would contain the actual extracted text from your PDF document with proper formatting and structure preserved.`;
+        // For PDF documents, create a formatted demo version
+        documentContent = `LEGAL DOCUMENT SAMPLE
+
+CONFIDENTIAL AGREEMENT
+
+PARTIES:
+Party A: [Company/Individual Name]
+Party B: [Company/Individual Name]
+
+EFFECTIVE DATE: ${new Date().toLocaleDateString()}
+
+WHEREAS, the parties wish to enter into this agreement for the following purposes:
+
+1. PURPOSE AND SCOPE
+   This agreement establishes the terms and conditions under which the parties will collaborate and share information.
+
+2. CONFIDENTIALITY OBLIGATIONS
+   Each party agrees to maintain the confidentiality of any proprietary information received from the other party.
+
+3. TERM AND TERMINATION
+   This agreement shall remain in effect for a period of [duration] unless terminated earlier in accordance with the provisions herein.
+
+4. GOVERNING LAW
+   This agreement shall be governed by the laws of [State/Country].
+
+ADDITIONAL TERMS:
+- All communications shall be in writing
+- Any modifications must be agreed upon by both parties
+- This agreement constitutes the entire understanding between the parties
+
+IN WITNESS WHEREOF, the parties have executed this agreement as of the date first written above.
+
+SIGNATURES:
+
+_________________________           _________________________
+[Party A Signature]                  [Party B Signature]
+[Printed Name]                       [Printed Name]
+[Title]                             [Title]
+[Date]                              [Date]
+
+---
+Note: This is a demonstration of a legal document format. In a production environment, this would display the actual content of your uploaded PDF document with preserved formatting, legal structure, and original text.`;
       } else {
         return res.status(400).json({ error: "Unsupported file type. Please upload a Word document, PDF, or text file." });
       }
