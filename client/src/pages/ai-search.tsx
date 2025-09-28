@@ -343,7 +343,7 @@ export default function AISearch() {
       const assistantMessage: ChatMessage = {
         id: Date.now().toString() + '_assistant',
         type: 'assistant',
-        content: data.answer,
+        content: data.answer?.answer || data.answer || "Sorry, I couldn't generate a response.",
         timestamp: new Date()
       };
       setChatMessages(prev => [...prev, assistantMessage]);

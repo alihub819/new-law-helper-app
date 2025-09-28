@@ -172,11 +172,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { question } = req.body;
       
+      console.log("[QUICK-QUESTION] Received question:", question);
+      
       if (!question) {
         return res.status(400).json({ error: "Question is required" });
       }
 
       const answer = await answerLegalQuestion(question);
+      console.log("[QUICK-QUESTION] OpenAI response:", JSON.stringify(answer, null, 2));
       
       // Save to search history
       await storage.createSearchHistory({
@@ -186,7 +189,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         results: { answer },
       });
 
-      res.json({ answer });
+      const response = { answer };
+      console.log("[QUICK-QUESTION] Sending response:", JSON.stringify(response, null, 2));
+      res.json(response);
     } catch (error) {
       console.error("Quick question error:", error);
       res.status(500).json({ error: "Failed to answer question" });
