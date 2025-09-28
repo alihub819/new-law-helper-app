@@ -11,11 +11,13 @@ import Dashboard from "@/pages/dashboard";
 import AISearch from "@/pages/ai-search";
 import DocumentGeneration from "@/pages/document-generation";
 import DocumentAnalyzer from "@/pages/document-analyzer";
+import LandingPage from "@/pages/landing-page";
 
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={Dashboard} />
+      <Route path="/" component={LandingPage} />
+      <ProtectedRoute path="/dashboard" component={Dashboard} />
       <ProtectedRoute path="/ai-search/:tab?" component={AISearch} />
       <ProtectedRoute path="/document-generation/:tab?" component={DocumentGeneration} />
       <ProtectedRoute path="/document-analyzer" component={DocumentAnalyzer} />
