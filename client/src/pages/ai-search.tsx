@@ -17,7 +17,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { FileUpload } from "@/components/ui/file-upload";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarLayout } from "@/components/layout/sidebar-layout";
-import { Search, FileText, TrendingUp, Scale, Globe, Info } from "lucide-react";
+import { Search, FileText, TrendingUp, Scale, Globe, Info, MessageCircle } from "lucide-react";
 
 interface LegalSearchForm {
   query: string;
@@ -36,6 +36,17 @@ interface LawAgentForm {
 
 interface WebSearchForm {
   query: string;
+}
+
+interface QuickQuestionForm {
+  question: string;
+}
+
+interface ChatMessage {
+  id: string;
+  type: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
 }
 
 // Tab metadata for comprehensive tool information
@@ -139,6 +150,26 @@ const tabsMetadata = {
       'Researching legal trends',
       'Current event legal analysis'
     ]
+  },
+  'quick-question': {
+    id: 'quick-question',
+    title: 'Quick Question',
+    icon: MessageCircle,
+    shortDescription: 'Fast AI chat assistance',
+    description: 'Ask any legal question and get instant AI-powered answers in a conversational format, perfect for quick clarifications and general legal guidance.',
+    features: [
+      'Instant AI responses',
+      'Conversational chat interface',
+      'Message history tracking',
+      'Real-time typing indicators',
+      'Follow-up question support'
+    ],
+    useCases: [
+      'Quick legal clarifications',
+      'General legal guidance',
+      'Follow-up questions',
+      'Casual legal consultations'
+    ]
   }
 };
 
@@ -161,6 +192,7 @@ export default function AISearch() {
   const [riskResults, setRiskResults] = useState<any>(null);
   const [lawAgentResults, setLawAgentResults] = useState<any>(null);
   const [webSearchResults, setWebSearchResults] = useState<any>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   const legalSearchForm = useForm<LegalSearchForm>({
     defaultValues: { query: "" }
@@ -181,6 +213,10 @@ export default function AISearch() {
 
   const webSearchForm = useForm<WebSearchForm>({
     defaultValues: { query: "" }
+  });
+
+  const quickQuestionForm = useForm<QuickQuestionForm>({
+    defaultValues: { question: "" }
   });
 
   const legalSearchMutation = useMutation({
@@ -297,12 +333,53 @@ export default function AISearch() {
     },
   });
 
+  const quickQuestionMutation = useMutation({
+    mutationFn: async (data: QuickQuestionForm) => {
+      const res = await apiRequest("POST", "/api/quick-question", data);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      // Add assistant response to chat
+      const assistantMessage: ChatMessage = {
+        id: Date.now().toString() + '_assistant',
+        type: 'assistant',
+        content: data.answer,
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, assistantMessage]);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Quick question failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleLawAgentQuestion = (data: LawAgentForm) => {
     lawAgentMutation.mutate(data);
   };
 
   const handleWebSearch = (data: WebSearchForm) => {
     webSearchMutation.mutate(data);
+  };
+
+  const handleQuickQuestion = (data: QuickQuestionForm) => {
+    // Add user message to chat
+    const userMessage: ChatMessage = {
+      id: Date.now().toString() + '_user',
+      type: 'user',
+      content: data.question,
+      timestamp: new Date()
+    };
+    setChatMessages(prev => [...prev, userMessage]);
+    
+    // Clear the form
+    quickQuestionForm.reset();
+    
+    // Send to API
+    quickQuestionMutation.mutate(data);
   };
 
   return (
@@ -1197,6 +1274,136 @@ export default function AISearch() {
                       <p className="text-muted-foreground">Enter a search query to find legal information</p>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'quick-question' && (
+            <div 
+              className="h-[600px] flex flex-col"
+              role="tabpanel"
+              id="tabpanel-quick-question"
+              aria-labelledby="tab-quick-question"
+              tabIndex={0}
+            >
+              {/* Chat Interface */}
+              <Card className="flex-1 flex flex-col">
+                <CardHeader className="pb-4">
+                  <CardTitle 
+                    className="text-lg md:text-xl flex items-center space-x-2"
+                    id="quick-question-heading"
+                  >
+                    <MessageCircle className="h-5 w-5" aria-hidden="true" />
+                    <span>Quick Question</span>
+                  </CardTitle>
+                  <p className="text-muted-foreground text-sm md:text-base">
+                    Ask any legal question and get instant AI answers in a conversational format.
+                  </p>
+                </CardHeader>
+                
+                <CardContent className="flex-1 flex flex-col pt-0">
+                  {/* Chat Messages */}
+                  <div 
+                    className="flex-1 overflow-y-auto space-y-4 mb-4 p-4 border border-border rounded-lg bg-muted/20 min-h-[300px]"
+                    role="log"
+                    aria-labelledby="quick-question-heading"
+                    aria-live="polite"
+                    data-testid="chat-messages"
+                  >
+                    {chatMessages.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-center">
+                        <MessageCircle className="h-12 w-12 text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-medium text-foreground mb-2">Start a conversation</h3>
+                        <p className="text-muted-foreground max-w-md">
+                          Ask any legal question to get started. I'm here to provide quick answers and guidance.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        {chatMessages.map((message) => (
+                          <div
+                            key={message.id}
+                            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                            data-testid={`message-${message.type}-${message.id}`}
+                          >
+                            <div
+                              className={`max-w-[80%] p-3 rounded-lg ${
+                                message.type === 'user'
+                                  ? 'bg-primary text-primary-foreground ml-4'
+                                  : 'bg-background border border-border mr-4'
+                              }`}
+                            >
+                              <p className="text-sm leading-relaxed">{message.content}</p>
+                              <p className="text-xs opacity-70 mt-2">
+                                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {/* Loading indicator */}
+                        {quickQuestionMutation.isPending && (
+                          <div className="flex justify-start">
+                            <div className="bg-background border border-border mr-4 p-3 rounded-lg">
+                              <div className="flex items-center space-x-2">
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
+                                <span className="text-sm text-muted-foreground">Thinking...</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* Chat Input */}
+                  <Form {...quickQuestionForm}>
+                    <form 
+                      onSubmit={quickQuestionForm.handleSubmit(handleQuickQuestion)}
+                      className="flex gap-2"
+                      aria-labelledby="quick-question-heading"
+                    >
+                      <FormField
+                        control={quickQuestionForm.control}
+                        name="question"
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input
+                                placeholder="Ask a legal question..."
+                                className="w-full"
+                                disabled={quickQuestionMutation.isPending}
+                                data-testid="input-quick-question"
+                                {...field}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    quickQuestionForm.handleSubmit(handleQuickQuestion)();
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage role="alert" />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button 
+                        type="submit"
+                        disabled={quickQuestionMutation.isPending || !quickQuestionForm.watch('question').trim()}
+                        data-testid="button-send-question"
+                        className="px-4"
+                      >
+                        {quickQuestionMutation.isPending ? (
+                          <i className="fas fa-spinner fa-spin"></i>
+                        ) : (
+                          <i className="fas fa-paper-plane"></i>
+                        )}
+                        <span className="sr-only">Send question</span>
+                      </Button>
+                    </form>
+                  </Form>
                 </CardContent>
               </Card>
             </div>
