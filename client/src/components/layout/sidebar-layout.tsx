@@ -32,6 +32,13 @@ const navigationItems: NavigationItem[] = [
     icon: "fas fa-search",
     path: "/ai-search/legal-research",
     testId: "nav-ai-search"
+  },
+  {
+    id: "document-generation",
+    label: "Document Generation",
+    icon: "fas fa-file-alt",
+    path: "/document-generation/letters",
+    testId: "nav-document-generation"
   }
 ];
 

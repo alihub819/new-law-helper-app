@@ -9,12 +9,14 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
 import AISearch from "@/pages/ai-search";
+import DocumentGeneration from "@/pages/document-generation";
 
 function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/ai-search/:tab?" component={AISearch} />
+      <ProtectedRoute path="/document-generation/:tab?" component={DocumentGeneration} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

@@ -7,7 +7,8 @@ import {
   summarizeDocument, 
   analyzeRisk,
   answerLegalQuestion,
-  performWebSearch
+  performWebSearch,
+  generateDocument
 } from "./openai";
 import multer from "multer";
 
@@ -195,6 +196,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Quick question error:", error);
       res.status(500).json({ error: "Failed to answer question" });
+    }
+  });
+
+  // Document Generation endpoint
+  app.post("/api/generate-document", isAuthenticated, async (req, res) => {
+    try {
+      const { documentType, inputMethod, textContent, formData } = req.body;
+      
+      console.log("[DOCUMENT-GENERATION] Received request:", { documentType, inputMethod, textContent: textContent?.substring(0, 100), formData });
+      
+      if (!documentType || !inputMethod) {
+        return res.status(400).json({ error: "Document type and input method are required" });
+      }
+
+      // Validate input based on method
+      if ((inputMethod === 'voice' || inputMethod === 'paste') && !textContent) {
+        return res.status(400).json({ error: "Text content is required for voice and paste input methods" });
+      }
+
+      if (inputMethod === 'manual' && !formData) {
+        return res.status(400).json({ error: "Form data is required for manual input method" });
+      }
+
+      const document = await generateDocument(documentType, inputMethod, textContent, formData);
+      console.log("[DOCUMENT-GENERATION] Generated document:", { 
+        id: document.id, 
+        type: document.type, 
+        title: document.title,
+        contentLength: document.formattedContent?.length || 0
+      });
+      
+      // Save to search history
+      await storage.createSearchHistory({
+        userId: req.user!.id,
+        type: 'document-generation',
+        query: `${documentType} - ${inputMethod}`,
+        results: { document },
+      });
+
+      res.json(document);
+    } catch (error) {
+      console.error("Document generation error:", error);
+      res.status(500).json({ error: "Failed to generate document" });
     }
   });
 

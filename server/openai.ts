@@ -271,3 +271,111 @@ Provide results in JSON format:
     throw new Error("Failed to perform web search");
   }
 }
+
+export async function generateDocument(documentType: string, inputMethod: 'voice' | 'paste' | 'manual', textContent?: string, formData?: Record<string, string>): Promise<any> {
+  try {
+    let contentDescription = '';
+    
+    // Build content description based on input method
+    if (inputMethod === 'voice' || inputMethod === 'paste') {
+      contentDescription = textContent || '';
+    } else if (inputMethod === 'manual' && formData) {
+      contentDescription = Object.entries(formData)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(', ');
+    }
+
+    const prompt = `You are a professional document generation specialist. Generate a ${documentType} document following international USA standards for formatting, structure, and content.
+
+Document Type: ${documentType}
+Input Method: ${inputMethod}
+Content/Requirements: ${contentDescription}
+
+Generate a complete, professional document that follows these requirements:
+
+1. FORMATTING STANDARDS:
+   - Use proper USA business letter format if applicable
+   - Include appropriate headers, dates, and signatures lines
+   - Use professional spacing and paragraph structure
+   - Follow international business correspondence standards
+
+2. CONTENT REQUIREMENTS:
+   - Professional tone and language
+   - Legally appropriate terminology where applicable
+   - Include all necessary sections and clauses
+   - Ensure compliance with USA document standards
+   - Add proper legal disclaimers if required
+
+3. STRUCTURE REQUIREMENTS:
+   - Clear, logical flow
+   - Proper introduction, body, and conclusion
+   - Professional closing and signature sections
+   - Include date and contact information placeholders
+
+Return the response in JSON format:
+{
+  "id": "unique-document-id",
+  "type": "${documentType}",
+  "title": "Document Title",
+  "content": "Raw document content",
+  "formattedContent": "Formatted document content with proper spacing and structure",
+  "metadata": {
+    "wordCount": 0,
+    "estimatedPages": 1,
+    "documentStandard": "USA International",
+    "generatedAt": "current-date",
+    "inputMethod": "${inputMethod}"
+  },
+  "sections": [
+    {
+      "name": "Header",
+      "content": "Header content"
+    },
+    {
+      "name": "Body",
+      "content": "Main body content"
+    },
+    {
+      "name": "Closing",
+      "content": "Closing content"
+    }
+  ],
+  "suggestions": [
+    "Suggestion 1 for improvement",
+    "Suggestion 2 for customization"
+  ]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert document generation specialist with extensive knowledge of USA business and legal document standards. Generate professional, properly formatted documents that comply with international USA standards for business correspondence, contracts, and applications."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || '{}');
+    
+    // Add current timestamp and ensure proper structure
+    return {
+      ...result,
+      createdAt: new Date().toISOString(),
+      id: result.id || `doc_${Date.now()}`,
+      metadata: {
+        ...result.metadata,
+        generatedAt: new Date().toISOString(),
+        inputMethod: inputMethod
+      }
+    };
+  } catch (error) {
+    console.error("OpenAI document generation error:", error);
+    throw new Error("Failed to generate document");
+  }
+}
