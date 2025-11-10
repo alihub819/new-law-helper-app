@@ -13,6 +13,7 @@ import {
   improveDocumentSection
 } from "./openai";
 import multer from "multer";
+import mammoth from "mammoth";
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -67,8 +68,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { summaryType = 'quick' } = req.body;
       
-      // Convert file buffer to text (simplified - in real app would use proper document parsing)
-      const documentText = req.file.buffer.toString('utf-8');
+      // Extract text based on file type
+      let documentText = '';
+      const fileType = req.file.mimetype;
+      
+      if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+          req.file.originalname.endsWith('.docx')) {
+        // Use mammoth to extract text from Word documents
+        const result = await mammoth.extractRawText({ buffer: req.file.buffer });
+        documentText = result.value;
+      } else if (fileType === 'application/msword' || req.file.originalname.endsWith('.doc')) {
+        // For older .doc format, attempt text extraction (may not be perfect)
+        documentText = req.file.buffer.toString('utf-8');
+      } else if (fileType === 'text/plain' || req.file.originalname.endsWith('.txt')) {
+        // Plain text files
+        documentText = req.file.buffer.toString('utf-8');
+      } else {
+        // Try UTF-8 conversion for other formats
+        documentText = req.file.buffer.toString('utf-8');
+      }
       
       const summary = await summarizeDocument(documentText, summaryType);
       
