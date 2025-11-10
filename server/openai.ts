@@ -679,3 +679,334 @@ Provide practical, actionable feedback that would be valuable to a legal profess
     throw new Error("Failed to analyze document");
   }
 }
+
+// Medical Intelligence Suite Helper
+export async function runMedicalIntelligence(mode: string, payload: any): Promise<any> {
+  try {
+    let prompt = "";
+    let systemMessage = "You are an expert medical legal analyst specializing in personal injury cases, medical billing, and medical chronologies. Provide accurate, professional analysis.";
+
+    switch (mode) {
+      case "chronology":
+        prompt = `Analyze the following medical records and create a detailed chronological timeline. Extract and organize:
+- Date of each visit/treatment
+- Provider name and type
+- Diagnosis (with ICD codes if mentioned)
+- Treatments/procedures performed (with CPT codes if mentioned)
+- Medications prescribed
+- Follow-up appointments
+- Treatment gaps (periods with no care)
+
+Medical Records Text:
+${payload.documentText}
+
+Provide response in JSON format:
+{
+  "timeline": [
+    {
+      "date": "YYYY-MM-DD",
+      "provider": "Provider name",
+      "type": "Initial visit/Follow-up/Emergency/etc",
+      "diagnosis": "Diagnosis text",
+      "diagnosisCodes": ["ICD-10 codes"],
+      "treatment": "Treatment performed",
+      "procedureCodes": ["CPT codes"],
+      "medications": ["Medication list"],
+      "notes": "Additional notes"
+    }
+  ],
+  "summary": "Overall treatment summary",
+  "treatmentGaps": ["List of gaps in treatment"],
+  "totalVisits": 0
+}`;
+        break;
+
+      case "bills":
+        prompt = `Analyze the following medical bills and provide a comprehensive billing summary. Extract:
+- Provider information
+- Service dates
+- CPT codes and descriptions
+- Charges and payments
+- Insurance information
+- Outstanding balances
+
+Medical Bills Text:
+${payload.documentText}
+
+Provide response in JSON format:
+{
+  "bills": [
+    {
+      "provider": "Provider name",
+      "serviceDate": "YYYY-MM-DD",
+      "services": [
+        {
+          "cptCode": "CPT code",
+          "description": "Service description",
+          "charge": 0.00,
+          "paid": 0.00,
+          "balance": 0.00
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "totalCharges": 0.00,
+    "totalPaid": 0.00,
+    "totalOutstanding": 0.00,
+    "insurancePaid": 0.00,
+    "patientResponsibility": 0.00
+  },
+  "unusualCharges": ["List of unusual or duplicate charges"],
+  "recommendations": ["Billing recommendations"]
+}`;
+        break;
+
+      case "summary":
+        prompt = `Create a comprehensive medical summary report for legal purposes. Include:
+- Chief complaint and injury details
+- Complete treatment history
+- All treating physicians
+- Current medical status and prognosis
+- Pre-existing conditions
+- Total medical expenses
+
+Medical Information:
+${payload.documentText}
+
+Provide response in JSON format:
+{
+  "chiefComplaint": "Primary injury/complaint",
+  "injuryDate": "YYYY-MM-DD",
+  "treatmentHistory": "Comprehensive treatment narrative",
+  "treatingPhysicians": [
+    {
+      "name": "Doctor name",
+      "specialty": "Specialty",
+      "dates": "Treatment period"
+    }
+  ],
+  "currentStatus": "Current medical condition",
+  "prognosis": "Future medical needs and prognosis",
+  "preExistingConditions": ["List of pre-existing conditions"],
+  "totalMedicalExpenses": 0.00,
+  "recommendations": ["Medical and legal recommendations"]
+}`;
+        break;
+
+      default:
+        throw new Error("Invalid mode");
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        { role: "system", content: systemMessage },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("Medical intelligence error:", error);
+    throw new Error("Failed to process medical intelligence request");
+  }
+}
+
+// Demand Letter Generation Helper
+export async function generateDemandLetter(data: any): Promise<any> {
+  try {
+    const prompt = `Generate a professional demand letter for a personal injury case with the following details:
+
+Case Type: ${data.caseType || "Personal Injury"}
+Claimant: ${data.claimantName}
+Defendant: ${data.defendantName}
+Incident Date: ${data.incidentDate}
+Incident Description: ${data.incidentDescription}
+Injuries: ${data.injuries}
+Medical Treatment: ${data.medicalTreatment || ""}
+Medical Expenses: $${data.medicalExpenses || 0}
+Lost Wages: $${data.lostWages || 0}
+Pain and Suffering Multiplier: ${data.painMultiplier || 3}x
+Settlement Demand: $${data.demandAmount}
+
+Create a comprehensive, professionally formatted demand letter that includes:
+1. Professional letterhead formatting
+2. Proper addressing and salutations
+3. Statement of representation
+4. Detailed accident description
+5. Liability analysis
+6. Injury description
+7. Medical treatment summary
+8. Damages breakdown (medical expenses, lost wages, pain and suffering)
+9. Settlement demand with justification
+10. Deadline for response (typically 30 days)
+11. Professional closing
+
+Provide the response in JSON format:
+{
+  "letterContent": "Full letter text with proper formatting",
+  "damagesBreakdown": {
+    "medicalExpenses": 0.00,
+    "lostWages": 0.00,
+    "painAndSuffering": 0.00,
+    "total": 0.00
+  },
+  "settlementCalculation": {
+    "economicDamages": 0.00,
+    "painMultiplier": 3.0,
+    "recommendedRange": {
+      "low": 0.00,
+      "high": 0.00
+    }
+  },
+  "keyPoints": ["List of key liability and damages points"]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        {
+          role: "system",
+          content: "You are an experienced personal injury attorney specializing in demand letter preparation. Create professional, persuasive demand letters that maximize settlement value while maintaining professional standards."
+        },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("Demand letter generation error:", error);
+    throw new Error("Failed to generate demand letter");
+  }
+}
+
+// Discovery Response Generator Helper
+export async function generateDiscoveryResponse(type: string, payload: any): Promise<any> {
+  try {
+    let prompt = "";
+    let systemMessage = "You are an experienced litigation attorney specializing in discovery practice. Generate professional, strategic discovery responses that protect client interests while complying with discovery rules.";
+
+    const jurisdiction = payload.jurisdiction || "Federal";
+    const caseType = payload.caseType || "General";
+
+    switch (type) {
+      case "interrogatories":
+        prompt = `Generate professional responses to the following interrogatories for a ${caseType} case in ${jurisdiction} jurisdiction:
+
+Interrogatories:
+${payload.questions}
+
+Case Facts:
+${payload.caseFacts || ""}
+
+Instructions:
+- Include standard objections where appropriate (relevance, overbroad, privilege, etc.)
+- Provide substantive answers based on the case facts provided
+- Use proper legal formatting and citation
+- Include reservation of rights language
+
+Provide response in JSON format:
+{
+  "responses": [
+    {
+      "number": 1,
+      "question": "Original interrogatory text",
+      "objections": ["List of objections"],
+      "response": "Substantive response text",
+      "notes": "Internal notes or strategy considerations"
+    }
+  ],
+  "generalObjections": ["List of general objections applicable to all responses"],
+  "verificationLanguage": "Verification statement text"
+}`;
+        break;
+
+      case "requests":
+        prompt = `Generate professional responses to the following Requests for Production of Documents for a ${caseType} case in ${jurisdiction} jurisdiction:
+
+Requests:
+${payload.requests}
+
+Available Documents:
+${payload.documents || ""}
+
+Instructions:
+- Include standard objections where appropriate
+- Specify which documents will be produced
+- Note any privileged documents in privilege log format
+- Use proper legal formatting
+
+Provide response in JSON format:
+{
+  "responses": [
+    {
+      "number": 1,
+      "request": "Original request text",
+      "objections": ["List of objections"],
+      "response": "Response text (will produce/objection/etc)",
+      "documentsProduced": ["List of document descriptions"]
+    }
+  ],
+  "privilegeLog": [
+    {
+      "description": "Document description",
+      "date": "Document date",
+      "author": "Author",
+      "recipient": "Recipient",
+      "privilege": "Type of privilege"
+    }
+  ]
+}`;
+        break;
+
+      case "admissions":
+        prompt = `Generate professional responses to the following Requests for Admission for a ${caseType} case in ${jurisdiction} jurisdiction:
+
+Requests for Admission:
+${payload.admissions}
+
+Case Position:
+${payload.casePosition || ""}
+
+Instructions:
+- Respond with "Admitted", "Denied", or qualified response
+- Include explanatory statements where needed
+- Preserve legal positions strategically
+
+Provide response in JSON format:
+{
+  "responses": [
+    {
+      "number": 1,
+      "request": "Original request text",
+      "response": "Admitted/Denied/Qualified Response",
+      "explanation": "Explanation if needed",
+      "strategy": "Internal strategy note"
+    }
+  ],
+  "summary": "Overall response strategy summary"
+}`;
+        break;
+
+      default:
+        throw new Error("Invalid discovery type");
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        { role: "system", content: systemMessage },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("Discovery response generation error:", error);
+    throw new Error("Failed to generate discovery response");
+  }
+}

@@ -11,16 +11,24 @@ import Dashboard from "@/pages/dashboard";
 import AISearch from "@/pages/ai-search";
 import DocumentGeneration from "@/pages/document-generation";
 import DocumentAnalyzer from "@/pages/document-analyzer";
+import MyCases from "@/pages/my-cases";
 import LandingPage from "@/pages/landing-page";
+import MedicalIntelligence from "@/pages/medical-intelligence";
+import DemandLetter from "@/pages/demand-letter";
+import DiscoveryTools from "@/pages/discovery-tools";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
       <ProtectedRoute path="/dashboard" component={Dashboard} />
+      <ProtectedRoute path="/my-cases" component={MyCases} />
       <ProtectedRoute path="/ai-search/:tab?" component={AISearch} />
       <ProtectedRoute path="/document-generation/:tab?" component={DocumentGeneration} />
       <ProtectedRoute path="/document-analyzer" component={DocumentAnalyzer} />
+      <ProtectedRoute path="/medical-intelligence" component={MedicalIntelligence} />
+      <ProtectedRoute path="/demand-letter" component={DemandLetter} />
+      <ProtectedRoute path="/discovery-tools" component={DiscoveryTools} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

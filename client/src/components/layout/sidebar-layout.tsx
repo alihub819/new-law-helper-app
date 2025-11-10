@@ -27,6 +27,13 @@ const navigationItems: NavigationItem[] = [
     testId: "nav-dashboard"
   },
   {
+    id: "my-cases",
+    label: "My Cases",
+    icon: "fas fa-briefcase",
+    path: "/my-cases",
+    testId: "nav-my-cases"
+  },
+  {
     id: "ai-search",
     label: "AI Search",
     icon: "fas fa-search",
@@ -46,6 +53,27 @@ const navigationItems: NavigationItem[] = [
     icon: "fas fa-chart-line",
     path: "/document-analyzer",
     testId: "nav-document-analyzer"
+  },
+  {
+    id: "medical-intelligence",
+    label: "Medical Intelligence",
+    icon: "fas fa-heartbeat",
+    path: "/medical-intelligence",
+    testId: "nav-medical-intelligence"
+  },
+  {
+    id: "demand-letter",
+    label: "Demand Letter",
+    icon: "fas fa-file-contract",
+    path: "/demand-letter",
+    testId: "nav-demand-letter"
+  },
+  {
+    id: "discovery-tools",
+    label: "Discovery Tools",
+    icon: "fas fa-balance-scale-right",
+    path: "/discovery-tools",
+    testId: "nav-discovery-tools"
   }
 ];
 

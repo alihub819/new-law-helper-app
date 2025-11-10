@@ -12,8 +12,11 @@ import {
   analyzeDocument,
   improveDocumentSection
 } from "./openai";
+import { insertCaseSchema, insertDocumentSchema, insertMedicalRecordSchema } from "@shared/schema";
 import multer from "multer";
 import mammoth from "mammoth";
+import { generatePDF, generateDOCX, generateTXT, type ExportContent } from "./document-export";
+import { runMedicalIntelligence, generateDemandLetter, generateDiscoveryResponse } from "./openai";
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -455,6 +458,306 @@ Note: This is a demonstration of a legal document format. In a production enviro
     } catch (error) {
       console.error("Search history error:", error);
       res.status(500).json({ error: "Failed to get search history" });
+    }
+  });
+
+  // Case Management Routes
+  app.get("/api/cases", isAuthenticated, async (req, res) => {
+    try {
+      const cases = await storage.getCasesByUser(req.user!.id);
+      res.json(cases);
+    } catch (error) {
+      console.error("Get cases error:", error);
+      res.status(500).json({ error: "Failed to get cases" });
+    }
+  });
+
+  app.get("/api/cases/:id", isAuthenticated, async (req, res) => {
+    try {
+      const caseData = await storage.getCase(req.params.id);
+      if (!caseData || caseData.userId !== req.user!.id) {
+        return res.status(404).json({ error: "Case not found" });
+      }
+      res.json(caseData);
+    } catch (error) {
+      console.error("Get case error:", error);
+      res.status(500).json({ error: "Failed to get case" });
+    }
+  });
+
+  app.post("/api/cases", isAuthenticated, async (req, res) => {
+    try {
+      // Validate request body
+      const validatedData = insertCaseSchema.parse({
+        ...req.body,
+        userId: req.user!.id, // Always set userId from authenticated user
+      });
+      const newCase = await storage.createCase(validatedData);
+      res.json(newCase);
+    } catch (error) {
+      console.error("Create case error:", error);
+      if (error instanceof Error && error.name === "ZodError") {
+        return res.status(400).json({ error: "Invalid case data", details: error });
+      }
+      res.status(500).json({ error: "Failed to create case" });
+    }
+  });
+
+  app.put("/api/cases/:id", isAuthenticated, async (req, res) => {
+    try {
+      const existingCase = await storage.getCase(req.params.id);
+      if (!existingCase || existingCase.userId !== req.user!.id) {
+        return res.status(404).json({ error: "Case not found" });
+      }
+      // Validate and prevent userId modification
+      const { userId: _ignored, ...updateData } = req.body;
+      const validatedData = insertCaseSchema.partial().parse(updateData);
+      const updatedCase = await storage.updateCase(req.params.id, validatedData);
+      res.json(updatedCase);
+    } catch (error) {
+      console.error("Update case error:", error);
+      if (error instanceof Error && error.name === "ZodError") {
+        return res.status(400).json({ error: "Invalid case data", details: error });
+      }
+      res.status(500).json({ error: "Failed to update case" });
+    }
+  });
+
+  app.delete("/api/cases/:id", isAuthenticated, async (req, res) => {
+    try {
+      const existingCase = await storage.getCase(req.params.id);
+      if (!existingCase || existingCase.userId !== req.user!.id) {
+        return res.status(404).json({ error: "Case not found" });
+      }
+      await storage.deleteCase(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete case error:", error);
+      res.status(500).json({ error: "Failed to delete case" });
+    }
+  });
+
+  // Document Management Routes
+  app.get("/api/documents", isAuthenticated, async (req, res) => {
+    try {
+      const { caseId } = req.query;
+      
+      if (caseId) {
+        // Verify user owns the case before returning documents
+        const caseData = await storage.getCase(caseId as string);
+        if (!caseData || caseData.userId !== req.user!.id) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+        const documents = await storage.getDocumentsByCase(caseId as string);
+        res.json(documents);
+      } else {
+        const documents = await storage.getDocumentsByUser(req.user!.id);
+        res.json(documents);
+      }
+    } catch (error) {
+      console.error("Get documents error:", error);
+      res.status(500).json({ error: "Failed to get documents" });
+    }
+  });
+
+  app.post("/api/documents", isAuthenticated, async (req, res) => {
+    try {
+      // If caseId provided, verify user owns the case
+      if (req.body.caseId) {
+        const caseData = await storage.getCase(req.body.caseId);
+        if (!caseData || caseData.userId !== req.user!.id) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+      
+      // Validate and create document
+      const validatedData = insertDocumentSchema.parse({
+        ...req.body,
+        userId: req.user!.id,
+      });
+      const newDoc = await storage.createDocument(validatedData);
+      res.json(newDoc);
+    } catch (error) {
+      console.error("Create document error:", error);
+      if (error instanceof Error && error.name === "ZodError") {
+        return res.status(400).json({ error: "Invalid document data", details: error });
+      }
+      res.status(500).json({ error: "Failed to create document" });
+    }
+  });
+
+  app.delete("/api/documents/:id", isAuthenticated, async (req, res) => {
+    try {
+      const doc = await storage.getDocument(req.params.id);
+      if (!doc || doc.userId !== req.user!.id) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      await storage.deleteDocument(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete document error:", error);
+      res.status(500).json({ error: "Failed to delete document" });
+    }
+  });
+
+  // Medical Records Routes
+  app.get("/api/medical-records/:caseId", isAuthenticated, async (req, res) => {
+    try {
+      const caseData = await storage.getCase(req.params.caseId);
+      if (!caseData || caseData.userId !== req.user!.id) {
+        return res.status(404).json({ error: "Case not found" });
+      }
+      const records = await storage.getMedicalRecordsByCase(req.params.caseId);
+      res.json(records);
+    } catch (error) {
+      console.error("Get medical records error:", error);
+      res.status(500).json({ error: "Failed to get medical records" });
+    }
+  });
+
+  app.post("/api/medical-records", isAuthenticated, async (req, res) => {
+    try {
+      const caseData = await storage.getCase(req.body.caseId);
+      if (!caseData || caseData.userId !== req.user!.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      // Validate and create medical record
+      const validatedData = insertMedicalRecordSchema.parse({
+        ...req.body,
+        userId: req.user!.id,
+      });
+      const newRecord = await storage.createMedicalRecord(validatedData);
+      res.json(newRecord);
+    } catch (error) {
+      console.error("Create medical record error:", error);
+      if (error instanceof Error && error.name === "ZodError") {
+        return res.status(400).json({ error: "Invalid medical record data", details: error });
+      }
+      res.status(500).json({ error: "Failed to create medical record" });
+    }
+  });
+
+  app.delete("/api/medical-records/:id", isAuthenticated, async (req, res) => {
+    try {
+      const record = await storage.getMedicalRecord(req.params.id);
+      if (!record || record.userId !== req.user!.id) {
+        return res.status(404).json({ error: "Medical record not found" });
+      }
+      await storage.deleteMedicalRecord(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete medical record error:", error);
+      res.status(500).json({ error: "Failed to delete medical record" });
+    }
+  });
+
+  // Document Export Routes
+  app.post("/api/export-document", isAuthenticated, async (req, res) => {
+    try {
+      const { format, content } = req.body;
+      
+      if (!format || !content) {
+        return res.status(400).json({ error: "Format and content are required" });
+      }
+
+      if (!["pdf", "docx", "txt"].includes(format)) {
+        return res.status(400).json({ error: "Invalid format. Must be pdf, docx, or txt" });
+      }
+
+      const exportContent: ExportContent = {
+        title: content.title || "LawHelper Document",
+        sections: content.sections || [{ content: JSON.stringify(content, null, 2) }],
+        metadata: {
+          author: req.user!.name,
+          subject: content.subject || "Legal Document",
+          keywords: content.keywords || [],
+        },
+      };
+
+      let fileBuffer: Buffer | string;
+      let mimeType: string;
+      let filename: string;
+
+      switch (format) {
+        case "pdf":
+          fileBuffer = await generatePDF(exportContent);
+          mimeType = "application/pdf";
+          filename = `${exportContent.title.replace(/\s+/g, "_")}.pdf`;
+          break;
+        case "docx":
+          fileBuffer = await generateDOCX(exportContent);
+          mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+          filename = `${exportContent.title.replace(/\s+/g, "_")}.docx`;
+          break;
+        case "txt":
+          fileBuffer = generateTXT(exportContent);
+          mimeType = "text/plain";
+          filename = `${exportContent.title.replace(/\s+/g, "_")}.txt`;
+          break;
+        default:
+          return res.status(400).json({ error: "Invalid format" });
+      }
+
+      res.setHeader("Content-Type", mimeType);
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.send(fileBuffer);
+    } catch (error) {
+      console.error("Document export error:", error);
+      res.status(500).json({ error: "Failed to export document" });
+    }
+  });
+
+  // Medical Intelligence Suite Route
+  app.post("/api/medical-intelligence", isAuthenticated, async (req, res) => {
+    try {
+      const { mode, payload } = req.body;
+      
+      if (!mode || !payload) {
+        return res.status(400).json({ error: "Mode and payload are required" });
+      }
+
+      if (!["chronology", "bills", "summary"].includes(mode)) {
+        return res.status(400).json({ error: "Invalid mode. Must be chronology, bills, or summary" });
+      }
+
+      const result = await runMedicalIntelligence(mode, payload);
+      res.json(result);
+    } catch (error) {
+      console.error("Medical intelligence error:", error);
+      res.status(500).json({ error: "Failed to process medical intelligence request" });
+    }
+  });
+
+  // Demand Letter Automation Route
+  app.post("/api/demand-letter", isAuthenticated, async (req, res) => {
+    try {
+      const result = await generateDemandLetter(req.body);
+      res.json(result);
+    } catch (error) {
+      console.error("Demand letter generation error:", error);
+      res.status(500).json({ error: "Failed to generate demand letter" });
+    }
+  });
+
+  // Discovery Response Tools Route
+  app.post("/api/discovery-tools", isAuthenticated, async (req, res) => {
+    try {
+      const { type, payload } = req.body;
+      
+      if (!type || !payload) {
+        return res.status(400).json({ error: "Type and payload are required" });
+      }
+
+      if (!["interrogatories", "requests", "admissions"].includes(type)) {
+        return res.status(400).json({ error: "Invalid type. Must be interrogatories, requests, or admissions" });
+      }
+
+      const result = await generateDiscoveryResponse(type, payload);
+      res.json(result);
+    } catch (error) {
+      console.error("Discovery response generation error:", error);
+      res.status(500).json({ error: "Failed to generate discovery response" });
     }
   });
 
