@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Download, Loader2, Calculator } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { SidebarLayout } from "@/components/layout/sidebar-layout";
 
 export default function DemandLetter() {
   const { toast } = useToast();
@@ -93,8 +94,9 @@ export default function DemandLetter() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <div className="container mx-auto px-4 py-8">
+    <SidebarLayout>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2" data-testid="heading-demand-letter">
@@ -303,6 +305,7 @@ export default function DemandLetter() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </SidebarLayout>
   );
 }

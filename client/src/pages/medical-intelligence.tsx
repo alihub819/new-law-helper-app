@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { FileText, DollarSign, FileCheck, Download, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { SidebarLayout } from "@/components/layout/sidebar-layout";
 
 type MedicalResults = {
   chronology: any | null;
@@ -92,8 +93,9 @@ export default function MedicalIntelligence() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <div className="container mx-auto px-4 py-8">
+    <SidebarLayout>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2" data-testid="heading-medical-intelligence">
@@ -319,6 +321,7 @@ export default function MedicalIntelligence() {
           </Tabs>
         </div>
       </div>
-    </div>
+      </div>
+    </SidebarLayout>
   );
 }
