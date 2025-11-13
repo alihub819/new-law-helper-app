@@ -16,6 +16,7 @@ import LandingPage from "@/pages/landing-page";
 import MedicalIntelligence from "@/pages/medical-intelligence";
 import DemandLetter from "@/pages/demand-letter";
 import DiscoveryTools from "@/pages/discovery-tools";
+import CaseDetails from "@/pages/case-details";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/" component={LandingPage} />
       <ProtectedRoute path="/dashboard" component={Dashboard} />
       <ProtectedRoute path="/my-cases" component={MyCases} />
+      <ProtectedRoute path="/cases/:id" component={CaseDetails} />
       <ProtectedRoute path="/ai-search/:tab?" component={AISearch} />
       <ProtectedRoute path="/document-generation/:tab?" component={DocumentGeneration} />
       <ProtectedRoute path="/document-analyzer" component={DocumentAnalyzer} />
