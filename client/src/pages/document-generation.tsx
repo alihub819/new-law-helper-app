@@ -175,6 +175,40 @@ const documentFormConfigs: Record<string, {
       { name: 'accommodationDetails', label: 'Accommodation Details', type: 'textarea', placeholder: 'Hotel name and address...', section: 'visa' },
       { name: 'financialSupport', label: 'Financial Support', type: 'textarea', placeholder: 'Self-funded, monthly income $8,000...', required: true, section: 'visa' }
     ]
+  },
+  'pi-car-accident': {
+    name: 'Personal Injury - Car Accident',
+    category: 'personal-injury',
+    fields: [
+      { name: 'clientName', label: 'Client Full Name', type: 'text', placeholder: 'John Smith', required: true, section: 'client' },
+      { name: 'clientContact', label: 'Client Contact Number', type: 'tel', placeholder: '(555) 123-4567', required: true, section: 'client' },
+      { name: 'clientEmail', label: 'Client Email', type: 'email', placeholder: 'client@email.com', section: 'client' },
+      { name: 'caseId', label: 'Case ID Number', type: 'text', placeholder: 'PI-2025-001', required: true, section: 'client' },
+      { name: 'accidentDate', label: 'Accident Date', type: 'date', required: true, section: 'accident' },
+      { name: 'accidentLocation', label: 'Accident Location', type: 'textarea', placeholder: 'Intersection of Main St and 5th Ave, Los Angeles, CA', required: true, section: 'accident' },
+      { name: 'vehicleYear', label: 'Client Vehicle Year', type: 'text', placeholder: '2020', section: 'accident' },
+      { name: 'vehicleMake', label: 'Client Vehicle Make', type: 'text', placeholder: 'Toyota', section: 'accident' },
+      { name: 'vehicleModel', label: 'Client Vehicle Model', type: 'text', placeholder: 'Camry', section: 'accident' },
+      { name: 'policeReportNumber', label: 'Police Report Number', type: 'text', placeholder: 'RPT-12345678', section: 'accident' },
+      { name: 'accidentDescription', label: 'Accident Description', type: 'textarea', placeholder: 'Detailed description of how the accident occurred...', required: true, section: 'accident' },
+      { name: 'injuryType', label: 'Type of Injuries', type: 'textarea', placeholder: 'Whiplash, back pain, contusions...', required: true, section: 'injury' },
+      { name: 'injurySeverity', label: 'Injury Severity', type: 'select', options: ['Minor', 'Moderate', 'Severe', 'Critical'], required: true, section: 'injury' },
+      { name: 'medicalReports', label: 'Medical Reports/Treatments', type: 'textarea', placeholder: 'List of treating physicians, hospitals, diagnosis, treatment received...', required: true, section: 'injury' },
+      { name: 'medicalExpenses', label: 'Total Medical Expenses', type: 'text', placeholder: '$25,000', section: 'injury' },
+      { name: 'responsibleParty', label: 'Responsible Party Name', type: 'text', placeholder: 'Jane Doe', required: true, section: 'liability' },
+      { name: 'responsiblePartyInsurance', label: 'At-Fault Party Insurance Company', type: 'text', placeholder: 'ABC Insurance Co.', section: 'liability' },
+      { name: 'responsiblePartyPolicy', label: 'At-Fault Party Policy Number', type: 'text', placeholder: 'POL-987654', section: 'liability' },
+      { name: 'evidenceCollected', label: 'Evidence Collected', type: 'textarea', placeholder: 'Photos, witness statements, traffic camera footage...', required: true, section: 'liability' },
+      { name: 'attorneyName', label: 'Attorney Name', type: 'text', placeholder: 'Robert Johnson, Esq.', required: true, section: 'legal' },
+      { name: 'firmName', label: 'Law Firm Name', type: 'text', placeholder: 'Johnson & Associates', required: true, section: 'legal' },
+      { name: 'attorneyContact', label: 'Attorney Contact', type: 'tel', placeholder: '(555) 999-8888', required: true, section: 'legal' },
+      { name: 'attorneyEmail', label: 'Attorney Email', type: 'email', placeholder: 'rjohnson@lawfirm.com', section: 'legal' },
+      { name: 'barNumber', label: 'Bar Number', type: 'text', placeholder: 'CA-123456', section: 'legal' },
+      { name: 'demandAmount', label: 'Settlement Demand Amount', type: 'text', placeholder: '$150,000', section: 'settlement' },
+      { name: 'lostWages', label: 'Lost Wages', type: 'text', placeholder: '$10,000', section: 'settlement' },
+      { name: 'painSuffering', label: 'Pain & Suffering Claim', type: 'text', placeholder: '$75,000', section: 'settlement' },
+      { name: 'claimSummary', label: 'Claim Summary', type: 'textarea', placeholder: 'Summary of all damages, liability findings, and settlement justification...', required: true, section: 'settlement' }
+    ]
   }
 };
 
@@ -244,6 +278,23 @@ const tabsMetadata = {
       'Official document standards',
       'Multi-step form support',
       'Document verification features'
+    ]
+  },
+  'personal-injury': {
+    id: 'personal-injury',
+    title: 'Personal Injury',
+    icon: FileText,
+    shortDescription: 'Generate PI case documents',
+    description: 'Create comprehensive personal injury case documentation including car accidents, medical malpractice, and other tort claims following USA legal standards.',
+    documentTypes: [
+      { id: 'pi-car-accident', name: 'Car Accident Case', description: 'Personal injury car accident documentation' }
+    ],
+    features: [
+      'USA legal compliance standards',
+      'Medical documentation integration',
+      'Insurance claim formatting',
+      'Settlement calculation support',
+      'Attorney representation details'
     ]
   }
 };
