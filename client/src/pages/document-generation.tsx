@@ -531,7 +531,7 @@ export default function DocumentGeneration() {
             {/* Tab Navigation - Mobile Horizontal Scroll, Desktop Normal */}
             <div className="flex-shrink-0 mb-6">
               <div className="flex md:hidden overflow-x-auto pb-2 scrollbar-hide">
-                <TabsList className="flex-shrink-0 grid grid-cols-3 min-w-full">
+                <TabsList className="flex-shrink-0 grid grid-cols-4 min-w-full">
                   {Object.values(tabsMetadata).map((tab) => {
                     const IconComponent = tab.icon;
                     return (
@@ -551,7 +551,7 @@ export default function DocumentGeneration() {
 
               {/* Desktop Tab List */}
               <div className="hidden md:block">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                   {Object.values(tabsMetadata).map((tab) => {
                     const IconComponent = tab.icon;
                     return (
