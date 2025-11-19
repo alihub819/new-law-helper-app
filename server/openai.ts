@@ -1,8 +1,9 @@
 import OpenAI from "openai";
 
-// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key" 
+  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key",
+  timeout: 30000,
+  maxRetries: 2,
 });
 
 export async function searchLegalDatabase(query: string, filters?: any): Promise<any> {
@@ -34,7 +35,7 @@ Format the response as JSON with this structure:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -85,7 +86,7 @@ Please provide a comprehensive analysis in JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -155,7 +156,7 @@ Provide a detailed risk analysis in JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -206,7 +207,7 @@ Provide a detailed response in JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -251,7 +252,7 @@ Provide results in JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -454,7 +455,7 @@ Return the response in JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -540,7 +541,7 @@ Respond with ONLY the example improved text that demonstrates how to implement t
     }
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -659,7 +660,7 @@ ANALYSIS GUIDELINES:
 Provide practical, actionable feedback that would be valuable to a legal professional or business person.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -799,7 +800,7 @@ Provide response in JSON format:
     }
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         { role: "system", content: systemMessage },
         { role: "user", content: prompt }
@@ -865,7 +866,7 @@ Provide the response in JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -996,7 +997,7 @@ Provide response in JSON format:
     }
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         { role: "system", content: systemMessage },
         { role: "user", content: prompt }
