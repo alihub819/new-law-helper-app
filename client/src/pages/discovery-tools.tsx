@@ -34,7 +34,7 @@ export default function DiscoveryTools() {
 
   const discoveryMutation = useMutation({
     mutationFn: async (data: { type: string; payload: any }) =>
-      apiRequest("/api/discovery-tools", "POST", data),
+      apiRequest("POST", "/api/discovery-tools", data),
     onSuccess: (data, variables) => {
       const type = variables.type as DiscoveryType;
       setResults((prev) => ({ ...prev, [type]: data }));

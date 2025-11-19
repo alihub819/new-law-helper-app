@@ -29,7 +29,7 @@ export default function DemandLetter() {
 
   const demandLetterMutation = useMutation({
     mutationFn: async (data: typeof formData) =>
-      apiRequest("/api/demand-letter", "POST", data),
+      apiRequest("POST", "/api/demand-letter", data),
     onSuccess: (data) => {
       setResult(data);
       toast({

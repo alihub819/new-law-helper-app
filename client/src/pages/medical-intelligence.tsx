@@ -31,7 +31,7 @@ export default function MedicalIntelligence() {
 
   const medicalIntelligenceMutation = useMutation({
     mutationFn: async (data: { mode: string; payload: any }) =>
-      apiRequest("/api/medical-intelligence", "POST", data),
+      apiRequest("POST", "/api/medical-intelligence", data),
     onSuccess: (data, variables) => {
       const mode = variables.mode as keyof MedicalResults;
       setResults((prev) => ({ ...prev, [mode]: data }));
