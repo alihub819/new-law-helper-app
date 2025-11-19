@@ -726,7 +726,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
       // Save the medical intelligence analysis to the database
       const modeTitle = mode === "chronology" ? "Medical Chronology" : 
                        mode === "bills" ? "Medical Bills Analysis" : "Medical Summary";
-      await storage.createSavedDocument({
+      await storage.createDocument({
         userId: req.user!.id,
         caseId: payload.caseId || null,
         documentType: `medical-${mode}`,
@@ -749,7 +749,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
       // Save the generated demand letter to the database
       const caseType = req.body.caseType || "Personal Injury";
       const claimantName = req.body.claimantName || "Unknown";
-      await storage.createSavedDocument({
+      await storage.createDocument({
         userId: req.user!.id,
         caseId: req.body.caseId || null,
         documentType: "demand-letter",
@@ -767,7 +767,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
   // Get Saved Documents Route
   app.get("/api/saved-documents", isAuthenticated, async (req, res) => {
     try {
-      const documents = await storage.getSavedDocumentsByUser(req.user!.id);
+      const documents = await storage.getDocumentsByUser(req.user!.id);
       res.json(documents);
     } catch (error) {
       console.error("Get saved documents error:", error);
@@ -778,7 +778,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
   // Delete Saved Document Route
   app.delete("/api/saved-documents/:id", isAuthenticated, async (req, res) => {
     try {
-      await storage.deleteSavedDocument(req.params.id);
+      await storage.deleteDocument(req.params.id);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete saved document error:", error);
@@ -804,7 +804,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
       // Save the discovery response to the database
       const typeTitle = type === "interrogatories" ? "Interrogatory Responses" : 
                        type === "requests" ? "Document Production Responses" : "Admission Responses";
-      await storage.createSavedDocument({
+      await storage.createDocument({
         userId: req.user!.id,
         caseId: payload.caseId || null,
         documentType: `discovery-${type}`,

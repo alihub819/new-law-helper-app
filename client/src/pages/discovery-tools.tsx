@@ -33,8 +33,10 @@ export default function DiscoveryTools() {
   const { toast } = useToast();
 
   const discoveryMutation = useMutation({
-    mutationFn: async (data: { type: string; payload: any }) =>
-      apiRequest("POST", "/api/discovery-tools", data),
+    mutationFn: async (data: { type: string; payload: any }) => {
+      const response = await apiRequest("POST", "/api/discovery-tools", data);
+      return response.json();
+    },
     onSuccess: (data, variables) => {
       const type = variables.type as DiscoveryType;
       setResults((prev) => ({ ...prev, [type]: data }));

@@ -28,8 +28,10 @@ export default function DemandLetter() {
   const [result, setResult] = useState<any>(null);
 
   const demandLetterMutation = useMutation({
-    mutationFn: async (data: typeof formData) =>
-      apiRequest("POST", "/api/demand-letter", data),
+    mutationFn: async (data: typeof formData) => {
+      const response = await apiRequest("POST", "/api/demand-letter", data);
+      return response.json();
+    },
     onSuccess: (data) => {
       setResult(data);
       toast({
