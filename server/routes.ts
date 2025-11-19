@@ -722,6 +722,18 @@ Note: This is a demonstration of a legal document format. In a production enviro
       }
 
       const result = await runMedicalIntelligence(mode, payload);
+      
+      // Save the medical intelligence analysis to the database
+      const modeTitle = mode === "chronology" ? "Medical Chronology" : 
+                       mode === "bills" ? "Medical Bills Analysis" : "Medical Summary";
+      await storage.createSavedDocument({
+        userId: req.user!.id,
+        caseId: payload.caseId || null,
+        documentType: `medical-${mode}`,
+        title: `${modeTitle} - ${new Date().toLocaleDateString()}`,
+        content: result,
+      });
+      
       res.json(result);
     } catch (error) {
       console.error("Medical intelligence error:", error);
@@ -733,10 +745,44 @@ Note: This is a demonstration of a legal document format. In a production enviro
   app.post("/api/demand-letter", isAuthenticated, async (req, res) => {
     try {
       const result = await generateDemandLetter(req.body);
+      
+      // Save the generated demand letter to the database
+      const caseType = req.body.caseType || "Personal Injury";
+      const claimantName = req.body.claimantName || "Unknown";
+      await storage.createSavedDocument({
+        userId: req.user!.id,
+        caseId: req.body.caseId || null,
+        documentType: "demand-letter",
+        title: `Demand Letter - ${claimantName} (${caseType})`,
+        content: result,
+      });
+      
       res.json(result);
     } catch (error) {
       console.error("Demand letter generation error:", error);
       res.status(500).json({ error: "Failed to generate demand letter" });
+    }
+  });
+
+  // Get Saved Documents Route
+  app.get("/api/saved-documents", isAuthenticated, async (req, res) => {
+    try {
+      const documents = await storage.getSavedDocumentsByUser(req.user!.id);
+      res.json(documents);
+    } catch (error) {
+      console.error("Get saved documents error:", error);
+      res.status(500).json({ error: "Failed to get saved documents" });
+    }
+  });
+
+  // Delete Saved Document Route
+  app.delete("/api/saved-documents/:id", isAuthenticated, async (req, res) => {
+    try {
+      await storage.deleteSavedDocument(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete saved document error:", error);
+      res.status(500).json({ error: "Failed to delete document" });
     }
   });
 
@@ -754,6 +800,18 @@ Note: This is a demonstration of a legal document format. In a production enviro
       }
 
       const result = await generateDiscoveryResponse(type, payload);
+      
+      // Save the discovery response to the database
+      const typeTitle = type === "interrogatories" ? "Interrogatory Responses" : 
+                       type === "requests" ? "Document Production Responses" : "Admission Responses";
+      await storage.createSavedDocument({
+        userId: req.user!.id,
+        caseId: payload.caseId || null,
+        documentType: `discovery-${type}`,
+        title: `${typeTitle} - ${new Date().toLocaleDateString()}`,
+        content: result,
+      });
+      
       res.json(result);
     } catch (error) {
       console.error("Discovery response generation error:", error);

@@ -17,6 +17,7 @@ import MedicalIntelligence from "@/pages/medical-intelligence";
 import DemandLetter from "@/pages/demand-letter";
 import DiscoveryTools from "@/pages/discovery-tools";
 import CaseDetails from "@/pages/case-details";
+import SavedDocuments from "@/pages/saved-documents";
 
 function Router() {
   return (
@@ -31,6 +32,7 @@ function Router() {
       <ProtectedRoute path="/medical-intelligence" component={MedicalIntelligence} />
       <ProtectedRoute path="/demand-letter" component={DemandLetter} />
       <ProtectedRoute path="/discovery-tools" component={DiscoveryTools} />
+      <ProtectedRoute path="/saved-documents" component={SavedDocuments} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

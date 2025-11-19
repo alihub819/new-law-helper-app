@@ -74,6 +74,13 @@ const navigationItems: NavigationItem[] = [
     icon: "fas fa-balance-scale-right",
     path: "/discovery-tools",
     testId: "nav-discovery-tools"
+  },
+  {
+    id: "saved-documents",
+    label: "Saved Documents",
+    icon: "fas fa-save",
+    path: "/saved-documents",
+    testId: "nav-saved-documents"
   }
 ];
 
