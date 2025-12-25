@@ -13,16 +13,9 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { type SavedDocument, type DocumentType } from "@shared/schema";
 
-type SavedDocument = {
-  id: string;
-  userId: string;
-  caseId: string | null;
-  documentType: string;
-  title: string;
-  content: any;
-  createdAt: string;
-};
+// Local type replaced by shared type import
 
 export default function SavedDocuments() {
   const { toast } = useToast();
@@ -87,15 +80,15 @@ export default function SavedDocuments() {
       });
   };
 
-  const getDocumentTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
+  const getDocumentTypeLabel = (type: DocumentType) => {
+    const labels: Record<DocumentType, string> = {
       "demand-letter": "Demand Letter",
       "medical-chronology": "Medical Chronology",
-      "medical-bills": "Medical Bills Analysis",
+      "medical-bill-analysis": "Medical Bill Analysis",
       "medical-summary": "Medical Summary",
-      "discovery-interrogatories": "Interrogatory Responses",
-      "discovery-requests": "Document Requests",
-      "discovery-admissions": "Admission Responses",
+      "interrogatories": "Interrogatory Responses",
+      "request-for-production": "Document Requests",
+      "other": "Other Document",
     };
     return labels[type] || type;
   };

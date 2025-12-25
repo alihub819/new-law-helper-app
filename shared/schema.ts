@@ -4,9 +4,11 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const CaseStatus = z.enum(["active", "pending", "closed"]);
+export type CaseStatus = z.infer<typeof CaseStatus>;
+
 export const CaseType = z.enum([
   "personal-injury",
-  "contract-dispute", 
+  "contract-dispute",
   "employment",
   "intellectual-property",
   "real-estate",
@@ -16,10 +18,12 @@ export const CaseType = z.enum([
   "product-liability",
   "other"
 ]);
+export type CaseType = z.infer<typeof CaseType>;
+
 export const DocumentType = z.enum([
   "demand-letter",
   "medical-summary",
-  "medical-chronology", 
+  "medical-chronology",
   "medical-bill-analysis",
   "discovery-response",
   "interrogatories",
@@ -28,6 +32,7 @@ export const DocumentType = z.enum([
   "contract",
   "other"
 ]);
+export type DocumentType = z.infer<typeof DocumentType>;
 export const FileFormat = z.enum(["pdf", "docx", "txt"]);
 
 export const users = pgTable("users", {
@@ -53,8 +58,8 @@ export const cases = pgTable("cases", {
   caseName: text("case_name").notNull(),
   caseNumber: text("case_number"),
   clientName: text("client_name").notNull(),
-  caseType: text("case_type").notNull(),
-  status: text("status").notNull().default("active"),
+  caseType: text("case_type").$type<CaseType>().notNull(),
+  status: text("status").$type<CaseStatus>().notNull().default("active"),
   description: text("description"),
   jurisdiction: text("jurisdiction"),
   practiceArea: text("practice_area"),
@@ -78,7 +83,7 @@ export const savedDocuments = pgTable("saved_documents", {
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   caseId: varchar("case_id").references(() => cases.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
-  documentType: text("document_type").notNull(),
+  documentType: text("document_type").$type<DocumentType>().notNull(),
   content: text("content").notNull(),
   fileFormat: text("file_format"),
   generatorTool: text("generator_tool"),

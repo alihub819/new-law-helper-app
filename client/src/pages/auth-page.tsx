@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, loginMutation, registerMutation, demoLoginMutation } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -48,7 +48,7 @@ export default function AuthPage() {
   useEffect(() => {
     if (registerMutation.error) {
       toast({
-        title: "Registration Failed", 
+        title: "Registration Failed",
         description: registerMutation.error.message || "Unable to create account",
         variant: "destructive",
       });
@@ -110,7 +110,7 @@ export default function AuthPage() {
 
   const handleLogin = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!validateLoginForm()) {
       return;
     }
@@ -123,7 +123,7 @@ export default function AuthPage() {
 
   const handleRegister = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!validateRegisterForm()) {
       return;
     }
@@ -158,7 +158,7 @@ export default function AuthPage() {
               <h1 className="text-4xl font-bold text-primary-foreground mb-4">LawHelper</h1>
               <p className="text-lg text-blue-100">AI-powered legal research platform designed for modern legal professionals</p>
             </div>
-            
+
             <div className="space-y-6">
               <div className="flex items-center space-x-3">
                 <i className="fas fa-search text-blue-200"></i>
@@ -175,7 +175,7 @@ export default function AuthPage() {
             </div>
           </div>
         </div>
-        
+
         {/* Right Side - Auth Forms */}
         <div className="w-full lg:w-1/2 flex items-center justify-center px-8">
           <div className="w-full max-w-md">
@@ -205,7 +205,7 @@ export default function AuthPage() {
                         <p className="text-sm text-red-500">{errors.loginEmail}</p>
                       )}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <label htmlFor="login-password" className="text-sm font-medium">
                         Password
@@ -223,21 +223,41 @@ export default function AuthPage() {
                         <p className="text-sm text-red-500">{errors.loginPassword}</p>
                       )}
                     </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
+
+                    <Button
+                      type="submit"
+                      className="w-full"
                       disabled={loginMutation.isPending}
                       data-testid="button-signin"
                     >
                       {loginMutation.isPending ? "Signing In..." : "Sign In"}
                     </Button>
+
+                    <div className="relative my-4">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t"></span>
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">Or demo access</span>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full border-2 border-primary/20 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200"
+                      onClick={() => demoLoginMutation.mutate()}
+                      disabled={demoLoginMutation.isPending}
+                      data-testid="button-demo"
+                    >
+                      {demoLoginMutation.isPending ? "Connecting..." : "Skip for Demo"}
+                    </Button>
                   </form>
-                  
+
                   <div className="mt-6 text-center">
                     <p className="text-muted-foreground">
                       Don't have an account?{" "}
-                      <button 
+                      <button
                         onClick={switchToRegister}
                         className="text-primary hover:underline font-medium"
                         data-testid="link-signup"
@@ -274,7 +294,7 @@ export default function AuthPage() {
                         <p className="text-sm text-red-500">{errors.registerName}</p>
                       )}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <label htmlFor="register-email" className="text-sm font-medium">
                         Email
@@ -292,7 +312,7 @@ export default function AuthPage() {
                         <p className="text-sm text-red-500">{errors.registerEmail}</p>
                       )}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <label htmlFor="register-password" className="text-sm font-medium">
                         Password
@@ -310,7 +330,7 @@ export default function AuthPage() {
                         <p className="text-sm text-red-500">{errors.registerPassword}</p>
                       )}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <label htmlFor="confirm-password" className="text-sm font-medium">
                         Confirm Password
@@ -328,10 +348,10 @@ export default function AuthPage() {
                         <p className="text-sm text-red-500">{errors.confirmPassword}</p>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="terms" 
+                      <Checkbox
+                        id="terms"
                         checked={acceptTerms}
                         onCheckedChange={(checked) => setAcceptTerms(checked === true)}
                         className={errors.acceptTerms ? "border-red-500" : ""}
@@ -350,21 +370,21 @@ export default function AuthPage() {
                     {errors.acceptTerms && (
                       <p className="text-sm text-red-500">{errors.acceptTerms}</p>
                     )}
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
+
+                    <Button
+                      type="submit"
+                      className="w-full"
                       disabled={registerMutation.isPending}
                       data-testid="button-create-account"
                     >
                       {registerMutation.isPending ? "Creating Account..." : "Create Account"}
                     </Button>
                   </form>
-                  
+
                   <div className="mt-6 text-center">
                     <p className="text-muted-foreground">
                       Already have an account?{" "}
-                      <button 
+                      <button
                         onClick={switchToLogin}
                         className="text-primary hover:underline font-medium"
                         data-testid="link-signin"

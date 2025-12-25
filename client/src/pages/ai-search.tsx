@@ -177,14 +177,14 @@ export default function AISearch() {
   const { tab } = useParams<{ tab?: string }>();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  
+
   // Redirect to default tab if no tab specified
   useEffect(() => {
     if (!tab) {
       setLocation('/ai-search/legal-research');
     }
   }, [tab, setLocation]);
-  
+
   const activeTab = tab || 'legal-research';
 
   const [searchResults, setSearchResults] = useState<any>(null);
@@ -287,11 +287,11 @@ export default function AISearch() {
 
   const handleFileUpload = (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    
+
     const formData = new FormData();
     formData.append('document', files[0]);
     formData.append('summaryType', 'detailed');
-    
+
     documentSummaryMutation.mutate(formData);
   };
 
@@ -374,10 +374,10 @@ export default function AISearch() {
       timestamp: new Date()
     };
     setChatMessages(prev => [...prev, userMessage]);
-    
+
     // Clear the form
     quickQuestionForm.reset();
-    
+
     // Send to API
     quickQuestionMutation.mutate(data);
   };
@@ -391,13 +391,13 @@ export default function AISearch() {
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2" id="main-heading">AI Legal Research Platform</h1>
             <p className="text-muted-foreground text-sm md:text-base" id="platform-description">Choose your AI-powered legal tool</p>
           </div>
-          
+
           <TooltipProvider>
             <div className="border border-border rounded-lg bg-background p-2">
               {/* Mobile: Dropdown-style navigation */}
               <div className="block lg:hidden">
                 <Label htmlFor="mobile-tab-select" className="sr-only">Select a legal research tool</Label>
-                <Select value={activeTab} onValueChange={(value) => switchTab(value)}>
+                <Select value={activeTab} onValueChange={(value) => setLocation(`/ai-search/${value}`)}>
                   <SelectTrigger className="w-full" id="mobile-tab-select" aria-label="Legal research tool selection">
                     <SelectValue>
                       <div className="flex items-center space-x-2">
@@ -439,16 +439,15 @@ export default function AISearch() {
                   {Object.values(tabsMetadata).map((tab) => {
                     const IconComponent = tab.icon;
                     const isActive = activeTab === tab.id;
-                    
+
                     return (
                       <div key={tab.id} className="flex items-center">
                         <button
                           onClick={() => switchTab(tab.id)}
-                          className={`flex items-center space-x-2 px-4 py-3 rounded-md font-medium text-sm transition-all ${
-                            isActive
+                          className={`flex items-center space-x-2 px-4 py-3 rounded-md font-medium text-sm transition-all ${isActive
                               ? 'bg-primary text-primary-foreground shadow-sm'
                               : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                          }`}
+                            }`}
                           role="tab"
                           aria-selected={isActive}
                           aria-controls={`tabpanel-${tab.id}`}
@@ -459,7 +458,7 @@ export default function AISearch() {
                           <span className="hidden xl:inline">{tab.title}</span>
                           <span className="xl:hidden">{tab.title.split(' ')[0]}</span>
                         </button>
-                        
+
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
@@ -580,7 +579,7 @@ export default function AISearch() {
         {/* Tab Content */}
         <div className="space-y-4 md:space-y-6">
           {activeTab === 'legal-research' && (
-            <div 
+            <div
               className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6"
               role="tabpanel"
               id="tabpanel-legal-research"
@@ -590,7 +589,7 @@ export default function AISearch() {
               {/* Search Form */}
               <Card>
                 <CardHeader className="pb-4">
-                  <CardTitle 
+                  <CardTitle
                     className="text-lg md:text-xl flex items-center space-x-2"
                     id="legal-research-form-heading"
                   >
@@ -602,10 +601,10 @@ export default function AISearch() {
                   </p>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  
+
                   <Form {...legalSearchForm}>
-                    <form 
-                      onSubmit={legalSearchForm.handleSubmit(handleLegalSearch)} 
+                    <form
+                      onSubmit={legalSearchForm.handleSubmit(handleLegalSearch)}
                       className="space-y-4"
                       aria-labelledby="legal-research-form-heading"
                       role="search"
@@ -633,9 +632,9 @@ export default function AISearch() {
                           </FormItem>
                         )}
                       />
-                      
-                      <Button 
-                        type="submit" 
+
+                      <Button
+                        type="submit"
                         className="w-full"
                         disabled={legalSearchMutation.isPending}
                         data-testid="button-search"
@@ -660,7 +659,7 @@ export default function AISearch() {
               {/* Search Results */}
               <Card>
                 <CardHeader className="pb-4">
-                  <CardTitle 
+                  <CardTitle
                     className="text-lg md:text-xl"
                     id="legal-search-results-heading"
                   >
@@ -669,8 +668,8 @@ export default function AISearch() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   {searchResults ? (
-                    <div 
-                      className="space-y-4" 
+                    <div
+                      className="space-y-4"
                       data-testid="search-results"
                       role="region"
                       aria-labelledby="legal-search-results-heading"
@@ -736,7 +735,7 @@ export default function AISearch() {
                   </p>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  
+
                   <div className="space-y-4">
                     <div>
                       <Label>Upload Document</Label>
@@ -774,12 +773,12 @@ export default function AISearch() {
                         <h4 className="font-medium text-foreground mb-2">Document Type</h4>
                         <p className="text-sm text-muted-foreground">{summaryResults.documentType}</p>
                       </div>
-                      
+
                       <div className="border border-border rounded-lg p-4">
                         <h4 className="font-medium text-foreground mb-2">Summary</h4>
                         <p className="text-sm text-muted-foreground">{summaryResults.summary}</p>
                       </div>
-                      
+
                       {summaryResults.keyPoints && (
                         <div className="border border-border rounded-lg p-4">
                           <h4 className="font-medium text-foreground mb-2">Key Points</h4>
@@ -793,17 +792,16 @@ export default function AISearch() {
                           </ul>
                         </div>
                       )}
-                      
+
                       {summaryResults.legalImplications && (
                         <div className="border border-border rounded-lg p-4">
                           <h4 className="font-medium text-foreground mb-2">Legal Implications</h4>
                           <div className="space-y-2">
                             {summaryResults.legalImplications.map((implication: any, index: number) => (
                               <div key={index} className="flex items-start space-x-2">
-                                <span className={`inline-block w-2 h-2 rounded-full mt-2 ${
-                                  implication.severity === 'high' ? 'bg-red-500' :
-                                  implication.severity === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                                }`}></span>
+                                <span className={`inline-block w-2 h-2 rounded-full mt-2 ${implication.severity === 'high' ? 'bg-red-500' :
+                                    implication.severity === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                                  }`}></span>
                                 <div>
                                   <p className="text-sm font-medium text-foreground capitalize">{implication.type}</p>
                                   <p className="text-sm text-muted-foreground">{implication.message}</p>
@@ -839,7 +837,7 @@ export default function AISearch() {
                   </p>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  
+
                   <Form {...riskAnalysisForm}>
                     <form onSubmit={riskAnalysisForm.handleSubmit(handleRiskAnalysis)} className="space-y-4">
                       <FormField
@@ -869,7 +867,7 @@ export default function AISearch() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={riskAnalysisForm.control}
                         name="description"
@@ -888,7 +886,7 @@ export default function AISearch() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={riskAnalysisForm.control}
                         name="jurisdiction"
@@ -906,7 +904,7 @@ export default function AISearch() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={riskAnalysisForm.control}
                         name="caseValue"
@@ -924,9 +922,9 @@ export default function AISearch() {
                           </FormItem>
                         )}
                       />
-                      
-                      <Button 
-                        type="submit" 
+
+                      <Button
+                        type="submit"
                         className="w-full"
                         disabled={riskAnalysisMutation.isPending}
                         data-testid="button-analyze"
@@ -963,8 +961,8 @@ export default function AISearch() {
                           <span className="text-2xl font-bold text-primary">{riskResults.successProbability}%</span>
                         </div>
                         <div className="w-full bg-muted rounded-full h-2">
-                          <div 
-                            className="bg-primary h-2 rounded-full" 
+                          <div
+                            className="bg-primary h-2 rounded-full"
                             style={{ width: `${riskResults.successProbability}%` }}
                           ></div>
                         </div>
@@ -980,10 +978,9 @@ export default function AISearch() {
                           <div className="space-y-2">
                             {riskResults.riskFactors.map((factor: any, index: number) => (
                               <div key={index} className="flex items-start space-x-2">
-                                <span className={`inline-block w-2 h-2 rounded-full mt-2 ${
-                                  factor.severity === 'high' ? 'bg-red-500' :
-                                  factor.severity === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                                }`}></span>
+                                <span className={`inline-block w-2 h-2 rounded-full mt-2 ${factor.severity === 'high' ? 'bg-red-500' :
+                                    factor.severity === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                                  }`}></span>
                                 <div>
                                   <p className="text-sm font-medium text-foreground">{factor.factor}</p>
                                   <p className="text-sm text-muted-foreground">{factor.impact}</p>
@@ -1075,7 +1072,7 @@ export default function AISearch() {
                   </p>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  
+
                   <Form {...lawAgentForm}>
                     <form onSubmit={lawAgentForm.handleSubmit(handleLawAgentQuestion)} className="space-y-4">
                       <FormField
@@ -1096,9 +1093,9 @@ export default function AISearch() {
                           </FormItem>
                         )}
                       />
-                      
-                      <Button 
-                        type="submit" 
+
+                      <Button
+                        type="submit"
                         className="w-full"
                         disabled={lawAgentMutation.isPending}
                         data-testid="button-ask-law-agent"
@@ -1132,7 +1129,7 @@ export default function AISearch() {
                         <h4 className="font-medium text-foreground mb-2">Answer</h4>
                         <p className="text-sm text-muted-foreground leading-relaxed">{lawAgentResults.answer}</p>
                       </div>
-                      
+
                       {lawAgentResults.references && (
                         <div className="border border-border rounded-lg p-4">
                           <h4 className="font-medium text-foreground mb-2">References & Citations</h4>
@@ -1147,7 +1144,7 @@ export default function AISearch() {
                           </div>
                         </div>
                       )}
-                      
+
                       {lawAgentResults.keyPoints && (
                         <div className="border border-border rounded-lg p-4">
                           <h4 className="font-medium text-foreground mb-2">Key Legal Points</h4>
@@ -1187,7 +1184,7 @@ export default function AISearch() {
                   </p>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  
+
                   <Form {...webSearchForm}>
                     <form onSubmit={webSearchForm.handleSubmit(handleWebSearch)} className="space-y-4">
                       <FormField
@@ -1207,9 +1204,9 @@ export default function AISearch() {
                           </FormItem>
                         )}
                       />
-                      
-                      <Button 
-                        type="submit" 
+
+                      <Button
+                        type="submit"
                         className="w-full"
                         disabled={webSearchMutation.isPending}
                         data-testid="button-web-search"
@@ -1260,7 +1257,7 @@ export default function AISearch() {
                           )}
                         </div>
                       ))}
-                      
+
                       {webSearchResults.summary && (
                         <div className="border border-primary rounded-lg p-4 bg-primary/5">
                           <h4 className="font-medium text-foreground mb-2">AI Summary</h4>
@@ -1280,7 +1277,7 @@ export default function AISearch() {
           )}
 
           {activeTab === 'quick-question' && (
-            <div 
+            <div
               className="h-[600px] flex flex-col"
               role="tabpanel"
               id="tabpanel-quick-question"
@@ -1290,7 +1287,7 @@ export default function AISearch() {
               {/* Chat Interface */}
               <Card className="flex-1 flex flex-col">
                 <CardHeader className="pb-4">
-                  <CardTitle 
+                  <CardTitle
                     className="text-lg md:text-xl flex items-center space-x-2"
                     id="quick-question-heading"
                   >
@@ -1301,10 +1298,10 @@ export default function AISearch() {
                     Ask any legal question and get instant AI answers in a conversational format.
                   </p>
                 </CardHeader>
-                
+
                 <CardContent className="flex-1 flex flex-col pt-0">
                   {/* Chat Messages */}
-                  <div 
+                  <div
                     className="flex-1 overflow-y-auto space-y-4 mb-4 p-4 border border-border rounded-lg bg-muted/20 min-h-[300px]"
                     role="log"
                     aria-labelledby="quick-question-heading"
@@ -1328,11 +1325,10 @@ export default function AISearch() {
                             data-testid={`message-${message.type}-${message.id}`}
                           >
                             <div
-                              className={`max-w-[80%] p-3 rounded-lg ${
-                                message.type === 'user'
+                              className={`max-w-[80%] p-3 rounded-lg ${message.type === 'user'
                                   ? 'bg-primary text-primary-foreground ml-4'
                                   : 'bg-background border border-border mr-4'
-                              }`}
+                                }`}
                             >
                               <p className="text-sm leading-relaxed">{message.content}</p>
                               <p className="text-xs opacity-70 mt-2">
@@ -1341,7 +1337,7 @@ export default function AISearch() {
                             </div>
                           </div>
                         ))}
-                        
+
                         {/* Loading indicator */}
                         {quickQuestionMutation.isPending && (
                           <div className="flex justify-start">
@@ -1356,10 +1352,10 @@ export default function AISearch() {
                       </>
                     )}
                   </div>
-                  
+
                   {/* Chat Input */}
                   <Form {...quickQuestionForm}>
-                    <form 
+                    <form
                       onSubmit={quickQuestionForm.handleSubmit(handleQuickQuestion)}
                       className="flex gap-2"
                       aria-labelledby="quick-question-heading"
@@ -1388,8 +1384,8 @@ export default function AISearch() {
                           </FormItem>
                         )}
                       />
-                      
-                      <Button 
+
+                      <Button
                         type="submit"
                         disabled={quickQuestionMutation.isPending || !quickQuestionForm.watch('question').trim()}
                         data-testid="button-send-question"

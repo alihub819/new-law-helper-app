@@ -3,14 +3,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Scale, 
-  Search, 
-  FileText, 
-  TrendingUp, 
-  Brain, 
-  Shield, 
-  Clock, 
+import {
+  Scale,
+  Search,
+  FileText,
+  TrendingUp,
+  Brain,
+  Shield,
+  Clock,
   Users,
   CheckCircle,
   ArrowRight,
@@ -90,7 +90,7 @@ const useTypewriter = (text: string, speed: number = 100) => {
 // Floating Particles Component
 const FloatingParticles = () => {
   const particles = Array.from({ length: 6 }, (_, i) => i);
-  
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {particles.map((particle) => (
@@ -157,7 +157,7 @@ const AnimatedBackground = () => (
 export default function LandingPage() {
   const heroText = useTypewriter("Revolutionize Legal Work with AI", 80);
   const [showSecondLine, setShowSecondLine] = useState(false);
-  
+
   useEffect(() => {
     const timer = setTimeout(() => setShowSecondLine(true), 2000);
     return () => clearTimeout(timer);
@@ -168,7 +168,7 @@ export default function LandingPage() {
       <AnimatedBackground />
       <FloatingParticles />
       {/* Navigation */}
-      <motion.nav 
+      <motion.nav
         className="fixed top-0 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 z-50"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -176,7 +176,7 @@ export default function LandingPage() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <motion.div 
+            <motion.div
               className="flex items-center space-x-2"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -207,7 +207,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Column - Content */}
-            <motion.div 
+            <motion.div
               className="space-y-8"
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -229,17 +229,17 @@ export default function LandingPage() {
                   AI-Powered Legal Innovation
                 </Badge>
               </motion.div>
-              
+
               {/* Animated Main Heading */}
               <div className="space-y-4">
-                <motion.h1 
+                <motion.h1
                   className="text-5xl md:text-6xl lg:text-7xl font-bold text-slate-900 dark:text-white leading-tight"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.4 }}
                 >
                   <span className="block">{heroText}</span>
-                  <motion.span 
+                  <motion.span
                     className="block bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: showSecondLine ? 1 : 0, y: showSecondLine ? 0 : 20 }}
@@ -248,7 +248,7 @@ export default function LandingPage() {
                     Beyond Expectations
                   </motion.span>
                 </motion.h1>
-                
+
                 {/* Animated cursor */}
                 <motion.span
                   className="inline-block w-1 h-12 bg-blue-600 ml-2"
@@ -256,11 +256,11 @@ export default function LandingPage() {
                   transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
                 />
               </div>
-              
+
               {/* Animated Description */}
               <AnimatePresence>
                 {showSecondLine && (
-                  <motion.p 
+                  <motion.p
                     className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 leading-relaxed max-w-lg"
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -270,23 +270,23 @@ export default function LandingPage() {
                   </motion.p>
                 )}
               </AnimatePresence>
-              
+
               {/* Enhanced CTA Buttons */}
               <AnimatePresence>
                 {showSecondLine && (
-                  <motion.div 
+                  <motion.div
                     className="flex flex-col sm:flex-row gap-4 pt-4"
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.6 }}
                   >
-                    <motion.div 
-                      whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(59, 130, 246, 0.3)" }} 
+                    <motion.div
+                      whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(59, 130, 246, 0.3)" }}
                       whileTap={{ scale: 0.95 }}
                     >
                       <Link href="/auth">
-                        <Button 
-                          size="lg" 
+                        <Button
+                          size="lg"
                           className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white px-10 py-5 text-lg rounded-2xl shadow-2xl border-0 relative overflow-hidden group"
                           data-testid="hero-get-started"
                         >
@@ -304,34 +304,36 @@ export default function LandingPage() {
                         </Button>
                       </Link>
                     </motion.div>
-                    
-                    <motion.div 
-                      whileHover={{ scale: 1.05 }} 
+
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <Button 
-                        variant="outline" 
-                        size="lg"
-                        className="border-2 border-gradient-to-r from-blue-300 to-purple-300 bg-white/10 backdrop-blur-sm px-10 py-5 text-lg rounded-2xl hover:bg-white/20 transition-all duration-300 group"
-                        data-testid="hero-watch-demo"
-                      >
-                        <motion.div
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{ duration: 2, repeat: Infinity }}
+                      <Link href="/auth">
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="border-2 border-gradient-to-r from-blue-300 to-purple-300 bg-white/10 backdrop-blur-sm px-10 py-5 text-lg rounded-2xl hover:bg-white/20 transition-all duration-300 group w-full sm:w-auto"
+                          data-testid="hero-watch-demo"
                         >
-                          <Globe className="mr-3 h-5 w-5" />
-                        </motion.div>
-                        Explore Demo
-                      </Button>
+                          <motion.div
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            <Globe className="mr-3 h-5 w-5" />
+                          </motion.div>
+                          Explore Demo
+                        </Button>
+                      </Link>
                     </motion.div>
                   </motion.div>
                 )}
               </AnimatePresence>
-              
+
               {/* Stats Pills */}
               <AnimatePresence>
                 {showSecondLine && (
-                  <motion.div 
+                  <motion.div
                     className="flex flex-wrap gap-4 pt-8"
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -358,7 +360,7 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Right Column - Visual Elements */}
-            <motion.div 
+            <motion.div
               className="relative"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -369,14 +371,14 @@ export default function LandingPage() {
                 {/* Main Card */}
                 <motion.div
                   className="absolute top-0 left-1/2 transform -translate-x-1/2 w-80 h-48 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl shadow-2xl"
-                  animate={{ 
+                  animate={{
                     y: [0, -20, 0],
                     rotateY: [0, 5, 0, -5, 0]
                   }}
-                  transition={{ 
-                    duration: 6, 
-                    repeat: Infinity, 
-                    ease: "easeInOut" 
+                  transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    ease: "easeInOut"
                   }}
                 >
                   <div className="p-6 text-white">
@@ -432,7 +434,7 @@ export default function LandingPage() {
       {/* Features Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-800">
         <div className="max-w-7xl mx-auto">
-          <motion.div 
+          <motion.div
             className="text-center mb-16"
             variants={fadeInUp}
             initial="initial"
@@ -447,7 +449,7 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
             variants={staggerContainer}
             initial="initial"
@@ -557,9 +559,9 @@ export default function LandingPage() {
               <p className="text-xl text-slate-600 dark:text-slate-300 mb-8 leading-relaxed">
                 Join thousands of legal professionals who trust LawHelper to streamline their practice and deliver exceptional results for their clients.
               </p>
-              
+
               <div className="space-y-6">
-                <motion.div 
+                <motion.div
                   className="flex items-start space-x-4"
                   whileHover={{ x: 10 }}
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -575,7 +577,7 @@ export default function LandingPage() {
                   </div>
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                   className="flex items-start space-x-4"
                   whileHover={{ x: 10 }}
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -591,7 +593,7 @@ export default function LandingPage() {
                   </div>
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                   className="flex items-start space-x-4"
                   whileHover={{ x: 10 }}
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -659,7 +661,7 @@ export default function LandingPage() {
         <div className="absolute inset-0">
           <motion.div
             className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full"
-            animate={{ 
+            animate={{
               scale: [1, 1.2, 1],
               opacity: [0.3, 0.6, 0.3]
             }}
@@ -667,7 +669,7 @@ export default function LandingPage() {
           />
           <motion.div
             className="absolute bottom-10 right-10 w-24 h-24 bg-white/10 rounded-full"
-            animate={{ 
+            animate={{
               scale: [1, 1.3, 1],
               opacity: [0.2, 0.5, 0.2]
             }}
@@ -690,12 +692,12 @@ export default function LandingPage() {
             >
               <div className="relative">
                 {/* Decorative background circle */}
-                <motion.div 
+                <motion.div
                   className="absolute -inset-8 bg-gradient-to-r from-white/20 to-white/10 rounded-full"
                   animate={{ rotate: 360 }}
                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                 />
-                
+
                 {/* CEO Image */}
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -708,7 +710,7 @@ export default function LandingPage() {
                     className="w-80 h-80 lg:w-96 lg:h-96 object-cover rounded-3xl shadow-2xl border-4 border-white/20 mx-auto"
                   />
                 </motion.div>
-                
+
                 {/* Floating badges */}
                 <motion.div
                   className="absolute -top-4 -right-4 bg-white text-blue-600 px-4 py-2 rounded-full shadow-lg font-semibold"
@@ -718,7 +720,7 @@ export default function LandingPage() {
                 >
                   CEO & Founder
                 </motion.div>
-                
+
                 <motion.div
                   className="absolute -bottom-4 -left-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full shadow-lg font-semibold"
                   initial={{ opacity: 0, scale: 0 }}
@@ -742,17 +744,17 @@ export default function LandingPage() {
                 </Badge>
               </motion.div>
 
-              <motion.h2 
+              <motion.h2
                 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight"
                 variants={fadeInUp}
               >
-                Meet Our 
+                Meet Our
                 <span className="block bg-gradient-to-r from-yellow-300 to-orange-400 bg-clip-text text-transparent">
                   Visionary Leader
                 </span>
               </motion.h2>
 
-              <motion.div 
+              <motion.div
                 className="space-y-4"
                 variants={fadeInUp}
               >
@@ -764,17 +766,17 @@ export default function LandingPage() {
                 </p>
               </motion.div>
 
-              <motion.p 
+              <motion.p
                 className="text-lg md:text-xl text-blue-100 leading-relaxed"
                 variants={fadeInUp}
               >
-                With over a decade of experience in artificial intelligence and legal technology, 
-                Jasmel has dedicated his career to revolutionizing how legal professionals work. 
-                His vision for LawHelper stems from a deep understanding of both AI capabilities 
+                With over a decade of experience in artificial intelligence and legal technology,
+                Jasmel has dedicated his career to revolutionizing how legal professionals work.
+                His vision for LawHelper stems from a deep understanding of both AI capabilities
                 and the real-world challenges facing modern law practices.
               </motion.p>
 
-              <motion.div 
+              <motion.div
                 className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4"
                 variants={fadeInUp}
               >
@@ -796,11 +798,11 @@ export default function LandingPage() {
                 ))}
               </motion.div>
 
-              <motion.blockquote 
+              <motion.blockquote
                 className="border-l-4 border-yellow-300 pl-6 italic text-lg text-blue-100"
                 variants={fadeInUp}
               >
-                "Our mission is to democratize access to intelligent legal tools, empowering every lawyer 
+                "Our mission is to democratize access to intelligent legal tools, empowering every lawyer
                 to deliver exceptional results while focusing on what truly matters - serving their clients."
               </motion.blockquote>
             </motion.div>
@@ -811,7 +813,7 @@ export default function LandingPage() {
       {/* Testimonials Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-800 dark:to-slate-900">
         <div className="max-w-7xl mx-auto">
-          <motion.div 
+          <motion.div
             className="text-center mb-16"
             variants={staggerContainer}
             initial="initial"
@@ -824,13 +826,13 @@ export default function LandingPage() {
                 Trusted by Legal Professionals
               </Badge>
             </motion.div>
-            <motion.h2 
+            <motion.h2
               className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4"
               variants={fadeInUp}
             >
               What Our <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Clients Say</span>
             </motion.h2>
-            <motion.p 
+            <motion.p
               className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto"
               variants={fadeInUp}
             >
@@ -889,7 +891,7 @@ export default function LandingPage() {
       {/* Pricing Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-900">
         <div className="max-w-7xl mx-auto">
-          <motion.div 
+          <motion.div
             className="text-center mb-16"
             variants={staggerContainer}
             initial="initial"
@@ -902,13 +904,13 @@ export default function LandingPage() {
                 Simple Pricing
               </Badge>
             </motion.div>
-            <motion.h2 
+            <motion.h2
               className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4"
               variants={fadeInUp}
             >
               Choose Your <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Plan</span>
             </motion.h2>
-            <motion.p 
+            <motion.p
               className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto"
               variants={fadeInUp}
             >
@@ -964,7 +966,7 @@ export default function LandingPage() {
                         <span className="text-slate-600 dark:text-slate-400 ml-2">/{plan.period}</span>
                       </div>
                     </div>
-                    
+
                     <ul className="space-y-4 mb-8">
                       {plan.features.map((feature, featureIndex) => (
                         <li key={featureIndex} className="flex items-center">
@@ -973,14 +975,14 @@ export default function LandingPage() {
                         </li>
                       ))}
                     </ul>
-                    
+
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       <Link href="/auth">
-                        <Button 
-                          className={`w-full py-3 text-lg rounded-xl ${plan.popular ? 
+                        <Button
+                          className={`w-full py-3 text-lg rounded-xl ${plan.popular ?
                             'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg' :
                             'bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white'
-                          } transition-all duration-300`}
+                            } transition-all duration-300`}
                           data-testid={`pricing-${plan.name.toLowerCase()}`}
                         >
                           Get Started
@@ -998,7 +1000,7 @@ export default function LandingPage() {
       {/* FAQ Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
         <div className="max-w-4xl mx-auto">
-          <motion.div 
+          <motion.div
             className="text-center mb-16"
             variants={staggerContainer}
             initial="initial"
@@ -1011,13 +1013,13 @@ export default function LandingPage() {
                 Frequently Asked Questions
               </Badge>
             </motion.div>
-            <motion.h2 
+            <motion.h2
               className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4"
               variants={fadeInUp}
             >
               Got <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Questions?</span>
             </motion.h2>
-            <motion.p 
+            <motion.p
               className="text-xl text-slate-600 dark:text-slate-300"
               variants={fadeInUp}
             >
@@ -1082,7 +1084,7 @@ export default function LandingPage() {
             </p>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link href="/auth">
-                <Button 
+                <Button
                   size="lg"
                   className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                   data-testid="cta-get-started"
@@ -1099,7 +1101,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="bg-slate-900 dark:bg-slate-950 text-white py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <motion.div 
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-4 gap-8"
             variants={staggerContainer}
             initial="initial"
@@ -1115,7 +1117,7 @@ export default function LandingPage() {
                 Empowering legal professionals with AI-driven tools for research, document generation, and analysis.
               </p>
             </motion.div>
-            
+
             <motion.div variants={fadeInUp}>
               <h3 className="text-lg font-bold mb-6">Product</h3>
               <ul className="space-y-3 text-slate-400">
@@ -1125,7 +1127,7 @@ export default function LandingPage() {
                 <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
               </ul>
             </motion.div>
-            
+
             <motion.div variants={fadeInUp}>
               <h3 className="text-lg font-bold mb-6">Resources</h3>
               <ul className="space-y-3 text-slate-400">
@@ -1135,7 +1137,7 @@ export default function LandingPage() {
                 <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
               </ul>
             </motion.div>
-            
+
             <motion.div variants={fadeInUp}>
               <h3 className="text-lg font-bold mb-6">Company</h3>
               <ul className="space-y-3 text-slate-400">
@@ -1146,8 +1148,8 @@ export default function LandingPage() {
               </ul>
             </motion.div>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             className="border-t border-slate-800 mt-12 pt-8 text-center text-slate-400"
             variants={fadeInUp}
             initial="initial"

@@ -1,5 +1,5 @@
-import { 
-  type User, type InsertUser, 
+import {
+  type User, type InsertUser,
   type SearchHistory, type InsertSearchHistory,
   type Case, type InsertCase,
   type SavedDocument, type InsertDocument,
@@ -15,8 +15,15 @@ import { eq, desc, and, sql as dsql } from "drizzle-orm";
 
 const MemoryStore = createMemoryStore(session);
 
-const sql = neon(process.env.DATABASE_URL!);
-const db = drizzle(sql);
+let db: any;
+try {
+  if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') && !process.env.DATABASE_URL.includes('pseudo')) {
+    const sql = neon(process.env.DATABASE_URL);
+    db = drizzle(sql);
+  }
+} catch (e) {
+  console.warn("DB Connection failed, falling back to MemStorage:", e);
+}
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -24,14 +31,14 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   createSearchHistory(search: InsertSearchHistory): Promise<SearchHistory>;
   getSearchHistoryByUserId(userId: string): Promise<SearchHistory[]>;
-  
+
   // Case Management
   getCasesByUser(userId: string): Promise<Case[]>;
   getCase(id: string): Promise<Case | undefined>;
   createCase(caseData: InsertCase): Promise<Case>;
   updateCase(id: string, caseData: Partial<InsertCase>): Promise<Case>;
   deleteCase(id: string): Promise<void>;
-  
+
   // Document Management
   getDocumentsByUser(userId: string): Promise<SavedDocument[]>;
   getDocumentsByCase(caseId: string): Promise<SavedDocument[]>;
@@ -39,14 +46,14 @@ export interface IStorage {
   createDocument(docData: InsertDocument): Promise<SavedDocument>;
   updateDocument(id: string, docData: Partial<InsertDocument>): Promise<SavedDocument>;
   deleteDocument(id: string): Promise<void>;
-  
+
   // Medical Records
   getMedicalRecordsByCase(caseId: string): Promise<MedicalRecord[]>;
   getMedicalRecord(id: string): Promise<MedicalRecord | undefined>;
   createMedicalRecord(recordData: InsertMedicalRecord): Promise<MedicalRecord>;
   updateMedicalRecord(id: string, recordData: Partial<InsertMedicalRecord>): Promise<MedicalRecord>;
   deleteMedicalRecord(id: string): Promise<void>;
-  
+
   sessionStore: session.Store;
 }
 
@@ -235,4 +242,166 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+export class MemStorage implements IStorage {
+  private users: Map<string, User> = new Map();
+  private cases: Map<string, Case> = new Map();
+  private documents: Map<string, SavedDocument> = new Map();
+  private searchHistory: Map<string, SearchHistory[]> = new Map();
+  private medicalRecords: Map<string, MedicalRecord> = new Map();
+  public sessionStore: session.Store;
+
+  constructor() {
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000,
+    });
+  }
+
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(u => u.email === email);
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = randomUUID();
+    const user: User = { ...insertUser, id, createdAt: new Date(), updatedAt: new Date(), password: insertUser.password || "" };
+    this.users.set(id, user);
+    return user;
+  }
+
+  async createSearchHistory(insertSearch: InsertSearchHistory): Promise<SearchHistory> {
+    const id = randomUUID();
+    const history: SearchHistory = { ...insertSearch, id, createdAt: new Date() };
+    const userHistory = this.searchHistory.get(insertSearch.userId) || [];
+    userHistory.unshift(history);
+    this.searchHistory.set(insertSearch.userId, userHistory.slice(0, 10));
+    return history;
+  }
+
+  async getSearchHistoryByUserId(userId: string): Promise<SearchHistory[]> {
+    return this.searchHistory.get(userId) || [];
+  }
+
+  async getCasesByUser(userId: string): Promise<Case[]> {
+    return Array.from(this.cases.values()).filter(c => c.userId === userId);
+  }
+
+  async getCase(id: string): Promise<Case | undefined> {
+    return this.cases.get(id);
+  }
+
+  async createCase(caseData: InsertCase): Promise<Case> {
+    const id = randomUUID();
+    const newCase: Case = {
+      ...caseData,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      description: caseData.description || null,
+      jurisdiction: caseData.jurisdiction || null,
+      valueLow: caseData.valueLow || null,
+      valueHigh: caseData.valueHigh || null,
+      keyDeadlines: caseData.keyDeadlines || null,
+      dateOpened: caseData.dateOpened || new Date(),
+      dateClosed: caseData.dateClosed || null
+    };
+    this.cases.set(id, newCase);
+    return newCase;
+  }
+
+  async updateCase(id: string, caseData: Partial<InsertCase>): Promise<Case> {
+    const existing = this.cases.get(id);
+    if (!existing) throw new Error("Case not found");
+    const updated = { ...existing, ...caseData, updatedAt: new Date() };
+    this.cases.set(id, updated);
+    return updated;
+  }
+
+  async deleteCase(id: string): Promise<void> {
+    this.cases.delete(id);
+  }
+
+  async getDocumentsByUser(userId: string): Promise<SavedDocument[]> {
+    return Array.from(this.documents.values()).filter(d => d.userId === userId);
+  }
+
+  async getDocumentsByCase(caseId: string): Promise<SavedDocument[]> {
+    return Array.from(this.documents.values()).filter(d => d.caseId === caseId);
+  }
+
+  async getDocument(id: string): Promise<SavedDocument | undefined> {
+    return this.documents.get(id);
+  }
+
+  async createDocument(docData: InsertDocument): Promise<SavedDocument> {
+    const id = randomUUID();
+    const doc: SavedDocument = {
+      ...docData,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      caseId: docData.caseId || null,
+      fileFormat: docData.fileFormat || null,
+      generatorTool: docData.generatorTool || null,
+      aiModel: docData.aiModel || null,
+      version: docData.version || 1,
+      metadata: docData.metadata || null
+    };
+    this.documents.set(id, doc);
+    return doc;
+  }
+
+  async updateDocument(id: string, docData: Partial<InsertDocument>): Promise<SavedDocument> {
+    const existing = this.documents.get(id);
+    if (!existing) throw new Error("Document not found");
+    const updated = { ...existing, ...docData, updatedAt: new Date() };
+    this.documents.set(id, updated);
+    return updated;
+  }
+
+  async deleteDocument(id: string): Promise<void> {
+    this.documents.delete(id);
+  }
+
+  async getMedicalRecordsByCase(caseId: string): Promise<MedicalRecord[]> {
+    return Array.from(this.medicalRecords.values()).filter(r => r.caseId === caseId);
+  }
+
+  async getMedicalRecord(id: string): Promise<MedicalRecord | undefined> {
+    return this.medicalRecords.get(id);
+  }
+
+  async createMedicalRecord(recordData: InsertMedicalRecord): Promise<MedicalRecord> {
+    const id = randomUUID();
+    const record: MedicalRecord = {
+      ...recordData,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      provider: recordData.provider || null,
+      facility: recordData.facility || null,
+      diagnosis: recordData.diagnosis || null,
+      treatment: recordData.treatment || null,
+      notes: recordData.notes || null,
+      serviceDate: recordData.serviceDate || new Date()
+    };
+    this.medicalRecords.set(id, record);
+    return record;
+  }
+
+  async updateMedicalRecord(id: string, recordData: Partial<InsertMedicalRecord>): Promise<MedicalRecord> {
+    const existing = this.medicalRecords.get(id);
+    if (!existing) throw new Error("Medical record not found");
+    const updated = { ...existing, ...recordData, updatedAt: new Date() };
+    this.medicalRecords.set(id, updated);
+    return updated;
+  }
+
+  async deleteMedicalRecord(id: string): Promise<void> {
+    this.medicalRecords.delete(id);
+  }
+}
+
+export const storage = db ? new DatabaseStorage() : new MemStorage();

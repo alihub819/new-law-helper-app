@@ -2,9 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { 
-  searchLegalDatabase, 
-  summarizeDocument, 
+import {
+  searchLegalDatabase,
+  summarizeDocument,
   analyzeRisk,
   answerLegalQuestion,
   performWebSearch,
@@ -18,7 +18,7 @@ import mammoth from "mammoth";
 import { generatePDF, generateDOCX, generateTXT, type ExportContent } from "./document-export";
 import { runMedicalIntelligence, generateDemandLetter, generateDiscoveryResponse } from "./openai";
 
-const upload = multer({ 
+const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit
@@ -36,17 +36,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
 
+  // Demo Login endpoint
+  app.post("/api/demo-login", async (req, res, next) => {
+    try {
+      const demoEmail = "demo@lawhelper.com";
+      let user = await storage.getUserByEmail(demoEmail);
+
+      if (!user) {
+        // Create demo user if doesn't exist
+        user = await storage.createUser({
+          name: "Demo Attorney",
+          email: demoEmail,
+          password: "demo-password-123", // In a real app, this would be hashed
+        });
+      }
+
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.json(user);
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Demo login failed" });
+    }
+  });
+
   // AI Legal Research endpoint
   app.post("/api/legal-search", isAuthenticated, async (req, res) => {
     try {
       const { query, filters } = req.body;
-      
+
       if (!query) {
         return res.status(400).json({ error: "Query is required" });
       }
 
       const results = await searchLegalDatabase(query, filters);
-      
+
       // Save to search history
       await storage.createSearchHistory({
         userId: req.user!.id,
@@ -70,13 +94,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { summaryType = 'quick' } = req.body;
-      
+
       // Extract text based on file type
       let documentText = '';
       const fileType = req.file.mimetype;
-      
-      if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
-          req.file.originalname.endsWith('.docx')) {
+
+      if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        req.file.originalname.endsWith('.docx')) {
         // Use mammoth to extract text from Word documents
         const result = await mammoth.extractRawText({ buffer: req.file.buffer });
         documentText = result.value;
@@ -90,9 +114,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Try UTF-8 conversion for other formats
         documentText = req.file.buffer.toString('utf-8');
       }
-      
+
       const summary = await summarizeDocument(documentText, summaryType);
-      
+
       // Save to search history
       await storage.createSearchHistory({
         userId: req.user!.id,
@@ -112,7 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/analyze-risk", isAuthenticated, async (req, res) => {
     try {
       const { caseType, description, jurisdiction, caseValue } = req.body;
-      
+
       if (!caseType || !description) {
         return res.status(400).json({ error: "Case type and description are required" });
       }
@@ -123,7 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         jurisdiction,
         caseValue,
       });
-      
+
       // Save to search history
       await storage.createSearchHistory({
         userId: req.user!.id,
@@ -143,13 +167,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/law-agent", isAuthenticated, async (req, res) => {
     try {
       const { question } = req.body;
-      
+
       if (!question) {
         return res.status(400).json({ error: "Question is required" });
       }
 
       const answer = await answerLegalQuestion(question);
-      
+
       // Save to search history
       await storage.createSearchHistory({
         userId: req.user!.id,
@@ -169,13 +193,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/web-search", isAuthenticated, async (req, res) => {
     try {
       const { query } = req.body;
-      
+
       if (!query) {
         return res.status(400).json({ error: "Search query is required" });
       }
 
       const results = await performWebSearch(query);
-      
+
       // Save to search history
       await storage.createSearchHistory({
         userId: req.user!.id,
@@ -195,16 +219,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/quick-question", isAuthenticated, async (req, res) => {
     try {
       const { question } = req.body;
-      
+
       console.log("[QUICK-QUESTION] Received question:", question);
-      
+
       if (!question) {
         return res.status(400).json({ error: "Question is required" });
       }
 
       const answer = await answerLegalQuestion(question);
       console.log("[QUICK-QUESTION] OpenAI response:", JSON.stringify(answer, null, 2));
-      
+
       // Save to search history
       await storage.createSearchHistory({
         userId: req.user!.id,
@@ -226,9 +250,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/generate-document", isAuthenticated, async (req, res) => {
     try {
       const { documentType, inputMethod, textContent, formData } = req.body;
-      
+
       console.log("[DOCUMENT-GENERATION] Received request:", { documentType, inputMethod, textContent: textContent?.substring(0, 100), formData });
-      
+
       if (!documentType || !inputMethod) {
         return res.status(400).json({ error: "Document type and input method are required" });
       }
@@ -243,13 +267,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const document = await generateDocument(documentType, inputMethod, textContent, formData);
-      console.log("[DOCUMENT-GENERATION] Generated document:", { 
-        id: document.id, 
-        type: document.type, 
+      console.log("[DOCUMENT-GENERATION] Generated document:", {
+        id: document.id,
+        type: document.type,
         title: document.title,
         contentLength: document.formattedContent?.length || 0
       });
-      
+
       // Save to search history
       await storage.createSearchHistory({
         userId: req.user!.id,
@@ -272,10 +296,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No document file provided" });
       }
 
-      console.log("[DOCUMENT-ANALYSIS] Received file:", { 
-        filename: req.file.originalname, 
-        mimetype: req.file.mimetype, 
-        size: req.file.size 
+      console.log("[DOCUMENT-ANALYSIS] Received file:", {
+        filename: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
       });
 
       // Extract text content from the uploaded file
@@ -292,11 +316,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 [Company Letterhead Area]
 
-Date: ${new Date().toLocaleDateString('en-US', { 
-  year: 'numeric', 
-  month: 'long', 
-  day: 'numeric' 
-})}
+Date: ${new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })}
 
 [Recipient Name]
 [Recipient Title]
@@ -385,7 +409,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
 
       // Analyze the document using AI
       const analysis = await analyzeDocument(documentContent, fileName);
-      console.log("[DOCUMENT-ANALYSIS] Analysis completed:", { 
+      console.log("[DOCUMENT-ANALYSIS] Analysis completed:", {
         documentTitle: analysis.documentTitle,
         overallScore: analysis.overallQuality?.score,
         strongPointsCount: analysis.strongPoints?.length || 0,
@@ -421,16 +445,16 @@ Note: This is a demonstration of a legal document format. In a production enviro
         return res.status(400).json({ error: "Missing required fields: type, item, documentContent" });
       }
 
-      console.log("[DOCUMENT-IMPROVEMENT] Processing improvement request:", { 
-        type, 
+      console.log("[DOCUMENT-IMPROVEMENT] Processing improvement request:", {
+        type,
         itemPoint: item.point || item.area,
-        contentLength: documentContent.length 
+        contentLength: documentContent.length
       });
 
       // Generate improvement using AI
       const improvement = await improveDocumentSection(type, item, documentContent);
-      
-      console.log("[DOCUMENT-IMPROVEMENT] Improvement generated:", { 
+
+      console.log("[DOCUMENT-IMPROVEMENT] Improvement generated:", {
         improvedTextLength: improvement.improvedText.length,
         explanation: improvement.explanation
       });
@@ -541,7 +565,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
   app.get("/api/documents", isAuthenticated, async (req, res) => {
     try {
       const { caseId } = req.query;
-      
+
       if (caseId) {
         // Verify user owns the case before returning documents
         const caseData = await storage.getCase(caseId as string);
@@ -569,7 +593,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
           return res.status(403).json({ error: "Access denied" });
         }
       }
-      
+
       // Validate and create document
       const validatedData = insertDocumentSchema.parse({
         ...req.body,
@@ -621,7 +645,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
       if (!caseData || caseData.userId !== req.user!.id) {
         return res.status(403).json({ error: "Access denied" });
       }
-      
+
       // Validate and create medical record
       const validatedData = insertMedicalRecordSchema.parse({
         ...req.body,
@@ -656,7 +680,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
   app.post("/api/export-document", isAuthenticated, async (req, res) => {
     try {
       const { format, content } = req.body;
-      
+
       if (!format || !content) {
         return res.status(400).json({ error: "Format and content are required" });
       }
@@ -712,7 +736,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
   app.post("/api/medical-intelligence", isAuthenticated, async (req, res) => {
     try {
       const { mode, payload } = req.body;
-      
+
       if (!mode || !payload) {
         return res.status(400).json({ error: "Mode and payload are required" });
       }
@@ -722,18 +746,24 @@ Note: This is a demonstration of a legal document format. In a production enviro
       }
 
       const result = await runMedicalIntelligence(mode, payload);
-      
+
       // Save the medical intelligence analysis to the database
-      const modeTitle = mode === "chronology" ? "Medical Chronology" : 
-                       mode === "bills" ? "Medical Bills Analysis" : "Medical Summary";
+      const modeTitle = mode === "chronology" ? "Medical Chronology" :
+        mode === "bills" ? "Medical Bills Analysis" : "Medical Summary";
+
+      let docType: any = "other";
+      if (mode === "chronology") docType = "medical-chronology";
+      else if (mode === "bills") docType = "medical-bill-analysis";
+      else if (mode === "summary") docType = "medical-summary";
+
       await storage.createDocument({
         userId: req.user!.id,
         caseId: payload.caseId || null,
-        documentType: `medical-${mode}`,
+        documentType: docType,
         title: `${modeTitle} - ${new Date().toLocaleDateString()}`,
         content: result,
       });
-      
+
       res.json(result);
     } catch (error) {
       console.error("Medical intelligence error:", error);
@@ -745,7 +775,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
   app.post("/api/demand-letter", isAuthenticated, async (req, res) => {
     try {
       const result = await generateDemandLetter(req.body);
-      
+
       // Save the generated demand letter to the database
       const caseType = req.body.caseType || "Personal Injury";
       const claimantName = req.body.claimantName || "Unknown";
@@ -756,7 +786,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
         title: `Demand Letter - ${claimantName} (${caseType})`,
         content: result,
       });
-      
+
       res.json(result);
     } catch (error) {
       console.error("Demand letter generation error:", error);
@@ -790,7 +820,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
   app.post("/api/discovery-tools", isAuthenticated, async (req, res) => {
     try {
       const { type, payload } = req.body;
-      
+
       if (!type || !payload) {
         return res.status(400).json({ error: "Type and payload are required" });
       }
@@ -800,18 +830,24 @@ Note: This is a demonstration of a legal document format. In a production enviro
       }
 
       const result = await generateDiscoveryResponse(type, payload);
-      
+
       // Save the discovery response to the database
-      const typeTitle = type === "interrogatories" ? "Interrogatory Responses" : 
-                       type === "requests" ? "Document Production Responses" : "Admission Responses";
+      const typeTitle = type === "interrogatories" ? "Interrogatory Responses" :
+        type === "requests" ? "Document Production Responses" : "Admission Responses";
+
+      let docType: any = "other";
+      if (type === "interrogatories") docType = "interrogatories";
+      else if (type === "requests") docType = "request-for-production";
+      else if (type === "admissions") docType = "other"; // Admissions not in enum yet, using other
+
       await storage.createDocument({
         userId: req.user!.id,
         caseId: payload.caseId || null,
-        documentType: `discovery-${type}`,
+        documentType: docType,
         title: `${typeTitle} - ${new Date().toLocaleDateString()}`,
         content: result,
       });
-      
+
       res.json(result);
     } catch (error) {
       console.error("Discovery response generation error:", error);

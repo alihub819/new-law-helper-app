@@ -18,12 +18,12 @@ import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Briefcase, Plus, FileText, Calendar, DollarSign, User, MapPin, Trash2, Edit, Eye } from "lucide-react";
 import { useLocation } from "wouter";
-import { type Case, insertCaseSchema } from "@shared/schema";
+import { type Case, insertCaseSchema, type CaseType, type CaseStatus } from "@shared/schema";
 
 // Extend the shared schema for form-specific validation
 const caseFormSchema = insertCaseSchema.omit({ userId: true, dateOpened: true }).extend({
-  valueLow: z.string().optional().transform(val => val ? val : undefined),
-  valueHigh: z.string().optional().transform(val => val ? val : undefined),
+  valueLow: z.string().optional(),
+  valueHigh: z.string().optional(),
 });
 
 type CaseFormData = z.infer<typeof caseFormSchema>;
@@ -41,7 +41,7 @@ export default function MyCases() {
       caseName: "",
       caseNumber: "",
       clientName: "",
-      caseType: "",
+      caseType: "personal-injury" as any,
       status: "active",
       description: "",
       jurisdiction: "",
@@ -124,7 +124,7 @@ export default function MyCases() {
   };
 
   if (!user) {
-    return null;
+    return <></>;
   }
 
   return (
@@ -174,7 +174,7 @@ export default function MyCases() {
                           <FormItem>
                             <FormLabel>Case Number</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., CV-2024-001" {...field} data-testid="input-case-number" />
+                              <Input placeholder="e.g., CV-2024-001" name={field.name} value={field.value ?? ""} onChange={field.onChange} onBlur={field.onBlur} ref={field.ref} data-testid="input-case-number" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -257,7 +257,7 @@ export default function MyCases() {
                           <FormItem>
                             <FormLabel>Jurisdiction</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., California, Federal" {...field} data-testid="input-jurisdiction" />
+                              <Input placeholder="e.g., California, Federal" name={field.name} value={field.value ?? ""} onChange={field.onChange} onBlur={field.onBlur} ref={field.ref} data-testid="input-jurisdiction" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -272,10 +272,14 @@ export default function MyCases() {
                         <FormItem>
                           <FormLabel>Case Description</FormLabel>
                           <FormControl>
-                            <Textarea 
+                            <Textarea
                               placeholder="Brief description of the case..."
                               className="min-h-[100px]"
-                              {...field}
+                              name={field.name}
+                              value={field.value ?? ""}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              ref={field.ref}
                               data-testid="input-description"
                             />
                           </FormControl>
@@ -292,7 +296,7 @@ export default function MyCases() {
                           <FormItem>
                             <FormLabel>Lead Attorney</FormLabel>
                             <FormControl>
-                              <Input placeholder="Attorney name" {...field} data-testid="input-lead-attorney" />
+                              <Input placeholder="Attorney name" name={field.name} value={field.value ?? ""} onChange={field.onChange} onBlur={field.onBlur} ref={field.ref} data-testid="input-lead-attorney" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -305,7 +309,7 @@ export default function MyCases() {
                           <FormItem>
                             <FormLabel>Opposing Party</FormLabel>
                             <FormControl>
-                              <Input placeholder="Opposing party name" {...field} data-testid="input-opposing-party" />
+                              <Input placeholder="Opposing party name" name={field.name} value={field.value ?? ""} onChange={field.onChange} onBlur={field.onBlur} ref={field.ref} data-testid="input-opposing-party" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -321,7 +325,7 @@ export default function MyCases() {
                           <FormItem>
                             <FormLabel>Estimated Value (Low)</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., 50000" {...field} data-testid="input-value-low" />
+                              <Input placeholder="e.g., 50000" name={field.name} value={field.value ?? ""} onChange={field.onChange} onBlur={field.onBlur} ref={field.ref} data-testid="input-value-low" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -334,7 +338,7 @@ export default function MyCases() {
                           <FormItem>
                             <FormLabel>Estimated Value (High)</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., 150000" {...field} data-testid="input-value-high" />
+                              <Input placeholder="e.g., 150000" name={field.name} value={field.value ?? ""} onChange={field.onChange} onBlur={field.onBlur} ref={field.ref} data-testid="input-value-high" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -464,8 +468,8 @@ export default function MyCases() {
                             {caseItem.valueLow && caseItem.valueHigh
                               ? `$${Number(caseItem.valueLow).toLocaleString()} - $${Number(caseItem.valueHigh).toLocaleString()}`
                               : caseItem.valueLow
-                              ? `$${Number(caseItem.valueLow).toLocaleString()}+`
-                              : `Up to $${Number(caseItem.valueHigh).toLocaleString()}`}
+                                ? `$${Number(caseItem.valueLow).toLocaleString()}+`
+                                : `Up to $${Number(caseItem.valueHigh).toLocaleString()}`}
                           </span>
                         </div>
                       )}

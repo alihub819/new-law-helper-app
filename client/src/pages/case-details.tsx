@@ -94,7 +94,7 @@ export default function CaseDetails() {
                 </Button>
               </div>
               <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-3">
-                {caseData.title}
+                {caseData.caseName}
                 <Badge
                   variant="outline"
                   className={getStatusColor(caseData.status)}
@@ -135,22 +135,22 @@ export default function CaseDetails() {
                 <div className="flex items-start gap-3">
                   <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Date Filed</p>
+                    <p className="text-sm font-medium text-muted-foreground">Date Opened</p>
                     <p className="text-base font-semibold text-foreground" data-testid="text-date-filed">
-                      {caseData.dateFiled
-                        ? new Date(caseData.dateFiled).toLocaleDateString()
+                      {caseData.dateOpened
+                        ? new Date(caseData.dateOpened).toLocaleDateString()
                         : "Not specified"}
                     </p>
                   </div>
                 </div>
 
-                {caseData.courtName && (
+                {caseData.jurisdiction && (
                   <div className="flex items-start gap-3">
                     <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Court</p>
+                      <p className="text-sm font-medium text-muted-foreground">Jurisdiction</p>
                       <p className="text-base font-semibold text-foreground" data-testid="text-court">
-                        {caseData.courtName}
+                        {caseData.jurisdiction}
                       </p>
                     </div>
                   </div>
@@ -199,8 +199,8 @@ export default function CaseDetails() {
                       {caseData.valueLow && caseData.valueHigh
                         ? `$${Number(caseData.valueLow).toLocaleString()} - $${Number(caseData.valueHigh).toLocaleString()}`
                         : caseData.valueLow
-                        ? `$${Number(caseData.valueLow).toLocaleString()}+`
-                        : `Up to $${Number(caseData.valueHigh).toLocaleString()}`}
+                          ? `$${Number(caseData.valueLow).toLocaleString()}+`
+                          : `Up to $${Number(caseData.valueHigh).toLocaleString()}`}
                     </p>
                   </div>
                 </div>
@@ -218,16 +218,16 @@ export default function CaseDetails() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {caseData.dateFiled && (
+                {caseData.dateOpened && (
                   <div className="flex gap-4">
                     <div className="flex flex-col items-center">
                       <div className="h-3 w-3 rounded-full bg-primary" />
                       <div className="flex-1 w-0.5 bg-border min-h-[40px]" />
                     </div>
                     <div className="pb-4">
-                      <p className="font-semibold text-foreground">Case Filed</p>
+                      <p className="font-semibold text-foreground">Case Opened</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(caseData.dateFiled).toLocaleDateString("en-US", {
+                        {new Date(caseData.dateOpened).toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "long",
                           day: "numeric",
