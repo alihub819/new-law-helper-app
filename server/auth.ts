@@ -9,7 +9,7 @@ import { User as SelectUser } from "@shared/schema";
 
 declare global {
   namespace Express {
-    interface User extends SelectUser {}
+    interface User extends SelectUser { }
   }
 }
 
@@ -30,7 +30,7 @@ async function comparePasswords(supplied: string, stored: string) {
 
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET || "law-helper-local-dev-secret",
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
@@ -47,16 +47,16 @@ export function setupAuth(app: Express) {
       try {
         const user = await storage.getUserByEmail(email);
         console.log(`[AUTH] User found: ${user ? 'YES' : 'NO'}`);
-        
+
         if (!user) {
           console.log(`[AUTH] User not found for email: ${email}`);
           return done(null, false);
         }
-        
+
         console.log(`[AUTH] Checking password for user: ${user.id}`);
         const passwordMatch = await comparePasswords(password, user.password);
         console.log(`[AUTH] Password match: ${passwordMatch}`);
-        
+
         if (!passwordMatch) {
           console.log(`[AUTH] Password mismatch for user: ${email}`);
           return done(null, false);
@@ -80,11 +80,11 @@ export function setupAuth(app: Express) {
   app.post("/api/register", async (req, res, next) => {
     console.log(`[AUTH] Registration attempt for email: ${req.body.email}`);
     console.log(`[AUTH] Registration body:`, { name: req.body.name, email: req.body.email, password: req.body.password ? '[PROVIDED]' : '[MISSING]' });
-    
+
     try {
       const existingUser = await storage.getUserByEmail(req.body.email);
       console.log(`[AUTH] Existing user check: ${existingUser ? 'EXISTS' : 'NEW'}`);
-      
+
       if (existingUser) {
         console.log(`[AUTH] Email already exists: ${req.body.email}`);
         return res.status(400).send("Email already exists");
@@ -93,7 +93,7 @@ export function setupAuth(app: Express) {
       console.log(`[AUTH] Creating new user...`);
       const hashedPassword = await hashPassword(req.body.password);
       console.log(`[AUTH] Password hashed successfully`);
-      
+
       const user = await storage.createUser({
         name: req.body.name,
         email: req.body.email,
