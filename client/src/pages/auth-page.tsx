@@ -195,7 +195,7 @@ export default function AuthPage() {
                       <Input
                         id="login-email"
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder="demo@lawhelper.com"
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
                         data-testid="input-email"
@@ -213,7 +213,7 @@ export default function AuthPage() {
                       <Input
                         id="login-password"
                         type="password"
-                        placeholder="Enter your password"
+                        placeholder="••••••••"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         data-testid="input-password"
@@ -226,43 +226,54 @@ export default function AuthPage() {
 
                     <Button
                       type="submit"
-                      className="w-full"
+                      className="w-full h-12 text-base font-semibold transition-all hover:scale-[1.01]"
                       disabled={loginMutation.isPending}
                       data-testid="button-signin"
                     >
                       {loginMutation.isPending ? "Signing In..." : "Sign In"}
                     </Button>
 
-                    <div className="relative my-4">
+                    <div className="relative my-8">
                       <div className="absolute inset-0 flex items-center">
                         <span className="w-full border-t"></span>
                       </div>
                       <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-card px-2 text-muted-foreground">Or demo access</span>
+                        <span className="bg-card px-4 text-muted-foreground font-medium">Fast Access</span>
                       </div>
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full border-2 border-primary/20 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200"
-                      onClick={() => demoLoginMutation.mutate()}
-                      disabled={demoLoginMutation.isPending}
-                      data-testid="button-demo"
-                    >
-                      {demoLoginMutation.isPending ? "Connecting..." : "Skip for Demo"}
-                    </Button>
+                    <div className="space-y-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-12 border-2 border-primary/20 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200 group relative overflow-hidden"
+                        onClick={() => demoLoginMutation.mutate()}
+                        disabled={demoLoginMutation.isPending}
+                        data-testid="button-demo"
+                      >
+                        <div className="flex items-center justify-center space-x-2">
+                          <i className="fas fa-rocket text-primary group-hover:animate-bounce"></i>
+                          <span className="font-semibold text-primary">
+                            {demoLoginMutation.isPending ? "Connecting..." : "Launch Demo MVP"}
+                          </span>
+                        </div>
+                      </Button>
+
+                      <p className="text-center text-xs text-muted-foreground">
+                        No password needed for demo access
+                      </p>
+                    </div>
                   </form>
 
-                  <div className="mt-6 text-center">
+                  <div className="mt-8 text-center pt-4 border-t">
                     <p className="text-muted-foreground">
                       Don't have an account?{" "}
                       <button
                         onClick={switchToRegister}
-                        className="text-primary hover:underline font-medium"
+                        className="text-primary hover:underline font-semibold"
                         data-testid="link-signup"
                       >
-                        Sign up
+                        Create Account
                       </button>
                     </p>
                   </div>

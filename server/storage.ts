@@ -266,14 +266,14 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id, createdAt: new Date(), updatedAt: new Date(), password: insertUser.password || "" };
+    const user: User = { ...insertUser, id, createdAt: new Date(), password: insertUser.password || "" };
     this.users.set(id, user);
     return user;
   }
 
   async createSearchHistory(insertSearch: InsertSearchHistory): Promise<SearchHistory> {
     const id = randomUUID();
-    const history: SearchHistory = { ...insertSearch, id, createdAt: new Date() };
+    const history: SearchHistory = { ...insertSearch, id, createdAt: new Date(), results: insertSearch.results || null };
     const userHistory = this.searchHistory.get(insertSearch.userId) || [];
     userHistory.unshift(history);
     this.searchHistory.set(insertSearch.userId, userHistory.slice(0, 10));
@@ -299,8 +299,14 @@ export class MemStorage implements IStorage {
       id,
       createdAt: new Date(),
       updatedAt: new Date(),
+      status: caseData.status || "active",
+      caseNumber: caseData.caseNumber || null,
       description: caseData.description || null,
       jurisdiction: caseData.jurisdiction || null,
+      practiceArea: caseData.practiceArea || null,
+      leadAttorney: caseData.leadAttorney || null,
+      opposingParty: caseData.opposingParty || null,
+      opposingCounsel: caseData.opposingCounsel || null,
       valueLow: caseData.valueLow || null,
       valueHigh: caseData.valueHigh || null,
       keyDeadlines: caseData.keyDeadlines || null,
@@ -380,12 +386,16 @@ export class MemStorage implements IStorage {
       id,
       createdAt: new Date(),
       updatedAt: new Date(),
-      provider: recordData.provider || null,
-      facility: recordData.facility || null,
-      diagnosis: recordData.diagnosis || null,
+      providerName: (recordData as any).providerName || null,
+      serviceDate: recordData.serviceDate || new Date(),
+      diagnosisCodes: recordData.diagnosisCodes || null,
+      procedureCodes: recordData.procedureCodes || null,
       treatment: recordData.treatment || null,
+      medications: recordData.medications || null,
+      chargeAmount: recordData.chargeAmount || null,
+      paidAmount: recordData.paidAmount || null,
       notes: recordData.notes || null,
-      serviceDate: recordData.serviceDate || new Date()
+      rawContent: recordData.rawContent || null
     };
     this.medicalRecords.set(id, record);
     return record;
