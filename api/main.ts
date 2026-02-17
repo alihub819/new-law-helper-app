@@ -55,55 +55,7 @@ const MemoryStore = createMemoryStore(session);
 const users = new Map<string, User>();
 const appointments = new Map<string, Appointment>();
 const intakeForms = new Map<string, IntakeForm>();
-const knowledgeBase = new Map<string, any[]>();
-
-let sessionStore: any;
-try {
-    sessionStore = new MemoryStore({ checkPeriod: 86400000 });
-} catch (e) {
-    console.warn("[SESSION] MemoryStore creation failed, using default store");
-    sessionStore = null;
-}
-
-// ============================================
-// Password Utils
-// ============================================
-const scryptAsync = promisify(scrypt);
-
-async function hashPassword(password: string): Promise<string> {
-    const salt = randomBytes(16).toString("hex");
-    const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-    return `${buf.toString("hex")}.${salt}`;
-}
-
-async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
-    try {
-        const [hashed, salt] = stored.split(".");
-        const hashedBuf = Buffer.from(hashed, "hex");
-        const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-        return timingSafeEqual(hashedBuf, suppliedBuf);
-    } catch {
-        return false;
-    }
-}
-
-// ============================================
-// Storage Functions
-// ============================================
-async function getUser(id: string): Promise<User | undefined> {
-    return users.get(id);
-}
-
-async function getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(users.values()).find(u => u.email === email);
-}
-
-async function createUser(data: { name: string; email: string; password: string }): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...data, id, createdAt: new Date() };
-    users.set(id, user);
-    return user;
-}
+const knowledgeBaseStore = new Map<string, { id: string; userId: string; fileName: string; content: string; fileType: string; createdAt: Date }[]>();
 
 // ============================================
 // Express App Setup
@@ -112,258 +64,16 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
-// Session
-app.set("trust proxy", 1);
-let sessionConfig: any = {
-    secret: process.env.SESSION_SECRET || "dev-secret-key-change-in-production",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 24 * 60 * 60 * 1000
-    }
-};
-
-try {
-    if (sessionStore) {
-        sessionConfig.store = sessionStore;
-    }
-} catch (e) {
-    console.warn("[SESSION] Using default session store");
-}
-
-app.use(session(sessionConfig));
-
-// Passport
-app.use(passport.initialize());
-app.use(passport.session());
-
-passport.use(
-    new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
-        try {
-            const user = await getUserByEmail(email);
-            if (!user) return done(null, false);
-            const match = await comparePasswords(password, user.password);
-            if (!match) return done(null, false);
-            return done(null, user);
-        } catch (error) {
-            return done(error);
-        }
-    })
-);
-
-passport.serializeUser((user: any, done) => done(null, user.id));
-passport.deserializeUser(async (id: string, done) => {
-    const user = await getUser(id);
-    done(null, user || null);
-});
-
-// Multer Setup
-const upload = multer({
-    storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
-});
-
-// Helper: Extract Text
-async function extractText(file: Express.Multer.File): Promise<string> {
-    try {
-        console.log(`[EXTRACT-TEXT] Name: ${file.originalname}, Mime: ${file.mimetype}, Size: ${file.size}`);
-        if (file.mimetype === 'text/plain' || file.originalname.endsWith('.txt')) {
-            return file.buffer.toString('utf-8');
-        } else if (file.mimetype.includes('word') || file.originalname.endsWith('.docx')) {
-            try {
-                const mammothModule = await import("mammoth");
-                const mammoth = mammothModule.default || mammothModule;
-                const result = await mammoth.extractRawText({ buffer: file.buffer });
-                return result.value || "";
-            } catch (mammothErr) {
-                console.error("[EXTRACT-TEXT] Mammoth error:", mammothErr);
-                return "";
-            }
-        } else if (file.mimetype === 'application/pdf' || file.originalname.endsWith('.pdf')) {
-            try {
-                const pdfParseModule = await import("pdf-parse");
-                const PDFParse = (pdfParseModule as any).PDFParse;
-                if (PDFParse) {
-                    const parser = new PDFParse({ data: file.buffer });
-                    const result = await parser.getText();
-                    return result.text || "";
-                } else {
-                    const pdfParser = (pdfParseModule as any).default || pdfParseModule;
-                    if (typeof pdfParser === 'function') {
-                        const data = await pdfParser(file.buffer);
-                        return data.text || "";
-                    }
-                }
-            } catch (pdfErr) {
-                console.error("[EXTRACT-TEXT] PDFParse error:", pdfErr);
-                return "";
-            }
-        }
-    } catch (e: any) {
-        console.error("[EXTRACT-TEXT] Failed", e);
-    }
-    return "";
-}
-
-// ============================================
-// Auth Routes
-// ============================================
-app.post("/api/register", async (req, res) => {
-    try {
-        const { name, email, password } = req.body;
-        if (!name || !email || !password) {
-            return res.status(400).json({ error: "Name, email and password required" });
-        }
-
-        const existing = await getUserByEmail(email);
-        if (existing) {
-            return res.status(400).json({ error: "Email already exists" });
-        }
-
-        const hashedPassword = await hashPassword(password);
-        const user = await createUser({ name, email, password: hashedPassword });
-
-        req.login(user, (err) => {
-            if (err) return res.status(500).json({ error: "Login failed" });
-            res.status(201).json({ id: user.id, name: user.name, email: user.email });
-        });
-    } catch (error) {
-        console.error("Registration error:", error);
-        res.status(500).json({ error: "Registration failed" });
-    }
-});
-
-app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    const user = req.user as User;
-    res.json({ id: user.id, name: user.name, email: user.email });
-});
-
-app.post("/api/logout", (req, res) => {
-    req.logout((err) => {
-        if (err) return res.status(500).json({ error: "Logout failed" });
-        res.json({ success: true });
-    });
-});
-
-app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
-    const user = req.user as User;
-    res.json({ id: user.id, name: user.name, email: user.email });
-});
-
-// Demo Login
-app.post("/api/demo-login", async (req, res) => {
-    try {
-        const demoEmail = "demo@lawhelper.com";
-        let user = await getUserByEmail(demoEmail);
-
-        if (!user) {
-            const hashedPassword = await hashPassword("demo-password-123");
-            user = await createUser({ name: "Demo Attorney", email: demoEmail, password: hashedPassword });
-        }
-
-        req.login(user, (err) => {
-            if (err) return res.status(500).json({ error: "Demo login failed" });
-            res.json({ id: user!.id, name: user!.name, email: user!.email });
-        });
-    } catch (error) {
-        console.error("Demo login error:", error);
-        res.status(500).json({ error: "Demo login failed" });
-    }
-});
-
-// ============================================
-// API Routes (AI Features) - MATCHING FRONTEND
-// ============================================
 function isAuthenticated(req: any, res: any, next: any) {
     if (req.isAuthenticated()) return next();
     res.status(401).json({ error: "Authentication required" });
 }
 
-// 1. Quick Question
-app.post("/api/quick-question", isAuthenticated, async (req, res) => {
-    try {
-        const { question } = req.body;
-        if (!question) return res.status(400).json({ error: "Question required" });
-        const answer = await openaiLib.answerLegalQuestion(question);
-        res.json({ answer });
-    } catch (error: any) {
-        console.error("Quick question error:", error);
-        res.status(500).json({ error: error.message || "Failed to answer question" });
-    }
-});
-
-// 2. Legal Search
-app.post("/api/legal-search", isAuthenticated, async (req, res) => {
-    try {
-        const { query, filters, context } = req.body; // useKnowledgeBase logic handled in frontend or needs context
-        // Frontend sends: { query, useKnowledgeBase }
-        // We should handle useKnowledgeBase if possible
-        let searchContext = context || "";
-
-        if (req.body.useKnowledgeBase) {
-            const userId = (req.user as User).id;
-            const entries = knowledgeBase.get(userId) || [];
-            searchContext = entries.map(e => `Doc: ${e.fileName}\n${e.content}`).join("\n\n");
-        }
-
-        if (!query) return res.status(400).json({ error: "Query required" });
-        const results = await openaiLib.searchLegalDatabase(query, filters, searchContext);
-        res.json(results);
-    } catch (error: any) {
-        console.error("Legal Search error:", error);
-        res.status(500).json({ error: error.message || "Failed to search" });
-    }
-});
-
-// 3. Summarize Document
-app.post("/api/summarize-document", isAuthenticated, upload.single('document'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).json({ error: "Document required" });
-        const text = await extractText(req.file);
-        if (!text) return res.status(400).json({ error: "Could not extract text" });
-
-        const summary = await openaiLib.summarizeDocument(text, req.body.summaryType || 'quick');
-        res.json(summary);
-    } catch (error: any) {
-        console.error("Summarize error:", error);
-        res.status(500).json({ error: error.message || "Failed to summarize" });
-    }
-});
-
-// 4. Analyze Risk
-app.post("/api/analyze-risk", isAuthenticated, async (req, res) => {
-    try {
-        const analysis = await openaiLib.analyzeRisk(req.body);
-        res.json(analysis);
-    } catch (error: any) {
-        console.error("Risk analysis error:", error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// 5. Law Agent
-app.post("/api/law-agent", isAuthenticated, async (req, res) => {
-    try {
-        const result = await openaiLib.answerLegalQuestion(req.body.question);
-        res.json(result);
-    } catch (error: any) {
-        console.error("Law Agent error:", error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// 6. Web Search
-app.post("/api/web-search", isAuthenticated, async (req, res) => {
-    try {
-        const result = await openaiLib.performWebSearch(req.body.query);
-        res.json(result);
-    } catch (error: any) {
-        console.error("Web Search error:", error);
-        res.status(500).json({ error: error.message });
-    }
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 50 * 1024 * 1024,
+    },
 });
 
 // 7. Document Generation
@@ -445,7 +155,7 @@ app.post("/api/knowledge-base", isAuthenticated, upload.single('document'), asyn
             createdAt: new Date()
         };
 
-        const entries = knowledgeBase.get(userId) || [];
+        const entries = knowledgeBaseStore.get(userId) || [];
         entries.push(entry);
         knowledgeBase.set(userId, entries);
 
@@ -458,12 +168,12 @@ app.post("/api/knowledge-base", isAuthenticated, upload.single('document'), asyn
 
 app.get("/api/knowledge-base", isAuthenticated, async (req, res) => {
     const userId = (req.user as User).id;
-    res.json(knowledgeBase.get(userId) || []);
+    res.json(knowledgeBaseStore.get(userId) || []);
 });
 
 app.delete("/api/knowledge-base/:id", isAuthenticated, async (req, res) => {
     const userId = (req.user as User).id;
-    let entries = knowledgeBase.get(userId) || [];
+    let entries = knowledgeBaseStore.get(userId) || [];
     entries = entries.filter(e => e.id !== req.params.id);
     knowledgeBase.set(userId, entries);
     res.json({ success: true });
@@ -839,6 +549,136 @@ app.post("/api/appointments", isAuthenticated, async (req, res) => {
         console.error('[APPOINTMENT] Creation failed:', error);
         res.status(500).json({ error: error.message || "Failed to create appointment" });
     }
+});
+
+// ============================================
+// Case Management Routes (in-memory storage for serverless)
+// ============================================
+interface Case {
+    id: string;
+    userId: string;
+    caseName: string;
+    caseNumber: string;
+    clientName: string;
+    caseType: string;
+    status: string;
+    description?: string;
+    jurisdiction?: string;
+    practiceArea?: string;
+    leadAttorney?: string;
+    opposingParty?: string;
+    opposingCounsel?: string;
+    valueLow?: string;
+    valueHigh?: string;
+    dateOpened: Date;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+const casesStore = new Map<string, Case>();
+
+app.get("/api/cases", isAuthenticated, (req, res) => {
+    const userId = (req.user as User).id;
+    const userCases = Array.from(casesStore.values()).filter(c => c.userId === userId);
+    res.json(userCases);
+});
+
+app.get("/api/cases/:id", isAuthenticated, (req, res) => {
+    const userId = (req.user as User).id;
+    const caseData = casesStore.get(req.params.id);
+    if (!caseData || caseData.userId !== userId) {
+        return res.status(404).json({ error: "Case not found" });
+    }
+    res.json(caseData);
+});
+
+app.post("/api/cases", isAuthenticated, (req, res) => {
+    try {
+        const userId = (req.user as User).id;
+        const { 
+            caseName, caseNumber, clientName, caseType, status, description,
+            jurisdiction, practiceArea, leadAttorney, opposingParty, opposingCounsel,
+            valueLow, valueHigh
+        } = req.body;
+
+        if (!caseName || !clientName || !caseType) {
+            return res.status(400).json({ error: "Case name, client name, and case type are required" });
+        }
+
+        const caseId = randomUUID();
+        const newCase: Case = {
+            id: caseId,
+            userId,
+            caseName,
+            caseNumber: caseNumber || "",
+            clientName,
+            caseType,
+            status: status || "active",
+            description: description || "",
+            jurisdiction: jurisdiction || "",
+            practiceArea: practiceArea || "",
+            leadAttorney: leadAttorney || "",
+            opposingParty: opposingParty || "",
+            opposingCounsel: opposingCounsel || "",
+            valueLow: valueLow || "",
+            valueHigh: valueHigh || "",
+            dateOpened: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
+
+        casesStore.set(caseId, newCase);
+        console.log('[CASE] Created case:', caseName);
+        res.json(newCase);
+    } catch (error: any) {
+        console.error('[CASE] Create error:', error);
+        res.status(500).json({ error: error.message || "Failed to create case" });
+    }
+});
+
+app.put("/api/cases/:id", isAuthenticated, (req, res) => {
+    const userId = (req.user as User).id;
+    const existingCase = casesStore.get(req.params.id);
+    if (!existingCase || existingCase.userId !== userId) {
+        return res.status(404).json({ error: "Case not found" });
+    }
+
+    const { 
+        caseName, caseNumber, clientName, caseType, status, description,
+        jurisdiction, practiceArea, leadAttorney, opposingParty, opposingCounsel,
+        valueLow, valueHigh
+    } = req.body;
+
+    const updatedCase: Case = {
+        ...existingCase,
+        caseName: caseName ?? existingCase.caseName,
+        caseNumber: caseNumber ?? existingCase.caseNumber,
+        clientName: clientName ?? existingCase.clientName,
+        caseType: caseType ?? existingCase.caseType,
+        status: status ?? existingCase.status,
+        description: description ?? existingCase.description,
+        jurisdiction: jurisdiction ?? existingCase.jurisdiction,
+        practiceArea: practiceArea ?? existingCase.practiceArea,
+        leadAttorney: leadAttorney ?? existingCase.leadAttorney,
+        opposingParty: opposingParty ?? existingCase.opposingParty,
+        opposingCounsel: opposingCounsel ?? existingCase.opposingCounsel,
+        valueLow: valueLow ?? existingCase.valueLow,
+        valueHigh: valueHigh ?? existingCase.valueHigh,
+        updatedAt: new Date(),
+    };
+
+    casesStore.set(req.params.id, updatedCase);
+    res.json(updatedCase);
+});
+
+app.delete("/api/cases/:id", isAuthenticated, (req, res) => {
+    const userId = (req.user as User).id;
+    const existingCase = casesStore.get(req.params.id);
+    if (!existingCase || existingCase.userId !== userId) {
+        return res.status(404).json({ error: "Case not found" });
+    }
+    casesStore.delete(req.params.id);
+    res.json({ success: true });
 });
 
 // ============================================
