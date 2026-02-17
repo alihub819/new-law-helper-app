@@ -146,6 +146,27 @@ const upload = multer({
     },
 });
 
+// Helper function to extract text from uploaded files
+async function extractText(file: any): Promise<string> {
+    try {
+        if (file.mimetype === 'application/pdf' || file.originalname.endsWith('.pdf')) {
+            // For PDFs, return a placeholder - in production would use pdf-parse
+            return `[PDF Content: ${file.originalname}]`;
+        } else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                   file.originalname.endsWith('.docx')) {
+            // For Word docs, return a placeholder - in production would use mammoth
+            return `[Word Document Content: ${file.originalname}]`;
+        } else if (file.mimetype.startsWith('text/') || file.originalname.endsWith('.txt')) {
+            return file.buffer.toString('utf-8');
+        } else {
+            return `[File: ${file.originalname}]`;
+        }
+    } catch (error) {
+        console.error("Extract text error:", error);
+        return "";
+    }
+}
+
 // 1. Registration
 app.post("/api/register", async (req: Request, res: Response) => {
   try {
@@ -226,6 +247,228 @@ app.post("/api/demo-entry", async (req: Request, res: Response) => {
   }
 });
 
+// 6. AI Legal Research & Analysis Routes
+app.post("/api/quick-question", isAuthenticated, async (req, res) => {
+  try {
+    const { question } = req.body;
+    if (!question) return res.status(400).json({ error: "Question required" });
+    const answer = await openaiLib.answerLegalQuestion(question);
+    res.json({ answer });
+  } catch (error: any) {
+    console.error("Quick question error:", error);
+    res.status(500).json({ error: error.message || "Failed to answer question" });
+  }
+});
+
+app.post("/api/legal-search", isAuthenticated, async (req, res) => {
+  try {
+    const { query, filters, context, useKnowledgeBase } = req.body;
+    let searchContext = context || "";
+    if (useKnowledgeBase) {
+      const userId = (req.user as User).id;
+      const entries = knowledgeBaseStore.get(userId) || [];
+      searchContext = entries.map(e => `Doc: ${e.fileName}\n${e.content}`).join("\n\n");
+    }
+    if (!query) return res.status(400).json({ error: "Query required" });
+    const results = await openaiLib.searchLegalDatabase(query, filters, searchContext);
+    res.json(results);
+  } catch (error: any) {
+    console.error("Legal Search error:", error);
+    res.status(500).json({ error: error.message || "Failed to search" });
+  }
+});
+
+app.post("/api/summarize-document", isAuthenticated, upload.single('document'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: "Document required" });
+    const text = await extractText(req.file);
+    if (!text) return res.status(400).json({ error: "Could not extract text" });
+    const summary = await openaiLib.summarizeDocument(text);
+    res.json({ summary, fileName: req.file.originalname });
+  } catch (error: any) {
+    console.error("Summarize error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/analyze-risk", isAuthenticated, async (req, res) => {
+  try {
+    const { caseType, description, jurisdiction, caseValue } = req.body;
+    if (!caseType || !description) return res.status(400).json({ error: "Case type and description required" });
+    const analysis = await openaiLib.analyzeRisk({ caseType, description, jurisdiction, caseValue });
+    res.json(analysis);
+  } catch (error: any) {
+    console.error("Risk analysis error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/law-agent", isAuthenticated, async (req, res) => {
+  try {
+    const { question, context } = req.body;
+    if (!question) return res.status(400).json({ error: "Question required" });
+    const answer = await openaiLib.answerLegalQuestion(question, context);
+    res.json({ answer });
+  } catch (error: any) {
+    console.error("Law agent error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/web-search", isAuthenticated, async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ error: "Query required" });
+    const results = await openaiLib.performWebSearch(query);
+    res.json(results);
+  } catch (error: any) {
+    console.error("Web search error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 7. Search History
+const searchHistoryStore = new Map<string, { id: string; userId: string; type: string; query: string; results: string; createdAt: Date }[]>();
+
+app.get("/api/search-history", isAuthenticated, (req, res) => {
+  const userId = (req.user as User).id;
+  const history = searchHistoryStore.get(userId) || [];
+  res.json(history);
+});
+
+// 8. Document Management
+const documentsStore = new Map<string, { id: string; userId: string; caseId?: string; name: string; type: string; content: string; format: string; createdAt: Date; updatedAt: Date }>();
+
+app.get("/api/documents", isAuthenticated, (req, res) => {
+  const userId = (req.user as User).id;
+  const caseId = req.query.caseId as string | undefined;
+  let userDocs = Array.from(documentsStore.values()).filter(d => d.userId === userId);
+  if (caseId) {
+    userDocs = userDocs.filter(d => d.caseId === caseId);
+  }
+  res.json(userDocs);
+});
+
+app.post("/api/documents", isAuthenticated, (req, res) => {
+  const userId = (req.user as User).id;
+  const { caseId, name, type, content, format } = req.body;
+  if (!name || !type) return res.status(400).json({ error: "Name and type required" });
+  
+  const docId = randomUUID();
+  const doc = {
+    id: docId,
+    userId,
+    caseId: caseId || "",
+    name,
+    type,
+    content: content || "",
+    format: format || "text",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  documentsStore.set(docId, doc);
+  res.json(doc);
+});
+
+app.delete("/api/documents/:id", isAuthenticated, (req, res) => {
+  const userId = (req.user as User).id;
+  const doc = documentsStore.get(req.params.id);
+  if (!doc || doc.userId !== userId) return res.status(404).json({ error: "Document not found" });
+  documentsStore.delete(req.params.id);
+  res.json({ success: true });
+});
+
+// 9. Saved Documents
+const savedDocsStore = new Map<string, { id: string; userId: string; caseId?: string; title: string; documentType: string; content: string; fileFormat: string; createdAt: Date; updatedAt: Date }>();
+
+app.get("/api/saved-documents", isAuthenticated, (req, res) => {
+  const userId = (req.user as User).id;
+  const docs = Array.from(savedDocsStore.values()).filter(d => d.userId === userId);
+  res.json(docs);
+});
+
+app.delete("/api/saved-documents/:id", isAuthenticated, (req, res) => {
+  const userId = (req.user as User).id;
+  const doc = savedDocsStore.get(req.params.id);
+  if (!doc || doc.userId !== userId) return res.status(404).json({ error: "Document not found" });
+  savedDocsStore.delete(req.params.id);
+  res.json({ success: true });
+});
+
+// 10. Export Document
+app.post("/api/export-document", isAuthenticated, async (req, res) => {
+  try {
+    const { content, format, filename } = req.body;
+    if (!content || !format) return res.status(400).json({ error: "Content and format required" });
+    const exportContent = { content, format, filename: filename || "document", generatedAt: new Date() };
+    res.json(exportContent);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 11. Medical Records
+const medicalRecordsStore = new Map<string, { id: string; userId: string; caseId: string; documentName: string; documentType: string; summary: string; parsedData: any; createdAt: Date; updatedAt: Date }>();
+
+app.get("/api/medical-records/:caseId", isAuthenticated, (req, res) => {
+  const userId = (req.user as User).id;
+  const records = Array.from(medicalRecordsStore.values()).filter(r => r.userId === userId && r.caseId === req.params.caseId);
+  res.json(records);
+});
+
+app.post("/api/medical-records", isAuthenticated, (req, res) => {
+  const userId = (req.user as User).id;
+  const { caseId, documentName, documentType, summary, parsedData } = req.body;
+  if (!caseId || !documentName) return res.status(400).json({ error: "Case ID and document name required" });
+  
+  const recordId = randomUUID();
+  const record = {
+    id: recordId,
+    userId,
+    caseId,
+    documentName,
+    documentType: documentType || "",
+    summary: summary || "",
+    parsedData: parsedData || null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  medicalRecordsStore.set(recordId, record);
+  res.json(record);
+});
+
+app.delete("/api/medical-records/:id", isAuthenticated, (req, res) => {
+  const userId = (req.user as User).id;
+  const record = medicalRecordsStore.get(req.params.id);
+  if (!record || record.userId !== userId) return res.status(404).json({ error: "Record not found" });
+  medicalRecordsStore.delete(req.params.id);
+  res.json({ success: true });
+});
+
+// 12. Demand Letter
+app.post("/api/demand-letter", isAuthenticated, async (req, res) => {
+  try {
+    const { caseData } = req.body;
+    if (!caseData) return res.status(400).json({ error: "Case data required" });
+    const result = await openaiLib.generateDemandLetter(caseData);
+    res.json(result);
+  } catch (error: any) {
+    console.error("Demand letter error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 13. Intake Form GET
+app.get("/api/intake/:id", async (req, res) => {
+  try {
+    const form = intakeForms.get(req.params.id);
+    if (!form) return res.status(404).json({ error: "Intake form not found" });
+    res.json(form);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 7. Document Generation
 app.post("/api/generate-document", isAuthenticated, async (req, res) => { // Updated route name to match frontend if needed, check frontend
     // Frontend likely uses /api/document-generation/generate OR /api/generate-document. 
@@ -286,6 +529,18 @@ app.post("/api/medical-intelligence", isAuthenticated, async (req, res) => {
         res.json(result);
     } catch (error: any) {
         console.error("Medical Intelligence error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 10b. Discovery Tools
+app.post("/api/discovery-tools", isAuthenticated, async (req, res) => {
+    try {
+        const { toolType, caseType, jurisdiction, caseFacts, casePosition } = req.body;
+        const result = await openaiLib.generateResponse(toolType, { caseType, jurisdiction, caseFacts, casePosition });
+        res.json(result);
+    } catch (error: any) {
+        console.error("Discovery tools error:", error);
         res.status(500).json({ error: error.message });
     }
 });
