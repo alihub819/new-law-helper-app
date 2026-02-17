@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { VoiceControlProvider } from "@/hooks/use-voice-control";
 import { ProtectedRoute } from "./lib/protected-route";
+import { VirtualFrontDesk } from "@/components/virtual-front-desk";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
@@ -57,6 +58,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
+            <VirtualFrontDesk />
           </TooltipProvider>
         </VoiceControlProvider>
       </AuthProvider>

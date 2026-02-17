@@ -6,6 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual, randomUUID } from "crypto";
 import { promisify } from "util";
 import createMemoryStore from "memorystore";
 import * as openaiLib from "./openai.js";
+import OpenAI from "openai";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
@@ -144,6 +145,11 @@ const upload = multer({
     limits: {
         fileSize: 50 * 1024 * 1024,
     },
+});
+
+// OpenAI client for TTS
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || ""
 });
 
 // Helper function to extract text from uploaded files
@@ -1244,6 +1250,123 @@ if (publicPath) {
         }
     });
 }
+
+// ============================================
+// Virtual Front Desk Routes
+// ============================================
+const WEBSITE_KNOWLEDGE = `
+You are the Virtual Front Desk Assistant for LawHelper, an AI-powered legal practice management platform.
+
+PLATFORM CAPABILITIES:
+1. AI Legal Research - Search case law, statutes, and legal precedents
+2. Document Generation - Create demand letters, contracts, motions, and legal documents
+3. Document Analysis - Upload and analyze legal documents with AI
+4. Case Management - Organize cases, track deadlines, manage clients
+5. Medical Intelligence - Analyze medical records for personal injury cases
+6. Discovery Tools - Generate responses to interrogatories and requests for production
+7. Transcription - Convert audio/video to text with legal formatting
+8. Video Calls - Secure client consultations with recording
+9. Voice Control - Navigate the app hands-free with voice commands
+10. Knowledge Base - Store and search your legal documents
+
+KEY FEATURES:
+- All data is secure and confidential
+- Works on desktop and mobile
+- Real-time AI assistance
+- Export documents in PDF, DOCX, or TXT
+- Calendar integration for appointments
+- Client intake forms with AI analysis
+
+DOCUMENT TYPES SUPPORTED:
+- Demand Letters (Personal Injury, Contract Disputes, Insurance Claims)
+- Legal Contracts (Service Agreements, Employment Contracts, NDAs)
+- Court Documents (Motions, Briefs, Pleadings)
+- Discovery Responses (Interrogatories, Requests for Production, Requests for Admission)
+- Business Letters (Demand, Cease & Desist, Notice)
+- Personal Documents (Power of Attorney, Affidavits)
+
+HOW TO USE:
+- Upload documents for AI analysis
+- Ask legal research questions
+- Generate documents from templates
+- Organize cases and track progress
+- Schedule appointments with clients
+- Record and transcribe calls
+
+Always be professional, helpful, and guide users to the right features.
+`;
+
+app.post("/api/virtual-front-desk", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+        const { message, conversationHistory = [] } = req.body;
+        const userId = (req.user as User).id;
+
+        if (!message) {
+            return res.status(400).json({ error: "Message is required" });
+        }
+
+        // Prepare conversation for AI
+        const messages = [
+            {
+                role: "system",
+                content: WEBSITE_KNOWLEDGE + "\n\nYou are a helpful virtual receptionist. Answer questions about the platform, guide users to features, and provide legal technology assistance. Keep responses concise and actionable."
+            },
+            ...conversationHistory.slice(-10),
+            {
+                role: "user",
+                content: message
+            }
+        ];
+
+        // Generate AI response using OpenAI
+        const response = await openaiLib.generateResponse(messages);
+
+        const updatedHistory = [
+            ...conversationHistory,
+            { role: "user", content: message },
+            { role: "assistant", content: response }
+        ];
+
+        res.json({
+            response,
+            conversationHistory: updatedHistory,
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error: any) {
+        console.error("Virtual Front Desk Error:", error);
+        res.status(500).json({
+            error: "Failed to process your request",
+            message: error.message
+        });
+    }
+});
+
+// Text-to-Speech endpoint
+app.post("/api/virtual-front-desk/speak", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+        const { text, voice = "alloy" } = req.body;
+
+        if (!text) {
+            return res.status(400).json({ error: "Text is required" });
+        }
+
+        const mp3 = await openai.audio.speech.create({
+            model: "tts-1",
+            voice: voice,
+            input: text,
+        });
+
+        const buffer = Buffer.from(await mp3.arrayBuffer());
+
+        res.set("Content-Type", "audio/mpeg");
+        res.send(buffer);
+
+    } catch (error: any) {
+        console.error("TTS Error:", error);
+        res.status(500).json({ error: "Failed to generate speech" });
+    }
+});
 
 // ============================================
 // Error Handler
