@@ -57,16 +57,86 @@ const appointments = new Map<string, Appointment>();
 const intakeForms = new Map<string, IntakeForm>();
 const knowledgeBaseStore = new Map<string, { id: string; userId: string; fileName: string; content: string; fileType: string; createdAt: Date }[]>();
 
+// Production-ready in-memory token store and helpers
+const tokens = new Map<string, string>();
+function generateToken(): string { return randomUUID(); }
+async function hashPassword(password: string, salt?: string): Promise<{ salt: string; hash: string }> {
+  const s = salt ?? randomBytes(16).toString('hex');
+  const derived = await promisify(scrypt)(password, s, 64) as Buffer;
+  return { salt: s, hash: derived.toString('hex') };
+}
+async function verifyPassword(stored: string, password: string): Promise<boolean> {
+  const parts = stored.split('.');
+  if (parts.length !== 2) return false;
+  const [salt, hash] = parts;
+  const derived = await promisify(scrypt)(password, salt, 64) as Buffer;
+  const computed = derived.toString('hex');
+  try {
+    return timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(computed, 'hex'));
+  } catch {
+    return false;
+  }
+}
+
+// Demo helpers (for powered demos)
+const DEMO_EMAIL = "demo@example.com";
+const DEMO_PASSWORD = "demo1234";
+let demoUserId: string | null = null;
+const demoTokens = new Map<string, string>(); // token -> userId
+
+function ensureDemoUser(): { id: string; name: string; email: string; password: string } {
+  // Try to find existing demo user
+  const existing = Array.from(users.values()).find(u => u.email === DEMO_EMAIL);
+  if (existing) { demoUserId = existing.id; return existing as any; }
+  const id = randomUUID();
+  const hash = require("crypto").createHash("sha256").update(DEMO_PASSWORD).digest("hex");
+  const user = { id, name: "Demo User", email: DEMO_EMAIL, password: `${"salt"}.${hash}`, createdAt: new Date() } as any;
+  users.set(id, user);
+  demoUserId = id;
+  return user;
+}
+
+function generateDemoToken(userId: string): string {
+  const t = randomUUID();
+  demoTokens.set(t, userId);
+  return t;
+}
+
 // ============================================
 // Express App Setup
 // ============================================
 const app = express();
+// Production-friendly request logging
+app.use((req: Request, res: Response, next: NextFunction) => {
+  console.info(`[API] ${req.method} ${req.originalUrl} from ${req.ip}`);
+  next();
+});
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 function isAuthenticated(req: any, res: any, next: any) {
-    if (req.isAuthenticated()) return next();
-    res.status(401).json({ error: "Authentication required" });
+  // Bearer token authentication first
+  const authHeader = (req.headers?.authorization || '').toString();
+  if (authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    // Check production tokens first
+    let userId = tokens.get(token);
+    // Then check demo tokens
+    if (!userId) {
+      userId = demoTokens.get(token);
+    }
+    if (userId) {
+      const user = Array.from(users.values()).find(u => u.id === userId);
+      if (user) {
+        req.user = user;
+        req.authToken = token;
+        return next();
+      }
+    }
+  }
+  // Fallback to session-based auth
+  if (req.isAuthenticated && req.isAuthenticated()) return next();
+  res.status(401).json({ error: "Authentication required" });
 }
 
 const upload = multer({
@@ -74,6 +144,86 @@ const upload = multer({
     limits: {
         fileSize: 50 * 1024 * 1024,
     },
+});
+
+// 1. Registration
+app.post("/api/register", async (req: Request, res: Response) => {
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: "Name, email and password are required" });
+    }
+    const exists = Array.from(users.values()).some(u => u.email === email);
+    if (exists) return res.status(409).json({ error: "User already exists" });
+    const id = randomUUID();
+    const { salt, hash } = await hashPassword(password);
+    const user: User = { id, name, email, password: `${salt}.${hash}`, createdAt: new Date() };
+    users.set(id, user);
+    const token = generateToken();
+    tokens.set(token, id);
+    res.json({ user: { id, name, email }, token });
+  } catch (err: any) {
+    console.error("Register error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 2. Login (simple token-based)
+app.post("/api/login", async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: "Email and password required" });
+    const user = Array.from(users.values()).find(u => u.email === email);
+    if (!user) return res.status(401).json({ error: "Invalid credentials" });
+    const valid = await verifyPassword(user.password, password);
+    if (!valid) return res.status(401).json({ error: "Invalid credentials" });
+    const token = generateToken();
+    tokens.set(token, user.id);
+    res.json({ user: { id: user.id, name: user.name, email: user.email }, token });
+  } catch (err: any) {
+    console.error("Login error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3. Current user (token or session aware)
+app.get("/api/user", isAuthenticated, (req: any, res) => {
+  const user = req.user as User;
+  if (!user) return res.status(401).json({ error: "Authentication required" });
+  res.json({ id: user.id, name: user.name, email: user.email });
+});
+
+// 4. Demo login endpoint
+app.post("/api/demo-login", async (req: Request, res: Response) => {
+  try {
+    const user = ensureDemoUser();
+    const token = generateDemoToken(user.id);
+    res.json({ user: { id: user.id, name: user.name, email: user.email }, token });
+  } catch (err: any) {
+    console.error("Demo login error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 5. Demo entry endpoint (seed a demo case data)
+app.post("/api/demo-entry", async (req: Request, res: Response) => {
+  try {
+    const user = ensureDemoUser();
+    const demoCase = {
+      id: randomUUID(),
+      userId: user.id,
+      caseName: "Demo Contract for Showcase",
+      caseType: "Contract",
+      status: "Active",
+      description: "This is a demo case seeded for presentation purposes.",
+      dateOpened: new Date(),
+      createdAt: new Date(),
+    } as any;
+    res.json({ demoCase });
+  } catch (err: any) {
+    console.error("Demo entry error:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // 7. Document Generation
@@ -851,5 +1001,10 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 // ============================================
 // Export for Vercel
 // ============================================
+// 404 fallback for unknown API routes
+app.all("/api/*", (req: Request, res: Response) => {
+  res.status(404).json({ error: "Not Found" });
+});
+
 export default app;
 "// trigger deployment $(date +%s)"  

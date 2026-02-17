@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/main.ts"
+      "destination": "/api/main"
     },
     {
       "source": "/(.*)",
