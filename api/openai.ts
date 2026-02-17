@@ -1,0 +1,1225 @@
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key",
+  timeout: 30000,
+  maxRetries: 2,
+});
+
+export async function generateResponse(messages: any[]): Promise<string> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: messages,
+    });
+    return response.choices[0].message.content || "";
+  } catch (error) {
+    console.error("OpenAI generation error:", error);
+    throw new Error("Failed to generate response");
+  }
+}
+
+export async function searchLegalDatabase(query: string, filters?: any, context?: string): Promise<any> {
+
+  try {
+    const prompt = `You are a legal research assistant. Search for relevant legal information based on this query: "${query}".
+
+${context ? `Use the following custom knowledge base context to enhance your search results:
+---
+${context}
+---` : ''}
+
+Please provide a comprehensive response that includes:
+1. Relevant case law with citations
+2. Applicable statutes and regulations
+3. Legal precedents
+4. Relevance scores (0-100%)
+5. Brief summaries of each result
+
+Format the response as JSON with this structure:
+{
+  "results": [
+    {
+      "title": "Case or Statute Title",
+      "type": "Case Law" | "Federal Statute" | "State Law" | "Regulation" | "Supreme Court",
+      "citation": "Legal citation",
+      "relevance": 95,
+      "summary": "Brief summary of the legal document",
+      "keyPoints": ["point 1", "point 2"],
+      "url": "link to full document"
+    }
+  ],
+  "totalResults": 5,
+  "searchTime": "2.3 seconds"
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert legal research assistant with access to comprehensive legal databases. Provide accurate, relevant legal information with proper citations."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("OpenAI legal search error:", error);
+    throw new Error("Failed to perform legal search");
+  }
+}
+
+export async function summarizeDocument(documentText: string, summaryType: string = 'quick'): Promise<any> {
+  try {
+    const prompt = `You are a legal document analysis expert. Analyze this legal document and provide a ${summaryType} summary.
+
+Document text:
+${documentText}
+
+Please provide a comprehensive analysis in JSON format:
+{
+  "documentType": "Contract/Brief/Statute/etc",
+  "keyPoints": ["point 1", "point 2", "point 3"],
+  "parties": ["party names if applicable"],
+  "summary": "Detailed summary of the document",
+  "legalImplications": [
+    {
+      "type": "warning" | "notice" | "recommendation",
+      "message": "Important legal consideration",
+      "severity": "high" | "medium" | "low"
+    }
+  ],
+  "importantDates": ["date 1", "date 2"],
+  "financialTerms": {
+    "totalValue": "amount if applicable",
+    "paymentSchedule": "schedule if applicable"
+  },
+  "risks": ["potential risk 1", "potential risk 2"],
+  "recommendations": ["recommendation 1", "recommendation 2"]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert legal document analyzer. Provide thorough, accurate analysis of legal documents with practical insights."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("OpenAI document summarization error:", error);
+    throw new Error("Failed to summarize document");
+  }
+}
+
+export async function analyzeRisk(caseData: {
+  caseType: string;
+  description: string;
+  jurisdiction?: string;
+  caseValue?: string;
+}): Promise<any> {
+  try {
+    const prompt = `You are a legal risk assessment expert. Analyze this case and provide a comprehensive risk assessment.
+
+Case Details:
+- Type: ${caseData.caseType}
+- Description: ${caseData.description}
+- Jurisdiction: ${caseData.jurisdiction || 'Not specified'}
+- Case Value: ${caseData.caseValue || 'Not specified'}
+
+Provide a detailed risk analysis in JSON format:
+{
+  "successProbability": 75,
+  "confidenceLevel": 85,
+  "riskFactors": [
+    {
+      "factor": "Risk description",
+      "severity": "high" | "medium" | "low",
+      "impact": "Description of potential impact"
+    }
+  ],
+  "strengths": ["strength 1", "strength 2"],
+  "weaknesses": ["weakness 1", "weakness 2"],
+  "recommendations": {
+    "immediate": ["action 1", "action 2"],
+    "longterm": ["strategy 1", "strategy 2"]
+  },
+  "precedentAnalysis": {
+    "similarCases": 150,
+    "successRate": 68,
+    "averageSettlement": "$75,000"
+  },
+  "settlementRange": {
+    "low": "$45,000",
+    "high": "$95,000",
+    "recommended": "$70,000"
+  },
+  "timeline": {
+    "estimated": "12-18 months",
+    "factors": ["factor 1", "factor 2"]
+  }
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert legal risk analyst with extensive knowledge of case outcomes, precedents, and legal strategy. Provide data-driven risk assessments."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("OpenAI risk analysis error:", error);
+    throw new Error("Failed to analyze legal risk");
+  }
+}
+
+export async function answerLegalQuestion(question: string): Promise<any> {
+  try {
+    const prompt = `You are an expert legal advisor. Answer this legal question comprehensively with accurate references and citations.
+
+Question: ${question}
+
+Provide a detailed response in JSON format:
+{
+  "answer": "Comprehensive answer to the legal question",
+  "references": [
+    {
+      "title": "Legal source title",
+      "citation": "Proper legal citation",
+      "summary": "Brief summary of relevance"
+    }
+  ],
+  "keyPoints": [
+    "Important legal point 1",
+    "Important legal point 2"
+  ],
+  "jurisdiction": "Applicable jurisdiction if relevant",
+  "disclaimer": "This is legal information, not legal advice. Consult with a qualified attorney for specific legal matters.",
+  "relatedConcepts": ["concept 1", "concept 2"],
+  "practicalAdvice": [
+    "Practical step 1",
+    "Practical step 2"
+  ]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert legal advisor with comprehensive knowledge of law across multiple jurisdictions. Provide accurate, well-cited legal information with proper references."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("OpenAI law agent error:", error);
+    throw new Error("Failed to answer legal question");
+  }
+}
+
+export async function performWebSearch(query: string): Promise<any> {
+  try {
+    const prompt = `You are a legal web search specialist. Based on this search query: "${query}", provide realistic web search results that would typically be found when searching for legal information online.
+
+Simulate web search results with current, relevant legal information and provide an AI-generated summary.
+
+Provide results in JSON format:
+{
+  "results": [
+    {
+      "title": "Search result title",
+      "url": "https://example-legal-site.com/article",
+      "domain": "legal-site.com",
+      "snippet": "Brief excerpt from the page describing the legal information",
+      "date": "2024-12-15"
+    }
+  ],
+  "totalResults": 8,
+  "summary": "AI-generated summary of the key findings from the search results, highlighting the most important legal information and trends.",
+  "relatedQueries": ["related query 1", "related query 2"],
+  "legalUpdates": "Any recent legal developments or changes related to the search topic"
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a legal information researcher specializing in finding and summarizing current legal information from web sources. Provide realistic, current legal search results."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("OpenAI web search error:", error);
+    throw new Error("Failed to perform web search");
+  }
+}
+
+export async function generateDocument(documentType: string, inputMethod: 'voice' | 'paste' | 'manual', textContent?: string, formData?: Record<string, string>): Promise<any> {
+  try {
+    let contentDescription = '';
+    let documentSpecificInstructions = '';
+
+    // Build content description based on input method
+    if (inputMethod === 'voice' || inputMethod === 'paste') {
+      contentDescription = textContent || '';
+    } else if (inputMethod === 'manual' && formData) {
+      contentDescription = Object.entries(formData)
+        .filter(([_, value]) => value && value.trim() !== '')
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('\n');
+    }
+
+    // Document-specific formatting instructions
+    switch (documentType) {
+      case 'business-letter':
+        documentSpecificInstructions = `
+BUSINESS LETTER SPECIFIC REQUIREMENTS:
+- Use full block format (all text aligned left)
+- Include sender's letterhead information at top
+- Date should be 2-3 lines below sender info
+- Recipient's address 2 lines below date
+- Subject line format: "Re: [Subject]"
+- Professional salutation: "Dear Mr./Ms. [Last Name]:" or "Dear [Title] [Last Name]:"
+- Body paragraphs with single spacing within, double spacing between
+- Professional closing: "Sincerely," "Best regards," or "Respectfully,"
+- 4 line spaces for signature, then typed name and title`;
+        break;
+
+      case 'cover-letter':
+        documentSpecificInstructions = `
+COVER LETTER SPECIFIC REQUIREMENTS:
+- Modern cover letter format with applicant info at top
+- Addressed to specific hiring manager if known, otherwise "Dear Hiring Manager:"
+- Opening paragraph: State position and how you learned about it
+- Body paragraph 1: Relevant experience and achievements with specific examples
+- Body paragraph 2: Skills and qualifications that match job requirements  
+- Body paragraph 3: Why you want to work for this specific company
+- Closing paragraph: Call to action and availability for interview
+- Professional closing with "Sincerely," and full name
+- Keep to one page maximum`;
+        break;
+
+      case 'recommendation-letter':
+        documentSpecificInstructions = `
+RECOMMENDATION LETTER SPECIFIC REQUIREMENTS:
+- Academic/Professional letterhead format
+- Date and recipient information (if known)
+- Subject line: "Letter of Recommendation for [Name]"
+- Opening: State relationship to candidate and duration
+- Body paragraph 1: Candidate's strengths and key qualifications
+- Body paragraph 2: Specific examples of achievements and performance
+- Body paragraph 3: Comparison to peers and overall assessment
+- Closing: Clear recommendation level and contact information for follow-up
+- Professional signature with credentials and title`;
+        break;
+
+      case 'service-agreement':
+        documentSpecificInstructions = `
+SERVICE AGREEMENT SPECIFIC REQUIREMENTS:
+- Contract title: "SERVICE AGREEMENT" centered at top
+- Parties section identifying Provider and Client with full legal names
+- Recitals section stating the purpose and background
+- Scope of Services section with detailed service descriptions
+- Term and Termination section with start/end dates
+- Compensation and Payment Terms section
+- Intellectual Property and Confidentiality clauses
+- Governing Law clause specifying state jurisdiction
+- Signature blocks with dates for both parties
+- Include standard contract disclaimers and notices`;
+        break;
+
+      case 'employment-contract':
+        documentSpecificInstructions = `
+EMPLOYMENT CONTRACT SPECIFIC REQUIREMENTS:
+- Contract title: "EMPLOYMENT AGREEMENT" centered at top
+- Parties section: Employer (Company) and Employee with addresses
+- Position and Duties section with job title and responsibilities
+- Compensation section: salary, benefits, payment schedule
+- Term of Employment section with start date and at-will status
+- Confidentiality and Non-Disclosure provisions
+- Intellectual Property assignment clauses
+- Termination and Severance provisions
+- Governing law and dispute resolution clauses
+- Signature blocks with dates for both parties`;
+        break;
+
+      case 'job-application':
+        documentSpecificInstructions = `
+JOB APPLICATION SPECIFIC REQUIREMENTS:
+- Application header: "EMPLOYMENT APPLICATION"
+- Personal Information section with all contact details
+- Position Information: job title, salary expectations, availability
+- Employment History: chronological listing with dates, companies, positions
+- Education section: degrees, institutions, graduation dates
+- Skills and Qualifications relevant to position
+- References section with complete contact information
+- Certification statements and applicant signature with date
+- Equal Opportunity/Non-Discrimination statements
+- Format as official application form with clear sections`;
+        break;
+
+      case 'visa-application':
+        documentSpecificInstructions = `
+VISA APPLICATION SPECIFIC REQUIREMENTS:
+- Official application header with visa type
+- Personal Details section: full legal name, date/place of birth, nationality
+- Passport Information: number, issue/expiry dates, issuing country
+- Travel Information: purpose, duration, planned dates, accommodation
+- Financial Information: funding source, bank statements reference
+- Supporting Documents checklist
+- Declaration and signature section with date
+- Official government application format style
+- Include all required legal disclaimers and warnings
+- Clear section divisions with numbered items where appropriate`;
+        break;
+
+      default:
+        documentSpecificInstructions = `
+GENERAL DOCUMENT REQUIREMENTS:
+- Professional USA business document format
+- Appropriate headers and contact information
+- Clear structure with logical sections
+- Professional tone and language throughout
+- Proper closing and signature sections`;
+    }
+
+    const prompt = `You are a professional document generation specialist with expertise in USA business and legal document standards. Generate a ${documentType} document following strict USA professional formatting and content standards.
+
+Document Type: ${documentType}
+Input Method: ${inputMethod}
+Content/Requirements:
+${contentDescription}
+
+${documentSpecificInstructions}
+
+GENERAL USA FORMATTING STANDARDS:
+- Date format: Month DD, YYYY (e.g., January 15, 2024)
+- Address format: Street Address, Suite/Unit, City, State ZIP
+- Phone format: (XXX) XXX-XXXX
+- Professional language and tone throughout
+- Proper spacing and margins
+- Clear section divisions
+- Consistent formatting
+
+Return the response in JSON format:
+{
+  "id": "unique-document-id",
+  "type": "${documentType}",
+  "title": "Document Title",
+  "content": "Raw document content",
+  "formattedContent": "Formatted document content with proper spacing and structure",
+  "metadata": {
+    "wordCount": 0,
+    "estimatedPages": 1,
+    "documentStandard": "USA International",
+    "generatedAt": "current-date",
+    "inputMethod": "${inputMethod}"
+  },
+  "sections": [
+    {
+      "name": "Header",
+      "content": "Header content"
+    },
+    {
+      "name": "Body",
+      "content": "Main body content"
+    },
+    {
+      "name": "Closing",
+      "content": "Closing content"
+    }
+  ],
+  "suggestions": [
+    "Suggestion 1 for improvement",
+    "Suggestion 2 for customization"
+  ]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert document generation specialist with extensive knowledge of USA business and legal document standards. Generate professional, properly formatted documents that comply with international USA standards for business correspondence, contracts, and applications."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || '{}');
+
+    // Add current timestamp and ensure proper structure
+    return {
+      ...result,
+      createdAt: new Date().toISOString(),
+      id: result.id || `doc_${Date.now()}`,
+      metadata: {
+        ...result.metadata,
+        generatedAt: new Date().toISOString(),
+        inputMethod: inputMethod
+      }
+    };
+  } catch (error) {
+    console.error("OpenAI document generation error:", error);
+    throw new Error("Failed to generate document");
+  }
+}
+
+export async function improveDocumentSection(
+  type: string,
+  item: any,
+  documentContent: string
+): Promise<{ improvedText: string; explanation: string }> {
+  try {
+    let prompt = '';
+
+    if (type === 'weak-point') {
+      prompt = `You are an expert legal document editor. A document has been analyzed and a specific weak point has been identified. Your task is to provide an improved version of the relevant section.
+
+DOCUMENT CONTENT:
+${documentContent}
+
+WEAK POINT IDENTIFIED:
+- Issue: ${item.point}
+- Category: ${item.category}
+- Severity: ${item.severity}
+- Explanation: ${item.explanation}
+
+Please provide an improved version of the specific section or paragraph that addresses this weak point. Your response should:
+
+1. Identify the exact text that needs improvement
+2. Provide a professionally written replacement that fixes the identified issue
+3. Maintain the document's tone and purpose
+4. Use clear, legally appropriate language
+5. Follow USA professional document standards
+
+Respond with ONLY the improved text that can directly replace the problematic section. Do not include explanations or comments - just the clean, improved text that the user can copy and paste into their document.`;
+
+    } else if (type === 'improvement') {
+      prompt = `You are an expert legal document editor. A document has been analyzed and a specific improvement suggestion has been made. Your task is to provide a concrete example of how to implement this improvement.
+
+DOCUMENT CONTENT:
+${documentContent}
+
+IMPROVEMENT SUGGESTION:
+- Area: ${item.area}
+- Priority: ${item.priority}
+- Suggestion: ${item.suggestion}
+
+Please provide a specific example of improved text that implements this suggestion. Your response should:
+
+1. Create a concrete example that addresses the improvement area
+2. Demonstrate best practices for this type of document section
+3. Use professional, legally appropriate language
+4. Follow USA professional document standards
+5. Be directly applicable to the user's document
+
+Respond with ONLY the example improved text that demonstrates how to implement the suggestion. Do not include explanations or comments - just the clean, example text that shows the improvement in action.`;
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert legal document editor and attorney specializing in document improvement and professional writing. Provide only the improved text without any additional commentary or explanations."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ]
+    });
+
+    const improvedText = response.choices[0].message.content || '';
+
+    return {
+      improvedText: improvedText.trim(),
+      explanation: type === 'weak-point'
+        ? `Improved version addressing: ${item.point}`
+        : `Example implementation for: ${item.area}`
+    };
+
+  } catch (error) {
+    console.error("OpenAI document improvement error:", error);
+    throw new Error("Failed to generate document improvement");
+  }
+}
+
+export async function analyzeDocument(documentContent: string, documentTitle: string): Promise<any> {
+  try {
+    const prompt = `You are a Senior Partner at a prestigious international law firm with 35+ years of experience across all major areas of law. You are widely recognized as a master attorney who has handled thousands of cases, drafted landmark legal documents, and served as lead counsel in precedent-setting litigation. Your expertise spans constitutional law, corporate law, intellectual property, criminal defense, civil litigation, international arbitration, and regulatory compliance.
+
+DOCUMENT TITLE: ${documentTitle}
+DOCUMENT CONTENT:
+${documentContent}
+
+As a master attorney, provide a comprehensive analysis that demonstrates your encyclopedic knowledge of law, deep understanding of legal strategy, and ability to identify subtle but critical legal issues that less experienced attorneys might miss.
+
+Provide a detailed analysis in JSON format with the following structure:
+
+{
+  "documentTitle": "${documentTitle}",
+  "documentType": "Precise legal classification (e.g., 'Bilateral Investment Treaty Arbitration Agreement', 'Class Action Settlement Agreement', 'Executive Employment Contract with Change-of-Control Provisions')",
+  "jurisdictionAnalysis": {
+    "primaryJurisdiction": "Applicable jurisdiction(s) with specific court/venue",
+    "choiceOfLaw": "Governing law analysis with conflicts implications",
+    "enforceability": "Cross-border enforceability assessment"
+  },
+  "overallQuality": {
+    "score": 95,
+    "grade": "A+",
+    "summary": "Executive summary from a senior partner's perspective",
+    "strategicAssessment": "How this document positions the client strategically"
+  },
+  "executiveSummary": {
+    "keyStrengths": ["3-5 most critical strengths"],
+    "criticalWeaknesses": ["3-5 most dangerous weaknesses"],
+    "riskAssessment": "High/Medium/Low with detailed justification",
+    "recommendation": "Proceed/Revise/Reject with reasoning"
+  },
+  "legalAnalysis": {
+    "contractualFramework": {
+      "formation": "Validity of contract formation under applicable law",
+      "capacity": "Parties' legal capacity analysis",
+      "consideration": "Adequacy and nature of consideration",
+      "statuteOfFrauds": "Compliance with statute of frauds requirements"
+    },
+    "substantiveLaw": {
+      "governingPrinciples": ["Core legal principles implicated"],
+      "precedentApplication": ["Relevant case law and how it applies"],
+      "statutoryCompliance": ["Applicable statutes and compliance status"]
+    },
+    "jurisdictionalIssues": {
+      "venue": "Appropriate venue analysis",
+      "personalJurisdiction": "Jurisdiction over parties",
+      "subjectMatter": "Subject matter jurisdiction assessment"
+    }
+  },
+  "riskAnalysis": {
+    "immediateRisks": [
+      {
+        "risk": "Critical immediate risk",
+        "probability": "High/Medium/Low",
+        "impact": "Severe/Moderate/Minor",
+        "mitigation": "Specific mitigation strategy"
+      }
+    ],
+    "longTermRisks": [
+      {
+        "risk": "Long-term strategic risk",
+        "timeframe": "1-5 years, 5-10 years, etc.",
+        "exposure": "Potential financial/liability exposure",
+        "preventiveMeasures": "Preventive legal strategies"
+      }
+    ],
+    "counterpartyRisks": {
+      "financialStability": "Assessment of counterparty's financial position",
+      "reputation": "Reputation and credibility analysis",
+      "litigationHistory": "Past litigation patterns and outcomes"
+    }
+  },
+  "strategicConsiderations": {
+    "negotiationLeverage": "How this document affects negotiation position",
+    "alternativeDisputeResolution": "ADR implications and recommendations",
+    "exitStrategies": "Termination and exit provisions analysis",
+    "futureAmendments": "Amendment provisions and flexibility"
+  },
+  "professionalInsights": [
+    {
+      "category": "practice-area-expertise",
+      "insight": "Deep expertise insight that only comes from decades of experience",
+      "implication": "Strategic implication for the client"
+    }
+  ],
+  "recommendedActions": {
+    "immediate": ["Actions required within 30 days"],
+    "shortTerm": ["Actions required within 90 days"],
+    "longTerm": ["Strategic actions for 6-12 months"],
+    "contingencyPlanning": ["Worst-case scenario preparations"]
+  },
+  "comparativeAnalysis": {
+    "industryStandards": "How this compares to industry-leading documents",
+    "jurisdictionalVariations": "How this would differ in other jurisdictions",
+    "alternativeStructures": "Other legal structures that could be considered"
+  }
+}
+
+ANALYSIS FRAMEWORK (Master Attorney Level):
+
+1. EXECUTIVE ASSESSMENT - Provide the kind of strategic analysis that would be presented to a CEO or Board of Directors
+
+2. LEGAL PRECISION - Demonstrate encyclopedic knowledge of relevant statutes, case law, and legal principles
+
+3. RISK QUANTIFICATION - Provide specific risk assessments with probability and impact ratings
+
+4. STRATEGIC COUNSEL - Advise on long-term business implications and strategic positioning
+
+5. PRACTICAL WISDOM - Include insights that only come from handling thousands of similar matters
+
+6. PREVENTIVE LAWYERING - Identify issues before they become problems
+
+7. COMMERCIAL REALITY - Balance legal perfection with business practicality
+
+8. INTERNATIONAL PERSPECTIVE - Consider cross-border and multi-jurisdictional implications
+
+Provide analysis that reflects the wisdom of a master attorney who has seen every possible legal scenario and knows how to protect clients from both obvious and subtle legal dangers.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a Senior Partner at an elite international law firm with 35+ years of experience. You are renowned as a master attorney who has handled landmark cases across all major practice areas. Your analysis reflects unparalleled legal wisdom, strategic insight, and the ability to identify critical issues that less experienced attorneys miss. You provide counsel at the highest level - advising CEOs, boards, and governments on complex legal matters."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.1 // Lower temperature for more precise legal analysis
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("OpenAI document analysis error:", error);
+    throw new Error("Failed to analyze document");
+  }
+}
+
+// Medical Intelligence Suite Helper
+export async function runMedicalIntelligence(mode: string, payload: any): Promise<any> {
+  try {
+    let prompt = "";
+    let systemMessage = "You are an expert medical legal analyst specializing in personal injury cases, medical billing, and medical chronologies. Provide accurate, professional analysis.";
+
+    switch (mode) {
+      case "chronology":
+        prompt = `Analyze the following medical records and create a detailed chronological timeline. Extract and organize:
+- Date of each visit/treatment
+- Provider name and type
+- Diagnosis (with ICD codes if mentioned)
+- Treatments/procedures performed (with CPT codes if mentioned)
+- Medications prescribed
+- Follow-up appointments
+- Treatment gaps (periods with no care)
+
+Medical Records Text:
+${payload.documentText}
+
+Provide response in JSON format:
+{
+  "timeline": [
+    {
+      "date": "YYYY-MM-DD",
+      "provider": "Provider name",
+      "type": "Initial visit/Follow-up/Emergency/etc",
+      "diagnosis": "Diagnosis text",
+      "diagnosisCodes": ["ICD-10 codes"],
+      "treatment": "Treatment performed",
+      "procedureCodes": ["CPT codes"],
+      "medications": ["Medication list"],
+      "notes": "Additional notes"
+    }
+  ],
+  "summary": "Overall treatment summary",
+  "treatmentGaps": ["List of gaps in treatment"],
+  "totalVisits": 0
+}`;
+        break;
+
+      case "bills":
+        prompt = `Analyze the following medical bills and provide a comprehensive billing summary. Extract:
+- Provider information
+- Service dates
+- CPT codes and descriptions
+- Charges and payments
+- Insurance information
+- Outstanding balances
+
+Medical Bills Text:
+${payload.documentText}
+
+Provide response in JSON format:
+{
+  "bills": [
+    {
+      "provider": "Provider name",
+      "serviceDate": "YYYY-MM-DD",
+      "services": [
+        {
+          "cptCode": "CPT code",
+          "description": "Service description",
+          "charge": 0.00,
+          "paid": 0.00,
+          "balance": 0.00
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "totalCharges": 0.00,
+    "totalPaid": 0.00,
+    "totalOutstanding": 0.00,
+    "insurancePaid": 0.00,
+    "patientResponsibility": 0.00
+  },
+  "unusualCharges": ["List of unusual or duplicate charges"],
+  "recommendations": ["Billing recommendations"]
+}`;
+        break;
+
+      case "summary":
+        prompt = `Create a comprehensive medical summary report for legal purposes. Include:
+- Chief complaint and injury details
+- Complete treatment history
+- All treating physicians
+- Current medical status and prognosis
+- Pre-existing conditions
+- Total medical expenses
+
+Medical Information:
+${payload.documentText}
+
+Provide response in JSON format:
+{
+  "chiefComplaint": "Primary injury/complaint",
+  "injuryDate": "YYYY-MM-DD",
+  "treatmentHistory": "Comprehensive treatment narrative",
+  "treatingPhysicians": [
+    {
+      "name": "Doctor name",
+      "specialty": "Specialty",
+      "dates": "Treatment period"
+    }
+  ],
+  "currentStatus": "Current medical condition",
+  "prognosis": "Future medical needs and prognosis",
+  "preExistingConditions": ["List of pre-existing conditions"],
+  "totalMedicalExpenses": 0.00,
+  "recommendations": ["Medical and legal recommendations"]
+}`;
+        break;
+
+      default:
+        throw new Error("Invalid mode");
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: systemMessage },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("Medical intelligence error:", error);
+    throw new Error("Failed to process medical intelligence request");
+  }
+}
+
+// Demand Letter Generation Helper
+export async function generateDemandLetter(data: any): Promise<any> {
+  try {
+    const prompt = `Generate a professional demand letter for a personal injury case with the following details:
+
+Case Type: ${data.caseType || "Personal Injury"}
+Claimant: ${data.claimantName}
+Defendant: ${data.defendantName}
+Incident Date: ${data.incidentDate}
+Incident Description: ${data.incidentDescription}
+Injuries: ${data.injuries}
+Medical Treatment: ${data.medicalTreatment || ""}
+Medical Expenses: $${data.medicalExpenses || 0}
+Lost Wages: $${data.lostWages || 0}
+Pain and Suffering Multiplier: ${data.painMultiplier || 3}x
+Settlement Demand: $${data.demandAmount}
+
+Create a comprehensive, professionally formatted demand letter that includes:
+1. Professional letterhead formatting
+2. Proper addressing and salutations
+3. Statement of representation
+4. Detailed accident description
+5. Liability analysis
+6. Injury description
+7. Medical treatment summary
+8. Damages breakdown (medical expenses, lost wages, pain and suffering)
+9. Settlement demand with justification
+10. Deadline for response (typically 30 days)
+11. Professional closing
+
+Provide the response in JSON format:
+{
+  "letterContent": "Full letter text with proper formatting",
+  "damagesBreakdown": {
+    "medicalExpenses": 0.00,
+    "lostWages": 0.00,
+    "painAndSuffering": 0.00,
+    "total": 0.00
+  },
+  "settlementCalculation": {
+    "economicDamages": 0.00,
+    "painMultiplier": 3.0,
+    "recommendedRange": {
+      "low": 0.00,
+      "high": 0.00
+    }
+  },
+  "keyPoints": ["List of key liability and damages points"]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an experienced personal injury attorney specializing in demand letter preparation. Create professional, persuasive demand letters that maximize settlement value while maintaining professional standards."
+        },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("Demand letter generation error:", error);
+    throw new Error("Failed to generate demand letter");
+  }
+}
+
+// Discovery Response Generator Helper
+export async function generateDiscoveryResponse(type: string, payload: any): Promise<any> {
+  try {
+    let prompt = "";
+    let systemMessage = "You are an experienced litigation attorney specializing in discovery practice. Generate professional, strategic discovery responses that protect client interests while complying with discovery rules.";
+
+    const jurisdiction = payload.jurisdiction || "Federal";
+    const caseType = payload.caseType || "General";
+
+    switch (type) {
+      case "interrogatories":
+        prompt = `Generate professional responses to the following interrogatories for a ${caseType} case in ${jurisdiction} jurisdiction:
+
+Interrogatories:
+${payload.questions}
+
+Case Facts:
+${payload.caseFacts || ""}
+
+Instructions:
+- Include standard objections where appropriate (relevance, overbroad, privilege, etc.)
+- Provide substantive answers based on the case facts provided
+- Use proper legal formatting and citation
+- Include reservation of rights language
+
+Provide response in JSON format:
+{
+  "responses": [
+    {
+      "number": 1,
+      "question": "Original interrogatory text",
+      "objections": ["List of objections"],
+      "response": "Substantive response text",
+      "notes": "Internal notes or strategy considerations"
+    }
+  ],
+  "generalObjections": ["List of general objections applicable to all responses"],
+  "verificationLanguage": "Verification statement text"
+}`;
+        break;
+
+      case "requests":
+        prompt = `Generate professional responses to the following Requests for Production of Documents for a ${caseType} case in ${jurisdiction} jurisdiction:
+
+Requests:
+${payload.requests}
+
+Available Documents:
+${payload.documents || ""}
+
+Instructions:
+- Include standard objections where appropriate
+- Specify which documents will be produced
+- Note any privileged documents in privilege log format
+- Use proper legal formatting
+
+Provide response in JSON format:
+{
+  "responses": [
+    {
+      "number": 1,
+      "request": "Original request text",
+      "objections": ["List of objections"],
+      "response": "Response text (will produce/objection/etc)",
+      "documentsProduced": ["List of document descriptions"]
+    }
+  ],
+  "privilegeLog": [
+    {
+      "description": "Document description",
+      "date": "Document date",
+      "author": "Author",
+      "recipient": "Recipient",
+      "privilege": "Type of privilege"
+    }
+  ]
+}`;
+        break;
+
+      case "admissions":
+        prompt = `Generate professional responses to the following Requests for Admission for a ${caseType} case in ${jurisdiction} jurisdiction:
+
+Requests for Admission:
+${payload.admissions}
+
+Case Position:
+${payload.casePosition || ""}
+
+Instructions:
+- Respond with "Admitted", "Denied", or qualified response
+- Include explanatory statements where needed
+- Preserve legal positions strategically
+
+Provide response in JSON format:
+{
+  "responses": [
+    {
+      "number": 1,
+      "request": "Original request text",
+      "response": "Admitted/Denied/Qualified Response",
+      "explanation": "Explanation if needed",
+      "strategy": "Internal strategy note"
+    }
+  ],
+  "summary": "Overall response strategy summary"
+}`;
+        break;
+
+      default:
+        throw new Error("Invalid discovery type");
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: systemMessage },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  } catch (error) {
+    console.error("Discovery response generation error:", error);
+    throw new Error("Failed to generate discovery response");
+  }
+}
+
+// ============================================
+// Audio Transcription with OpenAI Whisper
+// ============================================
+export async function transcribeAudio(audioBuffer: Buffer, fileName: string, options?: {
+  language?: string;
+  prompt?: string;
+  responseFormat?: 'json' | 'text' | 'srt' | 'verbose_json' | 'vtt';
+}): Promise<{
+  text: string;
+  segments?: Array<{
+    id: number;
+    start: number;
+    end: number;
+    text: string;
+  }>;
+  duration?: number;
+  language?: string;
+}> {
+  try {
+    // Create a File-like object from the buffer
+    // Convert Buffer to ArrayBuffer for proper BlobPart compatibility
+    const arrayBuffer = audioBuffer.buffer.slice(
+      audioBuffer.byteOffset,
+      audioBuffer.byteOffset + audioBuffer.byteLength
+    ) as ArrayBuffer;
+    const blob = new Blob([arrayBuffer], { type: getMimeType(fileName) });
+    const file = new File([blob], fileName, { type: getMimeType(fileName) });
+
+    const response = await openai.audio.transcriptions.create({
+      file: file,
+      model: "whisper-1",
+      language: options?.language,
+      prompt: options?.prompt || "Legal deposition, meeting, or consultation. Transcribe with accurate legal terminology.",
+      response_format: options?.responseFormat || "verbose_json",
+      timestamp_granularities: ["segment"]
+    });
+
+    // Handle different response formats
+    if (typeof response === 'string') {
+      return { text: response };
+    }
+
+    return {
+      text: response.text,
+      segments: (response as any).segments?.map((seg: any, index: number) => ({
+        id: index,
+        start: seg.start,
+        end: seg.end,
+        text: seg.text
+      })),
+      duration: (response as any).duration,
+      language: (response as any).language
+    };
+  } catch (error) {
+    console.error("OpenAI transcription error:", error);
+    throw new Error("Failed to transcribe audio");
+  }
+}
+
+// Helper function to get MIME type
+function getMimeType(fileName: string): string {
+  const ext = fileName.toLowerCase().split('.').pop();
+  const mimeTypes: Record<string, string> = {
+    'mp3': 'audio/mpeg',
+    'mp4': 'video/mp4',
+    'm4a': 'audio/m4a',
+    'wav': 'audio/wav',
+    'webm': 'audio/webm',
+    'ogg': 'audio/ogg',
+    'flac': 'audio/flac'
+  };
+  return mimeTypes[ext || ''] || 'audio/mpeg';
+}
+
+// Format transcript with timestamps
+export function formatTranscriptWithTimestamps(segments: Array<{
+  id: number;
+  start: number;
+  end: number;
+  text: string;
+}>): string {
+  return segments.map(seg => {
+    const startTime = formatTime(seg.start);
+    return `[${startTime}] ${seg.text.trim()}`;
+  }).join('\n');
+}
+
+function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Enhanced transcription with speaker diarization (post-processing)
+export async function transcribeWithAnalysis(audioBuffer: Buffer, fileName: string): Promise<{
+  rawText: string;
+  formattedTranscript: string;
+  segments: Array<{ id: number; start: number; end: number; text: string }>;
+  duration: number;
+  summary?: string;
+  keyPoints?: string[];
+  actionItems?: string[];
+}> {
+  try {
+    // First, get the raw transcription
+    const transcription = await transcribeAudio(audioBuffer, fileName, {
+      responseFormat: 'verbose_json'
+    });
+
+    if (!transcription.segments || transcription.segments.length === 0) {
+      return {
+        rawText: transcription.text,
+        formattedTranscript: transcription.text,
+        segments: [],
+        duration: transcription.duration || 0
+      };
+    }
+
+    // Format with timestamps
+    const formattedTranscript = formatTranscriptWithTimestamps(transcription.segments);
+
+    // Analyze the transcript for legal content
+    const analysisPrompt = `Analyze this legal meeting/deposition transcript and provide:
+1. A brief summary (2-3 sentences)
+2. Key points discussed (bullet points)
+3. Action items or follow-ups mentioned
+
+Transcript:
+${transcription.text}
+
+Respond in JSON format:
+{
+  "summary": "Brief summary",
+  "keyPoints": ["point 1", "point 2"],
+  "actionItems": ["action 1", "action 2"]
+}`;
+
+    const analysisResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: "You are a legal transcription analyst. Extract key information from meeting transcripts." },
+        { role: "user", content: analysisPrompt }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    const analysis = JSON.parse(analysisResponse.choices[0].message.content || '{}');
+
+    return {
+      rawText: transcription.text,
+      formattedTranscript,
+      segments: transcription.segments,
+      duration: transcription.duration || 0,
+      summary: analysis.summary,
+      keyPoints: analysis.keyPoints,
+      actionItems: analysis.actionItems
+    };
+  } catch (error) {
+    console.error("Transcription with analysis error:", error);
+    throw new Error("Failed to transcribe and analyze audio");
+  }
+}

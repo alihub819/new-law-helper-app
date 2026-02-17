@@ -1,0 +1,23 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "api/main.ts",
+            "use": "@vercel/node"
+        },
+        {
+            "src": "api/openai.ts",
+            "use": "@vercel/node"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api/(.*)",
+            "dest": "/api/main.ts"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/api/main.ts"
+        }
+    ]
+}
