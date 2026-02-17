@@ -216,6 +216,8 @@ export const VirtualFrontDesk: React.FC = () => {
         onClick={() => setIsOpen(true)}
         className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 z-50"
         size="icon"
+        data-testid="virtual-front-desk-button"
+        aria-label="Open Virtual Front Desk Assistant"
       >
         <Phone className="h-7 w-7 text-white" />
       </Button>

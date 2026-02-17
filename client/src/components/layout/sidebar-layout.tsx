@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { Menu, Mic, MicOff } from "lucide-react";
+import { Menu, Mic, MicOff, Play } from "lucide-react";
 import { useState } from "react";
 import { useVoiceControl } from "@/hooks/use-voice-control";
 
@@ -111,7 +111,7 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
   const { user, logoutMutation } = useAuth();
   const [location, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isListening, startListening, stopListening, supported } = useVoiceControl();
+  const { isListening, startListening, stopListening, supported, lastCommand } = useVoiceControl();
 
   const getInitials = (name: string) => {
     return name
@@ -187,6 +187,26 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
           </div>
         </div>
         <Button
+          variant="default"
+          size="sm"
+          onClick={async () => {
+            try {
+              const response = await fetch("/api/demo-entry", { method: "POST" });
+              const data = await response.json();
+              if (data.success) {
+                window.location.href = "/dashboard";
+              }
+            } catch (error) {
+              console.error("Demo activation failed:", error);
+            }
+          }}
+          className="w-full mb-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+          data-testid="button-demo-mode"
+        >
+          <Play className="h-4 w-4 mr-2" />
+          Activate Demo Mode
+        </Button>
+        <Button
           variant="outline"
           size="sm"
           onClick={handleLogout}
@@ -244,20 +264,27 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
               </div>
 
               <div className="flex items-center space-x-2 md:space-x-6">
-                {/* Voice Control Toggle */}
+                {/* Voice Control Toggle with Last Command */}
                 {supported && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={isListening ? stopListening : startListening}
-                    className={cn(
-                      "rounded-full transition-all duration-300",
-                      isListening ? "bg-red-100 text-red-600 animate-pulse" : "text-muted-foreground hover:text-primary"
+                  <div className="flex items-center space-x-2">
+                    {isListening && lastCommand && (
+                      <span className="hidden md:inline text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full animate-fade-in">
+                        "{lastCommand}"
+                      </span>
                     )}
-                    title={isListening ? "Stop Voice Control" : "Start Voice Control"}
-                  >
-                    {isListening ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={isListening ? stopListening : startListening}
+                      className={cn(
+                        "rounded-full transition-all duration-300",
+                        isListening ? "bg-red-100 text-red-600 animate-pulse" : "text-muted-foreground hover:text-primary"
+                      )}
+                      title={isListening ? "Stop Voice Control (Say 'help' for commands)" : "Start Voice Control"}
+                    >
+                      {isListening ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+                    </Button>
+                  </div>
                 )}
 
                 {/* Notifications */}

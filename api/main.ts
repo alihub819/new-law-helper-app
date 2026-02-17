@@ -232,21 +232,227 @@ app.post("/api/demo-login", async (req: Request, res: Response) => {
   }
 });
 
-// 5. Demo entry endpoint (seed a demo case data)
+// 5. Demo entry endpoint (seed comprehensive demo data)
 app.post("/api/demo-entry", async (req: Request, res: Response) => {
   try {
     const user = ensureDemoUser();
-    const demoCase = {
-      id: randomUUID(),
-      userId: user.id,
-      caseName: "Demo Contract for Showcase",
-      caseType: "Contract",
-      status: "Active",
-      description: "This is a demo case seeded for presentation purposes.",
-      dateOpened: new Date(),
-      createdAt: new Date(),
-    } as any;
-    res.json({ demoCase });
+    const createdItems: any = {
+      cases: [],
+      clients: [],
+      appointments: [],
+      documents: [],
+      medicalRecords: [],
+      knowledgeBase: [],
+      searchHistory: []
+    };
+
+    // Create demo clients
+    const demoClients = [
+      { id: randomUUID(), name: "John Smith", email: "john.smith@example.com", phone: "+1 (555) 123-4567", address: "123 Main St, Miami, FL 33101", type: "Individual", notes: "Personal injury client - car accident case" },
+      { id: randomUUID(), name: "Sarah Johnson", email: "sarah.j@example.com", phone: "+1 (555) 987-6543", address: "456 Oak Ave, Miami, FL 33102", type: "Individual", notes: "Contract dispute - vendor agreement breach" },
+      { id: randomUUID(), name: "TechCorp Industries", email: "legal@techcorp.com", phone: "+1 (555) 456-7890", address: "789 Business Blvd, Miami, FL 33103", type: "Corporate", notes: "Corporate client - multiple ongoing matters" },
+      { id: randomUUID(), name: "Maria Garcia", email: "maria.g@example.com", phone: "+1 (555) 234-5678", address: "321 Pine St, Miami, FL 33104", type: "Individual", notes: "Medical malpractice case" },
+      { id: randomUUID(), name: "Robert Chen", email: "robert.chen@example.com", phone: "+1 (555) 876-5432", address: "654 Elm St, Miami, FL 33105", type: "Individual", notes: "Real estate dispute - property boundary issue" }
+    ];
+    
+    demoClients.forEach(client => {
+      clientsStore.set(client.id, { ...client, userId: user.id, createdAt: new Date() });
+      createdItems.clients.push(client);
+    });
+
+    // Create demo cases with rich data
+    const demoCases = [
+      {
+        id: randomUUID(),
+        userId: user.id,
+        caseName: "Smith v. Speedy Auto Insurance",
+        caseNumber: "2024-PI-001",
+        clientName: "John Smith",
+        clientId: demoClients[0].id,
+        caseType: "personal-injury",
+        status: "active",
+        description: "Rear-end collision on I-95. Client suffered whiplash and lower back injuries. Medical bills totaling $45,000. Defendant insured by Speedy Auto Insurance.",
+        jurisdiction: "Miami-Dade County, FL",
+        practiceArea: "Personal Injury",
+        leadAttorney: "Demo Attorney",
+        opposingParty: "Speedy Auto Insurance",
+        opposingCounsel: "Defense Law Group LLP",
+        valueLow: "75000",
+        valueHigh: "150000",
+        dateOpened: new Date("2024-01-15"),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: randomUUID(),
+        userId: user.id,
+        caseName: "Johnson v. Elite Renovations LLC",
+        caseNumber: "2024-CD-002",
+        clientName: "Sarah Johnson",
+        clientId: demoClients[1].id,
+        caseType: "contract-dispute",
+        status: "active",
+        description: "Home renovation contract breach. Contractor failed to complete kitchen remodel, abandoned project with $35,000 paid but 60% incomplete work.",
+        jurisdiction: "Miami-Dade County, FL",
+        practiceArea: "Contract Law",
+        leadAttorney: "Demo Attorney",
+        opposingParty: "Elite Renovations LLC",
+        opposingCounsel: "Commercial Defense Partners",
+        valueLow: "35000",
+        valueHigh: "50000",
+        dateOpened: new Date("2024-02-01"),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: randomUUID(),
+        userId: user.id,
+        caseName: "TechCorp v. DataSecure Inc",
+        caseNumber: "2024-IP-003",
+        clientName: "TechCorp Industries",
+        clientId: demoClients[2].id,
+        caseType: "intellectual-property",
+        status: "pending",
+        description: "Trade secret misappropriation. Former employee took proprietary algorithms to competitor. Seeking injunctive relief and damages.",
+        jurisdiction: "Southern District of Florida",
+        practiceArea: "Intellectual Property",
+        leadAttorney: "Demo Attorney",
+        opposingParty: "DataSecure Inc",
+        opposingCounsel: "IP Defense Associates",
+        valueLow: "250000",
+        valueHigh: "500000",
+        dateOpened: new Date("2024-02-20"),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: randomUUID(),
+        userId: user.id,
+        caseName: "Garcia v. Memorial Hospital",
+        caseNumber: "2024-MM-004",
+        clientName: "Maria Garcia",
+        clientId: demoClients[3].id,
+        caseType: "medical-malpractice",
+        status: "active",
+        description: "Surgical error during routine procedure. Wrong site surgery resulting in permanent nerve damage. Extensive medical records to review.",
+        jurisdiction: "Miami-Dade County, FL",
+        practiceArea: "Medical Malpractice",
+        leadAttorney: "Demo Attorney",
+        opposingParty: "Memorial Hospital",
+        opposingCounsel: "Medical Defense Group",
+        valueLow: "500000",
+        valueHigh: "1200000",
+        dateOpened: new Date("2024-01-10"),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: randomUUID(),
+        userId: user.id,
+        caseName: "Chen v. Riverside Properties",
+        caseNumber: "2024-RE-005",
+        clientName: "Robert Chen",
+        clientId: demoClients[4].id,
+        caseType: "real-estate",
+        status: "pending",
+        description: "Property boundary dispute with neighboring commercial development. Survey discrepancies and encroachment issues.",
+        jurisdiction: "Miami-Dade County, FL",
+        practiceArea: "Real Estate",
+        leadAttorney: "Demo Attorney",
+        opposingParty: "Riverside Properties Inc",
+        opposingCounsel: "Real Estate Defense Firm",
+        valueLow: "100000",
+        valueHigh: "200000",
+        dateOpened: new Date("2024-03-01"),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+
+    demoCases.forEach(caseItem => {
+      casesStore.set(caseItem.id, caseItem);
+      createdItems.cases.push(caseItem);
+    });
+
+    // Create demo appointments
+    const demoAppointments = [
+      { id: randomUUID(), userId: user.id, clientId: demoClients[0].id, clientName: "John Smith", clientEmail: demoClients[0].email, date: new Date(Date.now() + 86400000).toISOString(), status: "scheduled", type: "consultation", notes: "Follow-up on settlement demand", createdAt: new Date() },
+      { id: randomUUID(), userId: user.id, clientId: demoClients[1].id, clientName: "Sarah Johnson", clientEmail: demoClients[1].email, date: new Date(Date.now() + 172800000).toISOString(), status: "scheduled", type: "review", notes: "Review contractor counteroffer", createdAt: new Date() },
+      { id: randomUUID(), userId: user.id, clientId: demoClients[3].id, clientName: "Maria Garcia", clientEmail: demoClients[3].email, date: new Date(Date.now() + 259200000).toISOString(), status: "scheduled", type: "consultation", notes: "Discuss expert witness findings", createdAt: new Date() }
+    ];
+
+    demoAppointments.forEach(appt => {
+      appointments.set(appt.id, appt);
+      createdItems.appointments.push(appt);
+    });
+
+    // Create demo documents
+    const demoDocuments = [
+      { id: randomUUID(), userId: user.id, caseId: demoCases[0].id, name: "Smith Demand Letter", type: "demand-letter", content: "Demand letter for personal injury case with supporting documentation...", format: "docx", createdAt: new Date(), updatedAt: new Date() },
+      { id: randomUUID(), userId: user.id, caseId: demoCases[1].id, name: "Johnson Contract Breach Analysis", type: "legal-analysis", content: "Analysis of renovation contract terms and breach elements...", format: "pdf", createdAt: new Date(), updatedAt: new Date() },
+      { id: randomUUID(), userId: user.id, caseId: demoCases[3].id, name: "Garcia Medical Chronology", type: "medical-summary", content: "Timeline of medical treatment and surgical procedure...", format: "pdf", createdAt: new Date(), updatedAt: new Date() }
+    ];
+
+    demoDocuments.forEach(doc => {
+      documentsStore.set(doc.id, doc);
+      createdItems.documents.push(doc);
+    });
+
+    // Create demo medical records for Garcia case
+    const demoMedicalRecords = [
+      { id: randomUUID(), userId: user.id, caseId: demoCases[3].id, documentName: "Surgical Report - March 2024", documentType: "operative-report", summary: "Wrong site surgery performed. Nerve damage documented.", parsedData: { procedures: ["Lumbar discectomy"], complications: ["Wrong level operated", "Nerve impingement"] }, createdAt: new Date(), updatedAt: new Date() },
+      { id: randomUUID(), userId: user.id, caseId: demoCases[3].id, documentName: "Physical Therapy Records", documentType: "therapy-notes", summary: "12 weeks of PT post-surgery with limited improvement.", parsedData: { duration: "12 weeks", visits: 24, improvement: "minimal" }, createdAt: new Date(), updatedAt: new Date() },
+      { id: randomUUID(), userId: user.id, caseId: demoCases[3].id, documentName: "MRI Imaging Reports", documentType: "imaging", summary: "Post-surgical imaging showing nerve damage at wrong level.", parsedData: { modality: "MRI", findings: ["Nerve compression L4-L5", "Post-surgical changes"] }, createdAt: new Date(), updatedAt: new Date() }
+    ];
+
+    demoMedicalRecords.forEach(record => {
+      medicalRecordsStore.set(record.id, record);
+      createdItems.medicalRecords.push(record);
+    });
+
+    // Create demo knowledge base entries
+    const demoKnowledgeBase = [
+      { id: randomUUID(), userId: user.id, fileName: "Florida PI Statute of Limitations.pdf", content: "Florida Statute 95.11: Actions other than for recovery of real property. (3) WITHIN FOUR YEARS.—An action founded on negligence...", fileType: "application/pdf", createdAt: new Date() },
+      { id: randomUUID(), userId: user.id, fileName: "Miami Court Rules 2024.pdf", content: "Local rules for the Eleventh Judicial Circuit of Florida. Case management procedures...", fileType: "application/pdf", createdAt: new Date() }
+    ];
+
+    const kbEntries = knowledgeBaseStore.get(user.id) || [];
+    demoKnowledgeBase.forEach(entry => {
+      kbEntries.push(entry);
+      createdItems.knowledgeBase.push(entry);
+    });
+    knowledgeBaseStore.set(user.id, kbEntries);
+
+    // Create demo search history
+    const demoSearchHistory = [
+      { id: randomUUID(), userId: user.id, type: "legal-research", query: "Florida rear-end collision liability presumption", results: JSON.stringify({ cases: 5, statutes: 2 }), createdAt: new Date(Date.now() - 86400000) },
+      { id: randomUUID(), userId: user.id, type: "quick-question", query: "What is the statute of limitations for contract disputes in Florida?", results: JSON.stringify({ answer: "5 years for written contracts per Florida Statute 95.11(2)(b)" }), createdAt: new Date(Date.now() - 172800000) }
+    ];
+
+    const historyEntries = searchHistoryStore.get(user.id) || [];
+    demoSearchHistory.forEach(entry => {
+      historyEntries.push(entry);
+      createdItems.searchHistory.push(entry);
+    });
+    searchHistoryStore.set(user.id, historyEntries);
+
+    console.log(`[DEMO] Created comprehensive demo environment for user ${user.id}:`, {
+      clients: createdItems.clients.length,
+      cases: createdItems.cases.length,
+      appointments: createdItems.appointments.length,
+      documents: createdItems.documents.length,
+      medicalRecords: createdItems.medicalRecords.length,
+      knowledgeBase: createdItems.knowledgeBase.length,
+      searchHistory: createdItems.searchHistory.length
+    });
+
+    res.json({
+      success: true,
+      user: { id: user.id, name: user.name, email: user.email },
+      demoData: createdItems,
+      message: "Full demo environment created successfully. You now have 5 clients, 5 cases, 3 appointments, 3 documents, 3 medical records, and sample knowledge base entries."
+    });
+
   } catch (err: any) {
     console.error("Demo entry error:", err);
     res.status(500).json({ error: err.message });
