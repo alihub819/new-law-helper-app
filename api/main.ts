@@ -213,6 +213,17 @@ app.post("/api/login", async (req: Request, res: Response) => {
   }
 });
 
+// Logout endpoint
+app.post("/api/logout", (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    tokens.delete(token);
+    demoTokens.delete(token);
+  }
+  res.json({ success: true, message: "Logged out successfully" });
+});
+
 // 3. Current user (token or session aware)
 app.get("/api/user", isAuthenticated, (req: any, res) => {
   const user = req.user as User;
