@@ -24,6 +24,8 @@ import Transcription from "@/pages/transcription";
 import VideoCall from "@/pages/video-call";
 import AppointmentsPage from "@/pages/appointments";
 import IntakePage from "@/pages/intake-form";
+import AttorneySettings from "@/pages/attorney-settings";
+import PracticeInterview from "@/pages/practice-interview";
 
 function Router() {
   return (
@@ -42,6 +44,8 @@ function Router() {
       <ProtectedRoute path="/transcription" component={Transcription} />
       <ProtectedRoute path="/video-call" component={VideoCall} />
       <ProtectedRoute path="/appointments" component={AppointmentsPage} />
+      <ProtectedRoute path="/attorney-settings" component={AttorneySettings} />
+      <ProtectedRoute path="/practice-interview" component={PracticeInterview} />
       <Route path="/intake/:id" component={IntakePage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />

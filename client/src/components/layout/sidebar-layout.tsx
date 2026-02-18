@@ -103,6 +103,20 @@ const navigationItems: NavigationItem[] = [
     icon: "fas fa-calendar-check",
     path: "/appointments",
     testId: "nav-appointments"
+  },
+  {
+    id: "attorney-settings",
+    label: "Attorney Settings",
+    icon: "fas fa-user-cog",
+    path: "/attorney-settings",
+    testId: "nav-attorney-settings"
+  },
+  {
+    id: "practice-interview",
+    label: "Practice Interview",
+    icon: "fas fa-user-graduate",
+    path: "/practice-interview",
+    testId: "nav-practice-interview"
   }
 ];
 

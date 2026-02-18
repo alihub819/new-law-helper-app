@@ -220,6 +220,100 @@ app.get("/api/user", isAuthenticated, (req: any, res) => {
   res.json({ id: user.id, name: user.name, email: user.email });
 });
 
+// Attorney Profile / Knowledge Base
+const attorneyProfiles = new Map<string, any>();
+
+app.get("/api/attorney-profile", isAuthenticated, (req: Request, res: Response) => {
+  const userId = (req.user as User).id;
+  const profile = attorneyProfiles.get(userId);
+  if (profile) {
+    res.json(profile);
+  } else {
+    // Return default empty profile
+    res.json({
+      firmName: "",
+      firmAddress: "",
+      firmPhone: "",
+      firmEmail: "",
+      firmWebsite: "",
+      attorneyName: "",
+      barNumber: "",
+      title: "Attorney",
+      directPhone: "",
+      directEmail: "",
+      practiceAreas: [],
+      jurisdictions: [],
+      caseTypes: [],
+      writingTone: "professional",
+      writingStyle: "",
+      preferredLanguage: "English",
+      documentTemplates: [],
+      aiPersonality: "Professional and thorough legal analyst",
+      responseStyle: "Comprehensive yet concise",
+      keyPhrases: [],
+      avoidPhrases: [],
+      emailSignature: "",
+      documentSignature: "",
+      staffMembers: [],
+      customTemplates: []
+    });
+  }
+});
+
+app.post("/api/attorney-profile", isAuthenticated, (req: Request, res: Response) => {
+  const userId = (req.user as User).id;
+  const profile = req.body;
+  attorneyProfiles.set(userId, profile);
+  console.log(`[ATTORNEY PROFILE] Saved profile for user ${userId}`);
+  res.json({ success: true, message: "Profile saved successfully" });
+});
+
+// Practice Client Interview Simulation
+app.post("/api/practice-interview", isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { caseType, difficulty, previousAnswers } = req.body;
+    
+    const prompt = `You are simulating a client interview for a ${caseType} case at ${difficulty} difficulty level.
+    
+    ${previousAnswers ? `Previous conversation:\n${JSON.stringify(previousAnswers)}\n\nContinue the interview naturally.` : 'Start the interview as the initial client consultation.'}
+    
+    Act as the client. Be realistic - you may:
+    - Be nervous or forget details
+    - Sometimes contradict yourself (lie detection opportunity)
+    - Have incomplete information
+    - Ask questions back to the attorney
+    - Show emotion appropriate to the case
+    
+    Provide your response as JSON:
+    {
+      "clientResponse": "What the client says",
+      "internalState": {
+        "isLying": boolean,
+        "lieAbout": "what they're lying about (if applicable)",
+        "emotion": "nervous/confident/upset/etc",
+        "hiddenInfo": "information they're not sharing yet"
+      },
+      "attorneyHints": ["questions to ask", "areas to probe"],
+      "knowledgeGaps": ["missing information the attorney should seek"]
+    }`;
+    
+    const response = await openaiLib.generateResponse([
+      { role: "system", content: "You are a realistic client simulation system for attorney training." },
+      { role: "user", content: prompt }
+    ]);
+    
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      res.json(JSON.parse(jsonMatch[0]));
+    } else {
+      res.json({ clientResponse: response });
+    }
+  } catch (error: any) {
+    console.error("Practice interview error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 4. Demo login endpoint
 app.post("/api/demo-login", async (req: Request, res: Response) => {
   try {
