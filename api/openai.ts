@@ -844,6 +844,138 @@ Provide response in JSON format:
 }`;
         break;
 
+      case "lop":
+        prompt = `Analyze the following Letter of Protection (LOP) documentation and provide comprehensive analysis. Include:
+- Provider information and LOP amount
+- Negotiation opportunities
+- Recommended settlement strategies
+- Potential reductions
+
+LOP/Medical Documentation:
+${payload.documentText}
+
+Provide response in JSON format:
+{
+  "lopAnalysis": {
+    "providerName": "Provider name",
+    "totalLopAmount": 0.00,
+    "reductionPercentage": 0,
+    "recommendedSettlement": 0.00,
+    "itemizedCharges": [{"description": "Service", "amount": 0.00}]
+  },
+  "negotiationStrategy": "Detailed negotiation approach",
+  "reductionOpportunities": ["List of specific reduction opportunities"],
+  "duplicateCharges": ["List of duplicate or questionable charges"],
+  "standardRateComparison": "Comparison to standard rates",
+  "recommendations": ["Strategic recommendations for settlement"]
+}`;
+        break;
+
+      case "pip":
+        prompt = `Analyze the following PIP (Personal Injury Protection) insurance documentation. Include:
+- Policy limits and usage
+- Covered vs non-covered services
+- Remaining benefits
+- Exhaustion projections
+
+PIP/Medical Documentation:
+${payload.documentText}
+
+Provide response in JSON format:
+{
+  "pipAnalysis": {
+    "policyLimit": 0.00,
+    "usedAmount": 0.00,
+    "remainingAmount": 0.00,
+    "exhaustionDate": "Projected date or N/A",
+    "claimStatus": "Active/Exhausted/Pending"
+  },
+  "coveredServices": [
+    {"name": "Service name", "covered": true, "amount": 0.00}
+  ],
+  "nonCoveredServices": ["List of non-covered services"],
+  "exhaustionWarning": "Warning about PIP exhaustion",
+  "recommendations": ["Recommendations for PIP management"],
+  "alternativeCoverage": ["Alternative coverage options"]
+}`;
+        break;
+
+      case "attorney":
+        prompt = `Analyze the following case information and provide comprehensive attorney insights for personal injury litigation. Include:
+- Case value assessment
+- Strengths and weaknesses
+- Strategic recommendations
+- Settlement considerations
+
+Case/Medical Documentation:
+${payload.documentText}
+
+Provide response in JSON format:
+{
+  "caseValue": {
+    "estimatedValue": 0,
+    "rangeLow": 0,
+    "rangeHigh": 0,
+    "confidenceLevel": "High/Medium/Low",
+    "factors": ["Key value factors"]
+  },
+  "strengthsAndWeaknesses": {
+    "strengths": ["List of case strengths"],
+    "weaknesses": ["List of case weaknesses"],
+    "mitigationStrategies": ["How to address weaknesses"]
+  },
+  "recommendedStrategy": "Detailed litigation strategy",
+  "settlementRecommendations": {
+    "initialDemand": 0,
+    "likelySettlementRange": {"low": 0, "high": 0},
+    "timingConsiderations": "When to settle vs litigate"
+  },
+  "evidenceChecklist": ["Evidence needed"],
+  "expertWitnesses": ["Recommended expert witnesses"],
+  "riskAssessment": "Overall case risk assessment"
+}`;
+        break;
+
+      case "therapist":
+        prompt = `Analyze the following therapy/treatment notes and provide comprehensive insights. Include:
+- Treatment plan analysis
+- Progress tracking
+- Functional improvement assessment
+- Future treatment recommendations
+
+Therapy/Treatment Documentation:
+${payload.documentText}
+
+Provide response in JSON format:
+{
+  "treatmentPlan": "Summary of treatment plan and goals",
+  "progressNotes": [
+    {
+      "date": "YYYY-MM-DD",
+      "progress": "improving/stable/declining",
+      "notes": "Session notes",
+      "functionalGoals": ["Goals addressed"],
+      "objectiveFindings": ["Objective measurements"]
+    }
+  ],
+  "functionalImprovement": {
+    "initialStatus": "Initial functional status",
+    "currentStatus": "Current functional status",
+    "percentImprovement": 0,
+    "keyMilestones": ["Achieved milestones"]
+  },
+  "treatmentRecommendations": {
+    "additionalSessions": 0,
+    "frequency": "Weekly/Bi-weekly",
+    "focusAreas": ["Areas to focus on"],
+    "homeExerciseProgram": "HEP recommendations"
+  },
+  "prognosis": "Overall prognosis and timeline",
+  "returnToWork": {"status": "Status", "timeline": "Expected timeline"},
+  "medicolegalConsiderations": ["Relevant medicolegal points"]
+}`;
+        break;
+
       default:
         throw new Error("Invalid mode");
     }

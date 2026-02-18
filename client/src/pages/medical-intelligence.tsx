@@ -36,7 +36,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 type AnalysisMode = "chronology" | "bills" | "summary" | "lop" | "pip" | "attorney" | "therapist";
-type LLMModel = "gpt-4o" | "gpt-4o-mini" | "o1-preview";
+type LLMModel = "ai-advanced" | "ai-standard" | "ai-basic";
 type Complexity = "standard" | "complex" | "forensic";
 
 interface MedicalResults {
@@ -60,7 +60,7 @@ interface RAGContext {
 
 export default function MedicalIntelligence() {
   const [activeTab, setActiveTab] = useState<AnalysisMode>("chronology");
-  const [selectedModel, setSelectedModel] = useState<LLMModel>("gpt-4o");
+  const [selectedModel, setSelectedModel] = useState<LLMModel>("ai-advanced");
   const [complexity, setComplexity] = useState<Complexity>("standard");
   const [documentText, setDocumentText] = useState<Record<AnalysisMode, string>>({
     chronology: "",
@@ -417,9 +417,9 @@ export default function MedicalIntelligence() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="gpt-4o-mini">GPT-4o Mini (Fast)</SelectItem>
-                        <SelectItem value="gpt-4o">GPT-4o (Balanced)</SelectItem>
-                        <SelectItem value="o1-preview">o1 Preview (Advanced)</SelectItem>
+                        <SelectItem value="ai-basic">Standard AI (Fast)</SelectItem>
+                        <SelectItem value="ai-advanced">Advanced AI (Recommended)</SelectItem>
+                        <SelectItem value="ai-standard">Professional AI (Complex Cases)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
