@@ -1875,9 +1875,88 @@ Return JSON.`;
 });
 
 
-// Health check
-app.get("/api/health", (_req, res) => {
-    res.json({ status: "ok", timestamp: new Date().toISOString() });
+// Health check with API key verification
+app.get("/api/health", async (_req, res) => {
+    const healthStatus: any = {
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || "development",
+        services: {}
+    };
+
+    // Check OpenAI API Key
+    const openaiKey = process.env.OPENAI_API_KEY;
+    healthStatus.services.openai = {
+        configured: !!openaiKey,
+        keyPrefix: openaiKey ? openaiKey.substring(0, 7) + "..." : "NOT_SET"
+    };
+
+    // Test OpenAI connection if key exists
+    if (openaiKey && openaiKey !== "default_key") {
+        try {
+            const testResponse = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [{ role: "user", content: "Say 'OK'" }],
+                max_tokens: 5
+            });
+            healthStatus.services.openai.working = true;
+            healthStatus.services.openai.testResponse = testResponse.choices[0].message.content;
+        } catch (error: any) {
+            healthStatus.services.openai.working = false;
+            healthStatus.services.openai.error = error.message;
+        }
+    } else {
+        healthStatus.services.openai.working = false;
+        healthStatus.services.openai.error = "API key not configured";
+    }
+
+    // Check session secret
+    healthStatus.services.session = {
+        configured: !!process.env.SESSION_SECRET
+    };
+
+    // Overall status
+    healthStatus.healthy = healthStatus.services.openai.working;
+
+    res.status(healthStatus.healthy ? 200 : 503).json(healthStatus);
+});
+
+// Simple AI test endpoint (no auth required) - for verifying API key
+app.get("/api/test-ai", async (_req, res) => {
+    try {
+        const openaiKey = process.env.OPENAI_API_KEY;
+        
+        if (!openaiKey || openaiKey === "default_key") {
+            return res.status(503).json({ 
+                success: false, 
+                error: "OpenAI API key not configured in Vercel environment variables",
+                instructions: "Add OPENAI_API_KEY to Vercel Project Settings → Environment Variables"
+            });
+        }
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [{ 
+                role: "user", 
+                content: "Respond with exactly: 'API key working correctly!'" 
+            }],
+            max_tokens: 20
+        });
+
+        res.json({
+            success: true,
+            message: "OpenAI API key is configured and working!",
+            testResponse: response.choices[0].message.content,
+            model: "gpt-4o-mini",
+            timestamp: new Date().toISOString()
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            instructions: "Check that your OPENAI_API_KEY is valid and has credits"
+        });
+    }
 });
 
 // ============================================
