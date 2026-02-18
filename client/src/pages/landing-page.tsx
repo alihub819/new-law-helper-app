@@ -65,9 +65,9 @@ const AiTyper = ({ text, onComplete }: { text: string; onComplete?: () => void }
   );
 };
 
-// Enhanced Demo Component
+// Enhanced Demo Component with More Examples
 const AiDemo = () => {
-  const [activeTab, setActiveTab] = useState<"draft" | "analyze" | "search">("draft");
+  const [activeTab, setActiveTab] = useState<"draft" | "analyze" | "search" | "medical" | "demand" | "discovery">("draft");
   const [isProcessing, setIsProcessing] = useState(false);
   const [showResult, setShowResult] = useState(false);
 
@@ -92,6 +92,27 @@ const AiDemo = () => {
       output: "According to N.Y. C.P.L.R. § 214-a, the statute of limitations for medical malpractice in New York is 2 years and 6 months from the act, omission, or failure complained of...",
       icon: Search,
       color: "text-purple-400"
+    },
+    medical: {
+      title: "Medical Chronology",
+      input: "Create a medical chronology from: Patient John Doe, rear-end collision on 1/15/24, ER visit same day, PT 3x/week for 8 weeks, MRI showing herniated disc L4-L5.",
+      output: "MEDICAL CHRONOLOGY\n\n01/15/2024 - EMERGENCY DEPARTMENT\n• Chief Complaint: Neck and lower back pain post-MVA\n• Treatment: X-rays negative, prescribed muscle relaxants\n• ICD-10: S13.4XXA, S33.5XXA\n\n01/16/2024 - 03/15/2024: PHYSICAL THERAPY (24 visits)\n• Treatment: Cervical and lumbar traction, therapeutic exercises\n• CPT: 97110, 97140, 97530\n\n02/01/2024 - MRI LUMBAR SPINE\n• Finding: Herniated disc L4-L5 with nerve impingement\n• CPT: 72148",
+      icon: Stethoscope,
+      color: "text-emerald-400"
+    },
+    demand: {
+      title: "Demand Letter",
+      input: "Generate a demand letter for a car accident case where my client suffered whiplash, $15,000 in medical bills, and 2 weeks lost wages. Policy limits are $50,000.",
+      output: "DEMAND LETTER\n\nRe: Motor Vehicle Accident - January 15, 2024\nClaim No: ABC-123-456\nPolicy Limit: $50,000\n\nDear Claims Adjuster:\n\nWe represent [Client Name] regarding the motor vehicle accident that occurred on January 15, 2024, when your insured rear-ended our client at the intersection of Main St and Broadway.\n\nLIABILITY:\nYour insured was cited for following too closely (Vehicle Code § 21703). Witness statements confirm your insured failed to stop in time.\n\nDAMAGES:\nMedical Expenses: $15,000.00\nLost Wages: $3,500.00\nPain & Suffering: $25,000.00\nFuture Medical: $6,500.00\nTOTAL DEMAND: $50,000.00 (Policy Limits)\n\nWe request a response within 30 days.",
+      icon: FileText,
+      color: "text-red-400"
+    },
+    discovery: {
+      title: "Discovery Response",
+      input: "Answer interrogatory: 'Describe all injuries you claim resulted from the accident of January 15, 2024.'",
+      output: "INTERROGATORY RESPONSE\n\nINTERROGATORY NO. 12:\nDescribe all injuries you claim resulted from the accident of January 15, 2024.\n\nRESPONSE:\nPlaintiff responds as follows:\n\n1. Cervical Strain (Whiplash)\n   - Diagnosed: January 15, 2024 at Memorial Hospital\n   - ICD-10: S13.4XXA\n   - Treatment: 8 weeks physical therapy\n   - Current Status: Resolved with residual stiffness\n\n2. Lumbar Disc Herniation at L4-L5\n   - Diagnosed: February 1, 2024 via MRI\n   - ICD-10: M51.26\n   - Treatment: Epidural steroid injection (2/15/24), ongoing PT\n   - Current Status: Permanent - requires maintenance therapy\n\n3. Anxiety/PTSD related to collision\n   - Diagnosed: January 30, 2024\n   - ICD-10: F43.10\n   - Treatment: Counseling, medication\n   - Current Status: Ongoing treatment",
+      icon: BookOpen,
+      color: "text-indigo-400"
     }
   };
 
@@ -407,6 +428,47 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Quick Use Cases - What You Can Do */}
+      <section className="py-24 px-6 bg-slate-900/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 mb-4">30+ Use Cases</Badge>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              What You Can <span className="text-amber-400">Do Right Now</span>
+            </h2>
+            <p className="text-xl text-slate-400 max-w-3xl mx-auto">
+              Real tasks you can accomplish with LawHelper.ai today
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { icon: FileText, text: "Draft a demand letter", color: "text-blue-400", bg: "bg-blue-400/10" },
+              { icon: Stethoscope, text: "Analyze medical records", color: "text-emerald-400", bg: "bg-emerald-400/10" },
+              { icon: Search, text: "Research case law", color: "text-purple-400", bg: "bg-purple-400/10" },
+              { icon: AlertTriangle, text: "Review contracts for risks", color: "text-orange-400", bg: "bg-orange-400/10" },
+              { icon: FileText, text: "Create discovery responses", color: "text-indigo-400", bg: "bg-indigo-400/10" },
+              { icon: BookOpen, text: "Generate legal memos", color: "text-pink-400", bg: "bg-pink-400/10" },
+              { icon: MessageSquare, text: "Practice client interviews", color: "text-cyan-400", bg: "bg-cyan-400/10" },
+              { icon: Video, text: "Conduct secure video calls", color: "text-red-400", bg: "bg-red-400/10" },
+              { icon: Calendar, text: "Schedule appointments", color: "text-green-400", bg: "bg-green-400/10" },
+              { icon: FolderOpen, text: "Organize case files", color: "text-yellow-400", bg: "bg-yellow-400/10" },
+              { icon: Mic, text: "Transcribe depositions", color: "text-teal-400", bg: "bg-teal-400/10" },
+              { icon: Brain, text: "Get AI legal opinions", color: "text-violet-400", bg: "bg-violet-400/10" }
+            ].map((item, idx) => (
+              <motion.div
+                key={idx}
+                whileHover={{ scale: 1.05 }}
+                className={`${item.bg} border border-white/10 rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-white/20 transition-all`}
+              >
+                <item.icon className={`w-5 h-5 ${item.color}`} />
+                <span className="text-white font-medium">{item.text}</span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Advanced Capabilities Section */}
       <section id="capabilities" className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
@@ -702,8 +764,213 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FAQ Section */}
+      {/* Real-World Examples Gallery */}
       <section className="py-24 bg-slate-900/30 border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <Badge className="bg-pink-500/10 text-pink-400 border-pink-500/20 mb-4">Real Examples</Badge>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              See It In <span className="text-pink-400">Action</span>
+            </h2>
+            <p className="text-xl text-slate-400 max-w-3xl mx-auto">
+              Real examples of how attorneys and paralegals use LawHelper.ai every day to streamline their practice.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Example 1: Personal Injury Case */}
+            <Card className="bg-slate-900 border-white/10 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 p-6 border-b border-white/10">
+                <div className="flex items-center gap-3 mb-2">
+                  <Badge className="bg-blue-500/20 text-blue-400">Personal Injury</Badge>
+                  <span className="text-slate-400 text-sm">Car Accident</span>
+                </div>
+                <h3 className="text-xl font-bold">From Intake to Demand Letter in 30 Minutes</h3>
+              </div>
+              <CardContent className="p-6 space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold shrink-0">1</div>
+                    <div>
+                      <div className="font-medium text-white">Client Interview</div>
+                      <p className="text-sm text-slate-400">Used Practice Interview mode to prepare questions. AI flagged potential liability issues.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-sm font-bold shrink-0">2</div>
+                    <div>
+                      <div className="font-medium text-white">Medical Records Analysis</div>
+                      <p className="text-sm text-slate-400">Uploaded 200+ pages of records. AI extracted ICD codes, treatment timeline, and billed $47,500.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-sm font-bold shrink-0">3</div>
+                    <div>
+                      <div className="font-medium text-white">Demand Letter Generated</div>
+                      <p className="text-sm text-slate-400">AI created demand letter citing specific injuries, treatment gaps, and case law. Ready to send.</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-white/10">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-400">Time Saved: 6 hours</span>
+                    <span className="text-emerald-400 font-medium">Case Value: $125,000</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Example 2: Contract Review */}
+            <Card className="bg-slate-900 border-white/10 overflow-hidden">
+              <div className="bg-gradient-to-r from-orange-600/20 to-red-600/20 p-6 border-b border-white/10">
+                <div className="flex items-center gap-3 mb-2">
+                  <Badge className="bg-orange-500/20 text-orange-400">Contract Law</Badge>
+                  <span className="text-slate-400 text-sm">Commercial Lease</span>
+                </div>
+                <h3 className="text-xl font-bold">Caught Hidden Liability Clause</h3>
+              </div>
+              <CardContent className="p-6 space-y-4">
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+                  <div className="flex items-center gap-2 text-red-400 font-medium mb-2">
+                    <AlertTriangle className="w-5 h-5" />
+                    AI Risk Alert
+                  </div>
+                  <p className="text-sm text-slate-300">
+                    "Section 14.2 requires tenant to indemnify landlord for ALL claims including landlord's own negligence. This is unenforceable in CA but creates litigation risk."
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-medium text-white">Identified 3 High-Risk Clauses</div>
+                      <p className="text-sm text-slate-400">Indemnification, maintenance obligations, and auto-renewal terms.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-medium text-white">Suggested Negotiation Points</div>
+                      <p className="text-sm text-slate-400">AI provided specific counter-language and legal justification.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-medium text-white">Client Protected</div>
+                      <p className="text-sm text-slate-400">Avoided $50K+ in potential liability exposure.</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-white/10">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-400">Review Time: 15 minutes</span>
+                    <span className="text-emerald-400 font-medium">Saved: $15,000+</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Example 3: Legal Research */}
+            <Card className="bg-slate-900 border-white/10 overflow-hidden">
+              <div className="bg-gradient-to-r from-purple-600/20 to-indigo-600/20 p-6 border-b border-white/10">
+                <div className="flex items-center gap-3 mb-2">
+                  <Badge className="bg-purple-500/20 text-purple-400">Legal Research</Badge>
+                  <span className="text-slate-400 text-sm">Motion to Compel</span>
+                </div>
+                <h3 className="text-xl font-bold">Found Winning Precedent in Seconds</h3>
+              </div>
+              <CardContent className="p-6 space-y-4">
+                <div className="space-y-3">
+                  <div className="p-4 bg-white/5 rounded-lg">
+                    <div className="text-sm text-slate-400 mb-1">Query</div>
+                    <div className="text-white">"Cases where court compelled production of Slack messages in employment discrimination cases in California"</div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-sm font-bold shrink-0">1</div>
+                    <div>
+                      <div className="font-medium text-white">AI Search Results</div>
+                      <p className="text-sm text-slate-400">Found 5 relevant cases including <em>Williams v. Amazon</em> (2023) with nearly identical facts.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-bold shrink-0">2</div>
+                    <div>
+                      <div className="font-medium text-white">Case Brief Generated</div>
+                      <p className="text-sm text-slate-400">AI created summary with holding, reasoning, and citation in proper Bluebook format.</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-white/10">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-400">Research Time: 20 minutes</span>
+                    <span className="text-emerald-400 font-medium">Motion Granted ✓</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Example 4: Medical Malpractice */}
+            <Card className="bg-slate-900 border-white/10 overflow-hidden">
+              <div className="bg-gradient-to-r from-emerald-600/20 to-teal-600/20 p-6 border-b border-white/10">
+                <div className="flex items-center gap-3 mb-2">
+                  <Badge className="bg-emerald-500/20 text-emerald-400">Medical Malpractice</Badge>
+                  <span className="text-slate-400 text-sm">Surgical Error</span>
+                </div>
+                <h3 className="text-xl font-bold">Organized 1,200 Pages of Medical Records</h3>
+              </div>
+              <CardContent className="p-6 space-y-4">
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="bg-white/5 p-3 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-emerald-400">47</div>
+                      <div className="text-xs text-slate-400">Provider Visits</div>
+                    </div>
+                    <div className="bg-white/5 p-3 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-blue-400">128</div>
+                      <div className="text-xs text-slate-400">ICD-10 Codes</div>
+                    </div>
+                    <div className="bg-white/5 p-3 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-purple-400">$847K</div>
+                      <div className="text-xs text-slate-400">Total Billed</div>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-medium text-white">Chronology Created</div>
+                      <p className="text-sm text-slate-400">AI generated detailed timeline from initial ER visit through 8 surgeries over 18 months.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-medium text-white">Treatment Gaps Identified</div>
+                      <p className="text-sm text-slate-400">Flagged 3-week delay in post-surgical care that worsened outcome.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-medium text-white">Expert Witness Ready</div>
+                      <p className="text-sm text-slate-400">Organized records by issue for expert review. Case settled for $2.4M.</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-white/10">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-400">Processing Time: 2 hours</span>
+                    <span className="text-emerald-400 font-medium">Settlement: $2.4M</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-24 px-6">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Frequently Asked Questions</h2>
