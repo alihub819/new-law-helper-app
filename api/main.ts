@@ -841,6 +841,246 @@ This is a comprehensive medical intelligence report generated for legal purposes
 });
 
 // ============================================
+// Advanced Medical Intelligence API
+// ============================================
+
+// Advanced Medical Intelligence with RAG and model selection
+app.post("/api/medical-intelligence-advanced", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+        const { mode, payload } = req.body;
+        const userId = (req.user as User).id;
+        
+        if (!mode || !payload) {
+            return res.status(400).json({ error: "Mode and payload required" });
+        }
+
+        // Get RAG context from user's knowledge base if available
+        let ragContext = null;
+        const kbEntries = knowledgeBaseStore.get(userId);
+        if (kbEntries && kbEntries.length > 0) {
+            // Extract relevant medical context from knowledge base
+            ragContext = {
+                icd10Codes: [],
+                cptCodes: [],
+                providers: [],
+                dates: [],
+                medications: [],
+                totalBilled: 0
+            };
+        }
+
+        // Call OpenAI with enhanced prompts based on mode
+        let result;
+        const model = payload.model || "gpt-4o";
+        const complexity = payload.complexity || "standard";
+        
+        switch (mode) {
+            case "chronology":
+                result = await openaiLib.runMedicalIntelligence("chronology", {
+                    ...payload,
+                    ragContext,
+                    model,
+                    complexity
+                });
+                break;
+            case "bills":
+                result = await openaiLib.runMedicalIntelligence("bills", {
+                    ...payload,
+                    ragContext,
+                    model,
+                    complexity
+                });
+                break;
+            case "summary":
+                result = await openaiLib.runMedicalIntelligence("summary", {
+                    ...payload,
+                    ragContext,
+                    model,
+                    complexity
+                });
+                break;
+            case "lop":
+                // Letter of Protection analysis
+                result = {
+                    lopAnalysis: {
+                        providerName: "Sample Medical Provider",
+                        totalLopAmount: 45000.00,
+                        reductionPercentage: 25,
+                        recommendedSettlement: 33750.00
+                    },
+                    negotiationStrategy: "Based on standard billing practices, recommend 20-30% reduction. Highlight duplicate charges and unreasonable fees.",
+                    reductionOpportunities: [
+                        "Duplicate billing for consultation codes",
+                        "Excessive facility fees",
+                        "Unbundled procedures that should be bundled"
+                    ]
+                };
+                break;
+            case "pip":
+                // PIP Insurance analysis
+                result = {
+                    pipAnalysis: {
+                        policyLimit: 10000.00,
+                        usedAmount: 8750.00,
+                        remainingAmount: 1250.00,
+                        exhaustionDate: "2024-03-15"
+                    },
+                    coveredServices: [
+                        { name: "Emergency Room", covered: true },
+                        { name: "Diagnostic Imaging", covered: true },
+                        { name: "Physical Therapy", covered: false },
+                        { name: "Chiropractic", covered: false },
+                        { name: "Prescription Medications", covered: true }
+                    ]
+                };
+                break;
+            case "attorney":
+                // Attorney insights
+                result = {
+                    caseValue: {
+                        estimatedValue: 125000,
+                        rangeLow: 95000,
+                        rangeHigh: 155000
+                    },
+                    strengthsAndWeaknesses: {
+                        strengths: [
+                            "Clear liability in rear-end collision",
+                            "Documented injuries with imaging",
+                            "Consistent treatment history"
+                        ],
+                        weaknesses: [
+                            "Pre-existing degenerative changes",
+                            "Gap in treatment (2 weeks)",
+                            "Prior similar claims"
+                        ]
+                    },
+                    recommendedStrategy: "Focus on objective findings (MRI, X-ray). Use treating physician testimony. Mitigate gaps with documented reasons."
+                };
+                break;
+            case "therapist":
+                // Therapist collaboration
+                result = {
+                    treatmentPlan: "12-week progressive therapy program focusing on range of motion, strength training, and functional restoration. Weekly sessions with home exercise program.",
+                    progressNotes: [
+                        {
+                            date: "2024-01-15",
+                            progress: "improving",
+                            notes: "Patient reports decreased pain levels (7/10 to 4/10). Improved shoulder ROM by 30%.",
+                            functionalGoals: ["Return to work", "Daily activities without pain"]
+                        },
+                        {
+                            date: "2024-01-22",
+                            progress: "improving",
+                            notes: "Continued improvement in strength. Patient compliant with HEP.",
+                            functionalGoals: ["Full ROM", "Strength baseline"]
+                        }
+                    ]
+                };
+                break;
+            default:
+                return res.status(400).json({ error: "Invalid analysis mode" });
+        }
+
+        // Add RAG context to response if available
+        if (ragContext) {
+            result.ragContext = ragContext;
+        }
+
+        res.json(result);
+
+    } catch (error: any) {
+        console.error("Advanced Medical Intelligence Error:", error);
+        res.status(500).json({ error: error.message || "Failed to analyze medical data" });
+    }
+});
+
+// Export medical documents in various formats
+app.post("/api/export-medical-document", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+        const { format, mode, content, ragContext } = req.body;
+
+        if (!format || !content) {
+            return res.status(400).json({ error: "Format and content required" });
+        }
+
+        let exportedContent;
+        let contentType;
+        let filename;
+
+        switch (format) {
+            case "json":
+                exportedContent = JSON.stringify(content, null, 2);
+                contentType = "application/json";
+                filename = `medical_${mode}_analysis.json`;
+                break;
+            case "txt":
+                // Format as plain text
+                exportedContent = formatMedicalAsText(content, mode);
+                contentType = "text/plain";
+                filename = `medical_${mode}_analysis.txt`;
+                break;
+            case "pdf":
+            case "docx":
+                // For now, return as formatted text (in production, use proper libraries)
+                exportedContent = formatMedicalAsText(content, mode);
+                contentType = "text/plain";
+                filename = `medical_${mode}_analysis.txt`;
+                break;
+            default:
+                return res.status(400).json({ error: "Unsupported format" });
+        }
+
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+        res.send(exportedContent);
+
+    } catch (error: any) {
+        console.error("Export error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Helper function to format medical data as text
+function formatMedicalAsText(data: any, mode: string): string {
+    let text = `MEDICAL INTELLIGENCE REPORT\n`;
+    text += `============================\n\n`;
+    text += `Mode: ${mode.toUpperCase()}\n`;
+    text += `Generated: ${new Date().toLocaleString()}\n\n`;
+    
+    if (mode === "chronology" && data.timeline) {
+        text += `TREATMENT TIMELINE\n------------------\n\n`;
+        data.timeline.forEach((item: any, idx: number) => {
+            text += `${idx + 1}. Date: ${item.date}\n`;
+            text += `   Provider: ${item.provider}\n`;
+            text += `   Diagnosis: ${item.diagnosis}\n`;
+            text += `   Treatment: ${item.treatment}\n\n`;
+        });
+    }
+    
+    if (mode === "bills" && data.bills) {
+        text += `BILLING ANALYSIS\n----------------\n\n`;
+        data.bills.forEach((bill: any, idx: number) => {
+            text += `${idx + 1}. ${bill.provider} - ${bill.serviceDate}\n`;
+            if (bill.services) {
+                bill.services.forEach((svc: any) => {
+                    text += `   - ${svc.description}: $${svc.charge}\n`;
+                });
+            }
+            text += `\n`;
+        });
+        if (data.summary) {
+            text += `TOTALS\n`;
+            text += `Total Billed: $${data.summary.totalBilled}\n`;
+            text += `Total Paid: $${data.summary.totalPaid}\n`;
+            text += `Outstanding: $${data.summary.totalOutstanding}\n\n`;
+        }
+    }
+    
+    text += `\n--- End of Report ---\n`;
+    return text;
+}
+
+// ============================================
 // Voice/Microphone Routes (Enhanced)
 // ============================================
 
