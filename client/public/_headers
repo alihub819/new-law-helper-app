@@ -1,0 +1,31 @@
+# Cloudflare Pages Headers Configuration
+
+# Security Headers
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+X-XSS-Protection: 1; mode=block
+
+# CORS Headers (adjust as needed)
+# Access-Control-Allow-Origin: *
+
+# Cache Control for static assets
+# HTML - no cache for SPA
+/*
+  X-Cache-Control: no-cache
+
+# Static assets - long cache
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable

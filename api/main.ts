@@ -2128,10 +2128,4 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 // ============================================
 // Export for Vercel
 // ============================================
-// 404 fallback for unknown API routes
-app.all("/api/*", (req: Request, res: Response) => {
-  res.status(404).json({ error: "Not Found" });
-});
-
 export default app;
-"// trigger deployment $(date +%s)"  
