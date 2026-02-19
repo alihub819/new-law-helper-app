@@ -57,6 +57,9 @@ const users = new Map<string, User>();
 const appointments = new Map<string, Appointment>();
 const intakeForms = new Map<string, IntakeForm>();
 const knowledgeBaseStore = new Map<string, { id: string; userId: string; fileName: string; content: string; fileType: string; createdAt: Date }[]>();
+const clientsStore = new Map<string, any>();
+const casesStore = new Map<string, any>();
+const documentsStore = new Map<string, any>();
 
 // Production-ready in-memory token store and helpers
 const tokens = new Map<string, string>();
@@ -495,7 +498,7 @@ Create a comprehensive legal document with proper formatting, legal terminology,
 
         const docContent = await openaiLib.generateDocument(
           caseItem.caseType === 'personal-injury' ? 'demand-letter' : 'business-letter',
-          'text',
+          'paste',
           docPrompt,
           { caseValue: caseItem.valueHigh }
         );
@@ -556,12 +559,12 @@ Create a comprehensive legal document with proper formatting, legal terminology,
 
     // Create realistic appointments
     console.log("[DEMO] Creating appointments...");
-    const appointmentTypes = ["consultation", "review", "court", "deposition"];
+    const appointmentTypes: Array<"consultation" | "review" | "court"> = ["consultation", "review", "court"];
     for (let i = 0; i < 5; i++) {
       const client = demoClients[i % demoClients.length];
-      const apptDate = new Date(Date.now() + (i * 7 + 3) * 24 * 60 * 60 * 1000); // Spread over next few weeks
+      const apptDate = new Date(Date.now() + (i * 7 + 3) * 24 * 60 * 60 * 1000);
       
-      const newAppt = {
+      const newAppt: Appointment = {
         id: randomUUID(),
         userId: user.id,
         clientId: client.id,
@@ -734,7 +737,7 @@ app.post("/api/law-agent", isAuthenticated, async (req, res) => {
   try {
     const { question, context } = req.body;
     if (!question) return res.status(400).json({ error: "Question required" });
-    const answer = await openaiLib.answerLegalQuestion(question, context);
+    const answer = await openaiLib.answerLegalQuestion(question);
     res.json({ answer });
   } catch (error: any) {
     console.error("Law agent error:", error);
@@ -1018,8 +1021,11 @@ app.post("/api/medical-intelligence", isAuthenticated, async (req, res) => {
 app.post("/api/discovery-tools", isAuthenticated, async (req, res) => {
     try {
         const { toolType, caseType, jurisdiction, caseFacts, casePosition } = req.body;
-        const result = await openaiLib.generateResponse(toolType, { caseType, jurisdiction, caseFacts, casePosition });
-        res.json(result);
+        const result = await openaiLib.generateResponse([
+            { role: "system", content: "You are a legal discovery assistant." },
+            { role: "user", content: `Tool: ${toolType}\nCase Type: ${caseType}\nJurisdiction: ${jurisdiction}\nFacts: ${caseFacts}\nPosition: ${casePosition}` }
+        ]);
+        res.json({ result });
     } catch (error: any) {
         console.error("Discovery tools error:", error);
         res.status(500).json({ error: error.message });
@@ -1035,15 +1041,16 @@ app.post("/api/knowledge-base", isAuthenticated, upload.single('document'), asyn
 
         const entry = {
             id: randomUUID(),
-            title: req.body.title || req.file.originalname,
-            content: text,
+            userId: userId,
             fileName: req.file.originalname,
+            content: text,
+            fileType: req.file.mimetype || 'text/plain',
             createdAt: new Date()
         };
 
         const entries = knowledgeBaseStore.get(userId) || [];
         entries.push(entry);
-        knowledgeBase.set(userId, entries);
+        knowledgeBaseStore.set(userId, entries);
 
         res.json(entry);
     } catch (error: any) {
@@ -1519,7 +1526,7 @@ app.post("/api/clients", isAuthenticated, async (req, res) => {
             clientEmail: email,
             date: new Date().toISOString(),
             status: "completed",
-            type: "client-registration",
+            type: "consultation",
             notes: "Client registered in system",
             createdAt: new Date()
         };
