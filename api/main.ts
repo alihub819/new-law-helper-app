@@ -2,7 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual, randomUUID } from "crypto";
+import { scrypt, randomBytes, timingSafeEqual, randomUUID, createHash } from "crypto";
 import { promisify } from "util";
 import createMemoryStore from "memorystore";
 import * as openaiLib from "./openai.js";
@@ -86,11 +86,10 @@ let demoUserId: string | null = null;
 const demoTokens = new Map<string, string>(); // token -> userId
 
 function ensureDemoUser(): { id: string; name: string; email: string; password: string } {
-  // Try to find existing demo user
   const existing = Array.from(users.values()).find(u => u.email === DEMO_EMAIL);
   if (existing) { demoUserId = existing.id; return existing as any; }
   const id = randomUUID();
-  const hash = require("crypto").createHash("sha256").update(DEMO_PASSWORD).digest("hex");
+  const hash = createHash("sha256").update(DEMO_PASSWORD).digest("hex");
   const user = { id, name: "Demo User", email: DEMO_EMAIL, password: `${"salt"}.${hash}`, createdAt: new Date() } as any;
   users.set(id, user);
   demoUserId = id;
