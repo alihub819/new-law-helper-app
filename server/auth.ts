@@ -1,3 +1,10 @@
+import { Request, Response, NextFunction } from "express";
+
+export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  if (req.isAuthenticated()) return next();
+  res.status(401).send("Unauthorized");
+}
+
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";

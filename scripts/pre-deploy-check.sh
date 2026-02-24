@@ -12,8 +12,8 @@ echo "Running Build..."
 npm run build
 
 # 3. Verify static assets
-if [ ! -d "server/public" ]; then
-  echo "Error: server/public directory missing after build!"
+if [ ! -d "dist/public" ]; then
+  echo "Error: dist/public directory missing after build!"
   exit 1
 fi
 
