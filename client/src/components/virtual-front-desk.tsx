@@ -155,11 +155,28 @@ export const VirtualFrontDesk: React.FC = () => {
 
           recognition.start();
         } else {
-          toast({
-            title: 'Not Supported',
-            description: 'Speech recognition is not supported in your browser',
-            variant: 'destructive'
-          });
+          // Fallback to OpenAI Whisper backend
+          try {
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'recording.wav');
+            
+            const response = await fetch('/api/virtual-front-desk/listen', {
+              method: 'POST',
+              body: formData
+            });
+            
+            if (!response.ok) throw new Error('Transcription failed');
+            const data = await response.json();
+            if (data.text) {
+              sendMessage(data.text);
+            }
+          } catch (error) {
+            toast({
+              title: 'Transcription Error',
+              description: 'Could not transcribe audio. Please try typing instead.',
+              variant: 'destructive'
+            });
+          }
         }
 
         // Stop all tracks

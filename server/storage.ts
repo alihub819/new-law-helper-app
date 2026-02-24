@@ -15,6 +15,9 @@ import createMemoryStore from "memorystore";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, desc, and, sql as dsql } from "drizzle-orm";
+import connectPgSimple from "connect-pg-simple";
+import pg from "pg";
+const { Pool } = pg;
 
 const MemoryStore = createMemoryStore(session);
 
@@ -84,9 +87,22 @@ export class DatabaseStorage implements IStorage {
   public sessionStore: session.Store;
 
   constructor() {
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000, // 24 hours
-    });
+    if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') && !process.env.DATABASE_URL.includes('pseudo')) {
+      const PgSession = connectPgSimple(session);
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+      });
+      this.sessionStore = new PgSession({
+        pool,
+        tableName: 'session',
+        createTableIfMissing: true,
+      });
+    } else {
+      this.sessionStore = new MemoryStore({
+        checkPeriod: 86400000, // 24 hours
+      });
+    }
   }
 
   async getUser(id: string): Promise<User | undefined> {
