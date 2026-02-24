@@ -21,20 +21,7 @@ const { Pool } = pg;
 
 const MemoryStore = createMemoryStore(session);
 
-let db: any;
-try {
-  let dbUrl = process.env.DATABASE_URL;
-  if (dbUrl && dbUrl.startsWith("psql")) {
-    dbUrl = dbUrl.replace(/^psql\s+'?|'?$/g, "");
-  }
-
-  if (dbUrl && !dbUrl.includes('localhost') && !dbUrl.includes('pseudo')) {
-    const sql = neon(dbUrl);
-    db = drizzle(sql);
-  }
-} catch (e) {
-  console.warn("DB Connection failed, falling back to MemStorage:", e);
-}
+import { db } from "./db";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -580,4 +567,6 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = db ? new DatabaseStorage() : new MemStorage();
+export const storage = process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') ? new DatabaseStorage() : new MemStorage();
+console.log(`[STORAGE] Initialized ${storage.constructor.name}`);
+

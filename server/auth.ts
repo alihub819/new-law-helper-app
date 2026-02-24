@@ -56,6 +56,10 @@ export function setupAuth(app: Express) {
     new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
       console.log(`[AUTH] Login attempt for email: ${email}`);
       try {
+        if (!storage.getUserByEmail) {
+           console.error("[AUTH] storage.getUserByEmail is undefined. Storage object:", Object.keys(storage));
+           return done(new Error("Storage initialization failed"));
+        }
         const user = await storage.getUserByEmail(email);
         console.log(`[AUTH] User found: ${user ? 'YES' : 'NO'}`);
 
