@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, jsonb, integer, decimal, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, jsonb, json, integer, decimal, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -220,3 +220,9 @@ export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type Appointment = typeof appointments.$inferSelect;
 export type InsertIntakeForm = z.infer<typeof insertIntakeFormSchema>;
 export type IntakeForm = typeof intakeForms.$inferSelect;
+
+export const session = pgTable("session", {
+  sid: varchar("sid").primaryKey(),
+  sess: json("sess").notNull(),
+  expire: timestamp("expire", { precision: 6 }).notNull(),
+});
