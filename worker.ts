@@ -14,7 +14,7 @@ export default {
       // API routes - forward to Express app
       if (url.pathname.startsWith("/api")) {
         // Import the Express app dynamically
-        const { default: app } = await import("./api/main");
+        const { default: app } = await import("./api/index");
         
         // Convert Request to Node-like request
         const headers: Headers = new Headers();
