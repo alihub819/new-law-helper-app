@@ -93,6 +93,9 @@ export class DatabaseStorage implements IStorage {
         connectionString: process.env.DATABASE_URL,
         ssl: { rejectUnauthorized: false }
       });
+      pool.on('error', (err) => {
+        console.error('Unexpected error on idle client', err);
+      });
       this.sessionStore = new PgSession({
         pool,
         tableName: 'session',

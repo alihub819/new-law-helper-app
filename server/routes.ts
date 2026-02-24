@@ -36,6 +36,15 @@ function isAuthenticated(req: any, res: any, next: any) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
+    app.get("/api/db-status", async (req, res) => {
+    try {
+      const userCount = await storage.getUserByEmail("demo@lawhelper.com");
+      res.json({ status: "connected", demoUserExists: !!userCount });
+    } catch (e: any) {
+      res.status(500).json({ status: "error", message: e.message || e.toString() });
+    }
+  });
+
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
@@ -63,8 +72,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (err) return next(err);
         res.json(user);
       });
-    } catch (error) {
-      res.status(500).json({ error: "Demo login failed" });
+    } catch (error: any) {
+      console.error("DEMO LOGIN ERROR:", error.message || error);
+      res.status(500).json({ error: "Demo login failed: " + (error.message || error) });
     }
   });
 
