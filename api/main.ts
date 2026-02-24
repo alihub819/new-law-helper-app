@@ -767,7 +767,6 @@ app.get("/api/search-history", isAuthenticated, (req, res) => {
 });
 
 // 8. Document Management
-const documentsStore = new Map<string, { id: string; userId: string; caseId?: string; name: string; type: string; content: string; format: string; createdAt: Date; updatedAt: Date }>();
 
 app.get("/api/documents", isAuthenticated, (req, res) => {
   const userId = (req.user as User).id;
@@ -1068,7 +1067,7 @@ app.delete("/api/knowledge-base/:id", isAuthenticated, async (req, res) => {
     const userId = (req.user as User).id;
     let entries = knowledgeBaseStore.get(userId) || [];
     entries = entries.filter(e => e.id !== req.params.id);
-    knowledgeBase.set(userId, entries);
+    knowledgeBaseStore.set(userId, entries);
     res.json({ success: true });
 });
 
@@ -1662,7 +1661,6 @@ interface Case {
     updatedAt: Date;
 }
 
-const casesStore = new Map<string, Case>();
 
 app.get("/api/cases", isAuthenticated, (req, res) => {
     const userId = (req.user as User).id;

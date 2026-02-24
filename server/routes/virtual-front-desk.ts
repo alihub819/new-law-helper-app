@@ -153,7 +153,7 @@ router.post('/virtual-front-desk/listen', isAuthenticated, async (req, res) => {
     });
 
     const transcript = await openai.audio.transcriptions.create({
-      file: req.file,
+      file: await import('openai').then(m => m.toFile(req.file!.buffer, req.file!.originalname, { type: req.file!.mimetype })),
       model: 'whisper-1',
     });
 
