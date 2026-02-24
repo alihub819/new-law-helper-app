@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
+import { ensureDatabase } from "./init-db";
 import {
   searchLegalDatabase,
   summarizeDocument,
@@ -55,6 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Demo Login endpoint
   app.post("/api/demo-login", async (req, res, next) => {
     try {
+      await ensureDatabase();
       const demoEmail = "demo@lawhelper.com";
       let user = await storage.getUserByEmail(demoEmail);
 

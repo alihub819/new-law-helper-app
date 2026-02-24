@@ -2,6 +2,9 @@ import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
 import { type Server } from "http";
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -47,7 +50,7 @@ export async function setupVite(app: Express, server: Server) {
 
     try {
       const clientTemplate = path.resolve(
-        import.meta.dirname,
+        __dirname,
         "..",
         "client",
         "index.html",
@@ -70,8 +73,8 @@ export async function setupVite(app: Express, server: Server) {
 
 export function serveStatic(app: Express) {
   const possiblePaths = [
-    path.resolve(import.meta.dirname, "public"),
-    path.resolve(import.meta.dirname, "..", "dist", "public"),
+    path.resolve(__dirname, "public"),
+    path.resolve(__dirname, "..", "dist", "public"),
     path.resolve(process.cwd(), "dist", "public"),
     path.resolve(process.cwd(), "public")
   ];
