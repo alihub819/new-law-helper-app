@@ -11,4 +11,4 @@ else
 fi
 
 echo "Building Vite app..."
-vite build
+npm run build:full
