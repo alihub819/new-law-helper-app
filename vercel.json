@@ -1,9 +1,15 @@
 {
   "version": 2,
   "outputDirectory": "dist/public",
-  "framework": "vite",
-
-  "buildCommand": "npm run build",
+  "framework": null,
+  "buildCommand": "npm run build:full",
+  "installCommand": "npm install",
+  "functions": {
+    "api/index.js": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -24,11 +30,11 @@
         },
         {
           "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
+          "value": "GET, POST, PUT, DELETE, OPTIONS, PATCH"
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
+          "value": "Content-Type, Authorization, Cookie"
         }
       ]
     }

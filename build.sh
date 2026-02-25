@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-# Fix for npm optional dependencies bug
-# Remove package-lock.json and node_modules to ensure clean install
-echo "Cleaning npm dependencies to fix optional dependencies bug..."
-rm -rf node_modules package-lock.json
-
-# Install dependencies fresh
-echo "Installing dependencies..."
-npm install
+# On Vercel, node_modules are already installed by the platform.
+# Only reinstall locally if node_modules is missing.
+if [ ! -d "node_modules" ]; then
+  echo "node_modules not found. Installing dependencies..."
+  npm install
+else
+  echo "node_modules found. Skipping install."
+fi
 
 if [ -n "$DATABASE_URL" ]; then
   echo "DATABASE_URL is set. Pushing schema to database..."
