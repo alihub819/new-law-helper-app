@@ -2,6 +2,8 @@
   "version": 2,
   "outputDirectory": "dist/public",
   "framework": "vite",
+  "installCommand": "npm install --platform=linux --arch=x64",
+  "buildCommand": "npm run build",
   "rewrites": [
     {
       "source": "/api/(.*)",
