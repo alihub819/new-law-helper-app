@@ -3,7 +3,7 @@
   "outputDirectory": "dist/public",
   "framework": null,
   "buildCommand": "npm run build:full",
-  "installCommand": "npm install",
+  "installCommand": "npm install --include=dev",
   "functions": {
     "api/index.js": {
       "maxDuration": 30
