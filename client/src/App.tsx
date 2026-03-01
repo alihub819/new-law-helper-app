@@ -26,6 +26,26 @@ import AppointmentsPage from "@/pages/appointments";
 import IntakePage from "@/pages/intake-form";
 import AttorneySettings from "@/pages/attorney-settings";
 import PracticeInterview from "@/pages/practice-interview";
+import React, { Component, ReactNode } from "react";
+
+class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean}> {
+  constructor(props: {children: ReactNode}) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error) {
+    console.error("ErrorBoundary caught:", error.message);
+  }
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+    return this.props.children;
+  }
+}
 
 function Router() {
   return (
@@ -56,17 +76,19 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <VoiceControlProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-            <VirtualFrontDesk />
-          </TooltipProvider>
-        </VoiceControlProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <VoiceControlProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+              <VirtualFrontDesk />
+            </TooltipProvider>
+          </VoiceControlProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
