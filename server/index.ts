@@ -49,7 +49,8 @@ const initPromise: Promise<void> = (async () => {
   });
 
   // Only set up Vite dev middleware in development, after all routes
-  if (app.get("env") === "development") {
+  const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+  if (!isProduction) {
     await setupVite(app, server);
   } else {
     serveStatic(app);
