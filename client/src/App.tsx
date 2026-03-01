@@ -41,7 +41,11 @@ class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean}
   }
   render() {
     if (this.state.hasError) {
-      return null;
+      return (
+        <div style={{padding: '20px', textAlign: 'center'}}>
+          <h1>Loading...</h1>
+        </div>
+      );
     }
     return this.props.children;
   }
