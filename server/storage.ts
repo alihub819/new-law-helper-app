@@ -33,34 +33,34 @@ export interface IStorage {
   // Case Management
   getCasesByUser(userId: string): Promise<Case[]>;
   getCase(id: string): Promise<Case | undefined>;
-  createCase(caseData: InsertCase): Promise<Case>;
-  updateCase(id: string, caseData: Partial<InsertCase>): Promise<Case>;
-  deleteCase(id: string): Promise<void>;
+  createCase(userId: string, caseData: InsertCase): Promise<Case>;
+  updateCase(id: string, userId: string, caseData: Partial<InsertCase>): Promise<Case>;
+  deleteCase(id: string, userId: string): Promise<void>;
 
   // Document Management
   getDocumentsByUser(userId: string): Promise<SavedDocument[]>;
   getDocumentsByCase(caseId: string): Promise<SavedDocument[]>;
   getDocument(id: string): Promise<SavedDocument | undefined>;
-  createDocument(docData: InsertDocument): Promise<SavedDocument>;
-  updateDocument(id: string, docData: Partial<InsertDocument>): Promise<SavedDocument>;
-  deleteDocument(id: string): Promise<void>;
+  createDocument(userId: string, docData: InsertDocument): Promise<SavedDocument>;
+  updateDocument(id: string, userId: string, docData: Partial<InsertDocument>): Promise<SavedDocument>;
+  deleteDocument(id: string, userId: string): Promise<void>;
 
   // Medical Records
   getMedicalRecordsByCase(caseId: string): Promise<MedicalRecord[]>;
   getMedicalRecord(id: string): Promise<MedicalRecord | undefined>;
-  createMedicalRecord(recordData: InsertMedicalRecord): Promise<MedicalRecord>;
-  updateMedicalRecord(id: string, recordData: Partial<InsertMedicalRecord>): Promise<MedicalRecord>;
-  deleteMedicalRecord(id: string): Promise<void>;
+  createMedicalRecord(userId: string, recordData: InsertMedicalRecord): Promise<MedicalRecord>;
+  updateMedicalRecord(id: string, userId: string, recordData: Partial<InsertMedicalRecord>): Promise<MedicalRecord>;
+  deleteMedicalRecord(id: string, userId: string): Promise<void>;
 
   // Knowledge Base
   getKnowledgeBaseByUser(userId: string): Promise<KnowledgeBase[]>;
-  createKnowledgeBase(kbData: InsertKnowledgeBase): Promise<KnowledgeBase>;
+  createKnowledgeBase(userId: string, kbData: InsertKnowledgeBase): Promise<KnowledgeBase>;
   deleteKnowledgeBase(id: string, userId: string): Promise<void>;
 
   // Appointments
   getAppointments(userId: string): Promise<Appointment[]>;
-  createAppointment(apt: InsertAppointment): Promise<Appointment>;
-  updateAppointment(id: string, apt: Partial<InsertAppointment>): Promise<Appointment>;
+  createAppointment(userId: string, apt: InsertAppointment): Promise<Appointment>;
+  updateAppointment(id: string, userId: string, apt: Partial<InsertAppointment>): Promise<Appointment>;
 
   // Intake Forms
   getIntakeForm(id: string): Promise<IntakeForm | undefined>;
@@ -160,26 +160,27 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async createCase(caseData: InsertCase): Promise<Case> {
+  async createCase(userId: string, caseData: InsertCase): Promise<Case> {
     console.log(`[DB] Creating case: ${caseData.caseName}`);
-    const result = await db.insert(cases).values(caseData).returning();
+    const result = await db.insert(cases).values({ ...caseData, userId }).returning();
     const newCase = result[0];
     console.log(`[DB] Case created with ID: ${newCase.id}`);
     return newCase;
   }
 
-  async updateCase(id: string, caseData: Partial<InsertCase>): Promise<Case> {
+  async updateCase(id: string, userId: string, caseData: Partial<InsertCase>): Promise<Case> {
     console.log(`[DB] Updating case: ${id}`);
     const result = await db.update(cases)
       .set({ ...caseData, updatedAt: new Date() })
-      .where(eq(cases.id, id))
+      .where(and(eq(cases.id, id), eq(cases.userId, userId)))
       .returning();
+    if (!result.length) throw new Error("Case not found or unauthorized");
     return result[0];
   }
 
-  async deleteCase(id: string): Promise<void> {
+  async deleteCase(id: string, userId: string): Promise<void> {
     console.log(`[DB] Deleting case: ${id}`);
-    await db.delete(cases).where(eq(cases.id, id));
+    await db.delete(cases).where(and(eq(cases.id, id), eq(cases.userId, userId)));
   }
 
   // Document Management Methods
@@ -209,26 +210,27 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async createDocument(docData: InsertDocument): Promise<SavedDocument> {
+  async createDocument(userId: string, docData: InsertDocument): Promise<SavedDocument> {
     console.log(`[DB] Creating document: ${docData.title}`);
-    const result = await db.insert(savedDocuments).values(docData).returning();
+    const result = await db.insert(savedDocuments).values({ ...docData, userId }).returning();
     const newDoc = result[0];
     console.log(`[DB] Document created with ID: ${newDoc.id}`);
     return newDoc;
   }
 
-  async updateDocument(id: string, docData: Partial<InsertDocument>): Promise<SavedDocument> {
+  async updateDocument(id: string, userId: string, docData: Partial<InsertDocument>): Promise<SavedDocument> {
     console.log(`[DB] Updating document: ${id}`);
     const result = await db.update(savedDocuments)
       .set({ ...docData, updatedAt: new Date() })
-      .where(eq(savedDocuments.id, id))
+      .where(and(eq(savedDocuments.id, id), eq(savedDocuments.userId, userId)))
       .returning();
+    if (!result.length) throw new Error("Document not found or unauthorized");
     return result[0];
   }
 
-  async deleteDocument(id: string): Promise<void> {
+  async deleteDocument(id: string, userId: string): Promise<void> {
     console.log(`[DB] Deleting document: ${id}`);
-    await db.delete(savedDocuments).where(eq(savedDocuments.id, id));
+    await db.delete(savedDocuments).where(and(eq(savedDocuments.id, id), eq(savedDocuments.userId, userId)));
   }
 
   // Medical Records Methods
@@ -248,26 +250,27 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async createMedicalRecord(recordData: InsertMedicalRecord): Promise<MedicalRecord> {
+  async createMedicalRecord(userId: string, recordData: InsertMedicalRecord): Promise<MedicalRecord> {
     console.log(`[DB] Creating medical record for case: ${recordData.caseId}`);
-    const result = await db.insert(medicalRecords).values(recordData).returning();
+    const result = await db.insert(medicalRecords).values({ ...recordData, userId }).returning();
     const newRecord = result[0];
     console.log(`[DB] Medical record created with ID: ${newRecord.id}`);
     return newRecord;
   }
 
-  async updateMedicalRecord(id: string, recordData: Partial<InsertMedicalRecord>): Promise<MedicalRecord> {
+  async updateMedicalRecord(id: string, userId: string, recordData: Partial<InsertMedicalRecord>): Promise<MedicalRecord> {
     console.log(`[DB] Updating medical record: ${id}`);
     const result = await db.update(medicalRecords)
       .set({ ...recordData, updatedAt: new Date() })
-      .where(eq(medicalRecords.id, id))
+      .where(and(eq(medicalRecords.id, id), eq(medicalRecords.userId, userId)))
       .returning();
+    if (!result.length) throw new Error("Medical record not found or unauthorized");
     return result[0];
   }
 
-  async deleteMedicalRecord(id: string): Promise<void> {
+  async deleteMedicalRecord(id: string, userId: string): Promise<void> {
     console.log(`[DB] Deleting medical record: ${id}`);
-    await db.delete(medicalRecords).where(eq(medicalRecords.id, id));
+    await db.delete(medicalRecords).where(and(eq(medicalRecords.id, id), eq(medicalRecords.userId, userId)));
   }
 
   async getKnowledgeBaseByUser(userId: string): Promise<KnowledgeBase[]> {
@@ -275,9 +278,9 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(knowledgeBase).where(eq(knowledgeBase.userId, userId));
   }
 
-  async createKnowledgeBase(kbData: InsertKnowledgeBase): Promise<KnowledgeBase> {
+  async createKnowledgeBase(userId: string, kbData: InsertKnowledgeBase): Promise<KnowledgeBase> {
     console.log(`[DB] Creating knowledge base entry: ${kbData.title}`);
-    const result = await db.insert(knowledgeBase).values(kbData).returning();
+    const result = await db.insert(knowledgeBase).values({ ...kbData, userId }).returning();
     return result[0];
   }
 
@@ -290,13 +293,17 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(appointments).where(eq(appointments.userId, userId));
   }
 
-  async createAppointment(apt: InsertAppointment): Promise<Appointment> {
-    const result = await db.insert(appointments).values(apt).returning();
+  async createAppointment(userId: string, apt: InsertAppointment): Promise<Appointment> {
+    const result = await db.insert(appointments).values({ ...apt, userId }).returning();
     return result[0];
   }
 
-  async updateAppointment(id: string, apt: Partial<InsertAppointment>): Promise<Appointment> {
-    const result = await db.update(appointments).set(apt).where(eq(appointments.id, id)).returning();
+  async updateAppointment(id: string, userId: string, apt: Partial<InsertAppointment>): Promise<Appointment> {
+    const result = await db.update(appointments)
+      .set(apt)
+      .where(and(eq(appointments.id, id), eq(appointments.userId, userId)))
+      .returning();
+    if (!result.length) throw new Error("Appointment not found or unauthorized");
     return result[0];
   }
 
@@ -369,10 +376,11 @@ export class MemStorage implements IStorage {
     return this.cases.get(id);
   }
 
-  async createCase(caseData: InsertCase): Promise<Case> {
+  async createCase(userId: string, caseData: InsertCase): Promise<Case> {
     const id = randomUUID();
     const newCase: Case = {
       ...caseData,
+      userId,
       id,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -394,16 +402,19 @@ export class MemStorage implements IStorage {
     return newCase;
   }
 
-  async updateCase(id: string, caseData: Partial<InsertCase>): Promise<Case> {
+  async updateCase(id: string, userId: string, caseData: Partial<InsertCase>): Promise<Case> {
     const existing = this.cases.get(id);
-    if (!existing) throw new Error("Case not found");
+    if (!existing || existing.userId !== userId) throw new Error("Case not found or unauthorized");
     const updated = { ...existing, ...caseData, updatedAt: new Date() };
     this.cases.set(id, updated);
     return updated;
   }
 
-  async deleteCase(id: string): Promise<void> {
-    this.cases.delete(id);
+  async deleteCase(id: string, userId: string): Promise<void> {
+    const existing = this.cases.get(id);
+    if (existing && existing.userId === userId) {
+      this.cases.delete(id);
+    }
   }
 
   async getDocumentsByUser(userId: string): Promise<SavedDocument[]> {
@@ -418,10 +429,11 @@ export class MemStorage implements IStorage {
     return this.documents.get(id);
   }
 
-  async createDocument(docData: InsertDocument): Promise<SavedDocument> {
+  async createDocument(userId: string, docData: InsertDocument): Promise<SavedDocument> {
     const id = randomUUID();
     const doc: SavedDocument = {
       ...docData,
+      userId,
       id,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -436,16 +448,19 @@ export class MemStorage implements IStorage {
     return doc;
   }
 
-  async updateDocument(id: string, docData: Partial<InsertDocument>): Promise<SavedDocument> {
+  async updateDocument(id: string, userId: string, docData: Partial<InsertDocument>): Promise<SavedDocument> {
     const existing = this.documents.get(id);
-    if (!existing) throw new Error("Document not found");
+    if (!existing || existing.userId !== userId) throw new Error("Document not found or unauthorized");
     const updated = { ...existing, ...docData, updatedAt: new Date() };
     this.documents.set(id, updated);
     return updated;
   }
 
-  async deleteDocument(id: string): Promise<void> {
-    this.documents.delete(id);
+  async deleteDocument(id: string, userId: string): Promise<void> {
+    const existing = this.documents.get(id);
+    if (existing && existing.userId === userId) {
+      this.documents.delete(id);
+    }
   }
 
   async getMedicalRecordsByCase(caseId: string): Promise<MedicalRecord[]> {
@@ -456,10 +471,11 @@ export class MemStorage implements IStorage {
     return this.medicalRecords.get(id);
   }
 
-  async createMedicalRecord(recordData: InsertMedicalRecord): Promise<MedicalRecord> {
+  async createMedicalRecord(userId: string, recordData: InsertMedicalRecord): Promise<MedicalRecord> {
     const id = randomUUID();
     const record: MedicalRecord = {
       ...recordData,
+      userId,
       id,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -478,26 +494,30 @@ export class MemStorage implements IStorage {
     return record;
   }
 
-  async updateMedicalRecord(id: string, recordData: Partial<InsertMedicalRecord>): Promise<MedicalRecord> {
+  async updateMedicalRecord(id: string, userId: string, recordData: Partial<InsertMedicalRecord>): Promise<MedicalRecord> {
     const existing = this.medicalRecords.get(id);
-    if (!existing) throw new Error("Medical record not found");
+    if (!existing || existing.userId !== userId) throw new Error("Medical record not found or unauthorized");
     const updated = { ...existing, ...recordData, updatedAt: new Date() };
     this.medicalRecords.set(id, updated);
     return updated;
   }
 
-  async deleteMedicalRecord(id: string): Promise<void> {
-    this.medicalRecords.delete(id);
+  async deleteMedicalRecord(id: string, userId: string): Promise<void> {
+    const existing = this.medicalRecords.get(id);
+    if (existing && existing.userId === userId) {
+      this.medicalRecords.delete(id);
+    }
   }
 
   async getKnowledgeBaseByUser(userId: string): Promise<KnowledgeBase[]> {
     return Array.from(this.knowledgeBase.values()).filter(k => k.userId === userId);
   }
 
-  async createKnowledgeBase(kbData: InsertKnowledgeBase): Promise<KnowledgeBase> {
+  async createKnowledgeBase(userId: string, kbData: InsertKnowledgeBase): Promise<KnowledgeBase> {
     const id = randomUUID();
     const entry: KnowledgeBase = {
       ...kbData,
+      userId,
       id,
       createdAt: new Date(),
       fileName: kbData.fileName || null
@@ -517,10 +537,11 @@ export class MemStorage implements IStorage {
     return Array.from(this.appointments.values()).filter(a => a.userId === userId);
   }
 
-  async createAppointment(apt: InsertAppointment): Promise<Appointment> {
+  async createAppointment(userId: string, apt: InsertAppointment): Promise<Appointment> {
     const id = randomUUID();
     const newApt: Appointment = {
       ...apt,
+      userId,
       id,
       status: apt.status || "scheduled",
       type: apt.type || "consultation",
@@ -532,9 +553,9 @@ export class MemStorage implements IStorage {
     return newApt;
   }
 
-  async updateAppointment(id: string, apt: Partial<InsertAppointment>): Promise<Appointment> {
+  async updateAppointment(id: string, userId: string, apt: Partial<InsertAppointment>): Promise<Appointment> {
     const existing = this.appointments.get(id);
-    if (!existing) throw new Error("Appointment not found");
+    if (!existing || existing.userId !== userId) throw new Error("Appointment not found or unauthorized");
     const updated = { ...existing, ...apt };
     this.appointments.set(id, updated);
     return updated;

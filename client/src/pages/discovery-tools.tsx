@@ -129,7 +129,10 @@ export default function DiscoveryTools() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ format, content }),
     })
-      .then((res) => res.blob())
+      .then((res) => {
+        if (!res.ok) throw new Error("Export failed");
+        return res.blob();
+      })
       .then((blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");

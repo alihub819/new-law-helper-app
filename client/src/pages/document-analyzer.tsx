@@ -213,8 +213,11 @@ export default function DocumentAnalyzer() {
       });
       
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to generate improvement");
+        if (res.headers.get("content-type")?.includes("application/json")) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to generate improvement");
+        }
+        throw new Error("Failed to generate improvement");
       }
       
       return await res.json();
@@ -254,6 +257,13 @@ export default function DocumentAnalyzer() {
         body: formData,
         credentials: "include"
       });
+      if (!res.ok) {
+        if (res.headers.get("content-type")?.includes("application/json")) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to analyze document");
+        }
+        throw new Error("Failed to analyze document");
+      }
       return await res.json();
     },
     onSuccess: (data) => {

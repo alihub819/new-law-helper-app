@@ -107,7 +107,8 @@ export default function MyCases() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    if (!status) return "bg-gray-100 text-gray-800";
+    switch (status.toLowerCase()) {
       case "active":
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
       case "pending":
@@ -120,6 +121,7 @@ export default function MyCases() {
   };
 
   const getCaseTypeLabel = (type: string) => {
+    if (!type) return "";
     return type.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
   };
 

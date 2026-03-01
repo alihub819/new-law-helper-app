@@ -19,4 +19,7 @@ const connectionString = databaseUrl.includes('sslmode=')
   : `${databaseUrl}${databaseUrl.includes('?') ? '&' : '?'}sslmode=require`;
 
 export const pool = new Pool({ connectionString });
+pool.on('error', (err) => {
+  console.error('Unexpected database error on idle client', err);
+});
 export const db = drizzle({ client: pool, schema });

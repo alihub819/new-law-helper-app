@@ -141,6 +141,7 @@ export const insertSearchHistorySchema = createInsertSchema(searchHistory).pick(
 
 export const insertCaseSchema = createInsertSchema(cases).omit({
   id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 }).extend({
@@ -150,6 +151,7 @@ export const insertCaseSchema = createInsertSchema(cases).omit({
 
 export const insertDocumentSchema = createInsertSchema(savedDocuments).omit({
   id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 }).extend({
@@ -159,11 +161,13 @@ export const insertDocumentSchema = createInsertSchema(savedDocuments).omit({
 
 export const insertKnowledgeBaseSchema = createInsertSchema(knowledgeBase).omit({
   id: true,
+  userId: true,
   createdAt: true,
 });
 
 export const insertMedicalRecordSchema = createInsertSchema(medicalRecords).omit({
   id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 });
@@ -208,6 +212,7 @@ export const intakeForms = pgTable("intake_forms", {
 
 export const insertAppointmentSchema = createInsertSchema(appointments).omit({
   id: true,
+  userId: true,
   createdAt: true,
 });
 

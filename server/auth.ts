@@ -31,7 +31,7 @@ export async function hashPassword(password: string) {
 export async function comparePasswords(supplied: string, stored: string) {
   const parts = stored.split(".");
   if (parts.length !== 2) {
-    return supplied === stored;
+    return false;
   }
   const [hashed, salt] = parts;
   const hashedBuf = Buffer.from(hashed, "hex");
@@ -40,11 +40,20 @@ export async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
+    throw new Error("SESSION_SECRET must be set in production");
+  }
+
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "law-helper-local-dev-secret",
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
+    cookie: {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production" || process.env.VERCEL === "1"
+    }
   };
 
   app.set("trust proxy", 1);
@@ -53,7 +62,8 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
+    new LocalStrategy({ usernameField: 'email' }, async (rawEmail, password, done) => {
+      const email = rawEmail.toLowerCase().trim();
       console.log(`[AUTH] Login attempt for email: ${email}`);
       try {
         if (!storage.getUserByEmail) {
@@ -93,25 +103,30 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/register", async (req, res, next) => {
-    console.log(`[AUTH] Registration attempt for email: ${req.body.email}`);
-    console.log(`[AUTH] Registration body:`, { name: req.body.name, email: req.body.email, password: req.body.password ? '[PROVIDED]' : '[MISSING]' });
+    let { name, email, password } = req.body;
+    if (!name || !email || !password) return res.status(400).send("Missing required fields");
+    if (password.length > 128) return res.status(400).send("Password must be less than 128 characters");
+    email = email.toLowerCase().trim();
+
+    console.log(`[AUTH] Registration attempt for email: ${email}`);
+    console.log(`[AUTH] Registration body:`, { name, email, password: '[PROVIDED]' });
 
     try {
-      const existingUser = await storage.getUserByEmail(req.body.email);
+      const existingUser = await storage.getUserByEmail(email);
       console.log(`[AUTH] Existing user check: ${existingUser ? 'EXISTS' : 'NEW'}`);
 
       if (existingUser) {
-        console.log(`[AUTH] Email already exists: ${req.body.email}`);
+        console.log(`[AUTH] Email already exists: ${email}`);
         return res.status(400).send("Email already exists");
       }
 
       console.log(`[AUTH] Creating new user...`);
-      const hashedPassword = await hashPassword(req.body.password);
+      const hashedPassword = await hashPassword(password);
       console.log(`[AUTH] Password hashed successfully`);
 
       const user = await storage.createUser({
-        name: req.body.name,
-        email: req.body.email,
+        name,
+        email,
         password: hashedPassword,
       });
       console.log(`[AUTH] User created successfully:`, { id: user.id, email: user.email });
@@ -136,8 +151,12 @@ export function setupAuth(app: Express) {
 
   app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {
-      if (err) return next(err);
-      res.sendStatus(200);
+      if (err) return res.status(500).json({ error: "Logout failed" });
+      req.session.destroy((err) => {
+        if (err) return res.status(500).json({ error: "Failed to destroy session" });
+        res.clearCookie('connect.sid');
+        res.sendStatus(200);
+      });
     });
   });
 
