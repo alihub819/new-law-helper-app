@@ -1,3 +1,8 @@
+// Polyfill DOMMatrix for pdfjs-dist in Node.js environments
+if (typeof globalThis.DOMMatrix === 'undefined') {
+  globalThis.DOMMatrix = class DOMMatrix {};
+}
+
 export default async function (req, res) {
   try {
     const serverModule = await import("../dist/server.js");
