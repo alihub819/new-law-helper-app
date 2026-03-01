@@ -18,7 +18,7 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
-    sourcemap: true,
+    sourcemap: false,
     chunkSizeWarningLimit: 1600,
     rollupOptions: {
       output: {
@@ -36,8 +36,5 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
-  },
-  preview: {
-    cors: true,
   },
 });
