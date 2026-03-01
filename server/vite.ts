@@ -21,7 +21,8 @@ export async function setupVite(app: Express, server: Server) {
   // Hard dynamic imports for dev-only dependencies to prevent production crashes
   const { createServer: createViteServer, createLogger } = await import("vite");
   const { nanoid } = await import("nanoid");
-  const viteConfig = (await import("../vite.config")).default;
+  const viteConfigModule = "../vite.config";
+  const viteConfig = (await import(viteConfigModule)).default;
   const viteLogger = createLogger();
 
   const serverOptions = {
