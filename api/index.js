@@ -1,6 +1,9 @@
-// Polyfill DOMMatrix for pdfjs-dist in Node.js environments
+// Polyfill DOMMatrix and Path2D for pdfjs-dist in Node.js environments
 if (typeof globalThis.DOMMatrix === 'undefined') {
   globalThis.DOMMatrix = class DOMMatrix {};
+}
+if (typeof globalThis.Path2D === 'undefined') {
+  globalThis.Path2D = class Path2D {};
 }
 
 export default async function (req, res) {
