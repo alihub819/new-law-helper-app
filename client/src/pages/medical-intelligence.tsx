@@ -21,8 +21,8 @@ import {
   FileSpreadsheet,
   Sparkles,
   ChevronDown,
-  CheckCircle2,
-  AlertCircle,
+  CircleCheck,
+  CircleAlert,
   Clock,
   TrendingUp
 } from "lucide-react";
@@ -441,7 +441,7 @@ export default function MedicalIntelligence() {
                   {ragContext && (
                     <div className="flex items-center gap-2 ml-auto">
                       <Badge variant="outline" className="bg-green-50 text-green-700">
-                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        <CircleCheck className="w-3 h-3 mr-1" />
                         RAG Context Active
                       </Badge>
                     </div>
@@ -543,7 +543,7 @@ export default function MedicalIntelligence() {
                                 />
                                 {uploadedFile && (
                                   <p className="text-sm text-green-600">
-                                    <CheckCircle2 className="w-4 h-4 inline mr-1" />
+                                    <CircleCheck className="w-4 h-4 inline mr-1" />
                                     {uploadedFile.name} ready
                                   </p>
                                 )}
@@ -682,7 +682,7 @@ function ResultsDisplay({ mode, data }: { mode: AnalysisMode; data: any }) {
                   </div>
                   {item.treatmentGaps && item.treatmentGaps.length > 0 && (
                     <div className="mt-2 text-sm text-amber-600">
-                      <AlertCircle className="w-4 h-4 inline mr-1" />
+                      <CircleAlert className="w-4 h-4 inline mr-1" />
                       Gap in treatment: {item.treatmentGaps.join(', ')}
                     </div>
                   )}
@@ -734,7 +734,7 @@ function ResultsDisplay({ mode, data }: { mode: AnalysisMode; data: any }) {
           {data.unusualCharges && data.unusualCharges.length > 0 && (
             <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-200">
               <h4 className="font-semibold text-amber-800 dark:text-amber-400 mb-2">
-                <AlertCircle className="w-4 h-4 inline mr-1" />
+                <CircleAlert className="w-4 h-4 inline mr-1" />
                 Unusual Charges Detected
               </h4>
               <ul className="list-disc list-inside text-sm text-amber-700 dark:text-amber-300">

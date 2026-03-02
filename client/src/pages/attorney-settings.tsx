@@ -30,7 +30,7 @@ import {
   Mail,
   MapPin,
   Loader2,
-  CheckCircle2,
+  CircleCheck,
   Upload
 } from "lucide-react";
 

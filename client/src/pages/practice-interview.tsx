@@ -18,8 +18,8 @@ import {
   Send, 
   User, 
   Bot, 
-  AlertTriangle, 
-  CheckCircle2, 
+  TriangleAlert, 
+  CircleCheck, 
   Brain,
   MessageSquare,
   Lightbulb,
@@ -490,7 +490,7 @@ export default function PracticeInterview() {
                           )}
                           {message.metadata.isLying && (
                             <Badge variant="destructive" className="flex items-center gap-1">
-                              <AlertTriangle className="w-3 h-3" />
+                              <TriangleAlert className="w-3 h-3" />
                               Lying about: {message.metadata.lieAbout}
                             </Badge>
                           )}
