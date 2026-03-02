@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileQuestion, FileText, CheckSquare, Download, Loader2 } from "lucide-react";
+import { FileQuestion, FileText, SquareCheck, Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarLayout } from "@/components/layout/sidebar-layout";
 
@@ -175,7 +175,7 @@ export default function DiscoveryTools() {
                   Requests for Production
                 </TabsTrigger>
                 <TabsTrigger value="admissions" data-testid="tab-admissions">
-                  <CheckSquare className="w-4 h-4 mr-2" />
+                  <SquareCheck className="w-4 h-4 mr-2" />
                   Requests for Admission
                 </TabsTrigger>
               </TabsList>

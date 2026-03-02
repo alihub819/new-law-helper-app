@@ -17,7 +17,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { FileUpload } from "@/components/ui/file-upload";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarLayout } from "@/components/layout/sidebar-layout";
-import { Search, FileText, TrendingUp, Scale, Globe, Info, MessageCircle, Database, Trash2, CheckCircle2 } from "lucide-react";
+import { Search, FileText, TrendingUp, Scale, Globe, Info, MessageCircle, Database, Trash2, CircleCheck } from "lucide-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -1397,7 +1397,7 @@ export default function AISearch() {
                       kbEntries.map((entry: any) => (
                         <div key={entry.id} className="flex items-center justify-between p-3 border rounded-lg group">
                           <div className="flex items-center gap-3">
-                            <CheckCircle2 className="h-5 w-5 text-green-500" />
+                            <CircleCheck className="h-5 w-5 text-green-500" />
                             <div>
                               <p className="text-sm font-medium">{entry.title}</p>
                               <p className="text-xs text-muted-foreground">{new Date(entry.createdAt).toLocaleDateString()}</p>

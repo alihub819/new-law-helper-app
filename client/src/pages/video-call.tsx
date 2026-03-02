@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Video, Mic, MicOff, VideoOff, PhoneOff, Settings, Users,
   MessageSquare, Monitor, ShieldCheck, FileText, Download,
-  Radio, Loader2, AlertCircle, CheckCircle
+  Radio, Loader2, CircleAlert, CheckCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
