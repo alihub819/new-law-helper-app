@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
+import { ensureDatabase } from "./init-db";
 import {
   searchLegalDatabase,
   summarizeDocument,
@@ -36,6 +37,15 @@ function isAuthenticated(req: any, res: any, next: any) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
+    app.get("/api/db-status", async (req, res) => {
+    try {
+      const userCount = await storage.getUserByEmail("demo@lawhelper.com");
+      res.json({ status: "connected", demoUserExists: !!userCount });
+    } catch (e: any) {
+      res.status(500).json({ status: "error", message: e.message || e.toString() });
+    }
+  });
+
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
@@ -46,6 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Demo Login endpoint
   app.post("/api/demo-login", async (req, res, next) => {
     try {
+      await ensureDatabase();
       const demoEmail = "demo@lawhelper.com";
       let user = await storage.getUserByEmail(demoEmail);
 
@@ -63,8 +74,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (err) return next(err);
         res.json(user);
       });
-    } catch (error) {
-      res.status(500).json({ error: "Demo login failed" });
+    } catch (error: any) {
+      console.error("DEMO LOGIN ERROR:", error.message || error);
+      res.status(500).json({ error: "Demo login failed: " + (error.message || error) });
     }
   });
 
@@ -458,7 +470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId: req.user!.id, // Always set userId from authenticated user
       });
-      const newCase = await storage.createCase(validatedData);
+      const newCase = await storage.createCase(req.user!.id, validatedData);
       res.json(newCase);
     } catch (error) {
       console.error("Create case error:", error);
@@ -478,7 +490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate and prevent userId modification
       const { userId: _ignored, ...updateData } = req.body;
       const validatedData = insertCaseSchema.partial().parse(updateData);
-      const updatedCase = await storage.updateCase(req.params.id, validatedData);
+      const updatedCase = await storage.updateCase(req.params.id, req.user!.id, validatedData);
       res.json(updatedCase);
     } catch (error) {
       console.error("Update case error:", error);
@@ -495,7 +507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!existingCase || existingCase.userId !== req.user!.id) {
         return res.status(404).json({ error: "Case not found" });
       }
-      await storage.deleteCase(req.params.id);
+      await storage.deleteCase(req.params.id, req.user!.id);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete case error:", error);
@@ -541,7 +553,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId: req.user!.id,
       });
-      const newDoc = await storage.createDocument(validatedData);
+      const newDoc = await storage.createDocument(req.user!.id, validatedData);
       res.json(newDoc);
     } catch (error) {
       console.error("Create document error:", error);
@@ -558,7 +570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!doc || doc.userId !== req.user!.id) {
         return res.status(404).json({ error: "Document not found" });
       }
-      await storage.deleteDocument(req.params.id);
+      await storage.deleteDocument(req.params.id, req.user!.id);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete document error:", error);
@@ -593,7 +605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId: req.user!.id,
       });
-      const newRecord = await storage.createMedicalRecord(validatedData);
+      const newRecord = await storage.createMedicalRecord(req.user!.id, validatedData);
       res.json(newRecord);
     } catch (error) {
       console.error("Create medical record error:", error);
@@ -610,7 +622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!record || record.userId !== req.user!.id) {
         return res.status(404).json({ error: "Medical record not found" });
       }
-      await storage.deleteMedicalRecord(req.params.id);
+      await storage.deleteMedicalRecord(req.params.id, req.user!.id);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete medical record error:", error);
@@ -698,7 +710,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       else if (mode === "bills") docType = "medical-bill-analysis";
       else if (mode === "summary") docType = "medical-summary";
 
-      await storage.createDocument({
+      await storage.createDocument(req.user!.id, {
         userId: req.user!.id,
         caseId: payload.caseId || null,
         documentType: docType,
@@ -721,7 +733,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Save the generated demand letter to the database
       const caseType = req.body.caseType || "Personal Injury";
       const claimantName = req.body.claimantName || "Unknown";
-      await storage.createDocument({
+      await storage.createDocument(req.user!.id, {
         userId: req.user!.id,
         caseId: req.body.caseId || null,
         documentType: "demand-letter",
@@ -754,7 +766,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!doc || doc.userId !== req.user!.id) {
         return res.status(404).json({ error: "Document not found" });
       }
-      await storage.deleteDocument(req.params.id);
+      await storage.deleteDocument(req.params.id, req.user!.id);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete saved document error:", error);
@@ -793,7 +805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content = req.file.buffer.toString('utf-8');
       }
 
-      const entry = await storage.createKnowledgeBase({
+      const entry = await storage.createKnowledgeBase(req.user!.id, {
         userId: req.user!.id,
         title: req.body.title || req.file.originalname,
         content: content,
@@ -841,7 +853,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       else if (type === "requests") docType = "request-for-production";
       else if (type === "admissions") docType = "other"; // Admissions not in enum yet, using other
 
-      await storage.createDocument({
+      await storage.createDocument(req.user!.id, {
         userId: req.user!.id,
         caseId: payload.caseId || null,
         documentType: docType,
@@ -926,7 +938,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "scheduled"
       });
 
-      const appointment = await storage.createAppointment(data);
+      const appointment = await storage.createAppointment(req.user!.id, data);
 
       // Create intake form link
       const intakeForm = await storage.createIntakeForm({

@@ -131,7 +131,10 @@ export default function SavedDocuments() {
       credentials: "include",
       body: JSON.stringify({ format, content: exportContent }),
     })
-      .then((res) => res.blob())
+      .then((res) => {
+        if (!res.ok) throw new Error("Export failed");
+        return res.blob();
+      })
       .then((blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -165,6 +168,7 @@ export default function SavedDocuments() {
   };
 
   const getDocumentTypeBadgeColor = (type: string) => {
+    if (!type) return "bg-gray-500/10 text-gray-600 border-gray-500/20";
     if (type.startsWith("medical")) return "bg-blue-500/10 text-blue-600 border-blue-500/20";
     if (type.startsWith("discovery")) return "bg-purple-500/10 text-purple-600 border-purple-500/20";
     if (type === "demand-letter") return "bg-green-500/10 text-green-600 border-green-500/20";

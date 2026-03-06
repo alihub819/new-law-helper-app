@@ -1,0 +1,13 @@
+{
+  "name": "new-law-helper-app",
+  "buildCommand": "npm run build:full",
+  "startCommand": "npm run start",
+  "env": {
+    "DATABASE_URL": {
+      "description": "PostgreSQL connection string"
+    },
+    "NODE_ENV": {
+      "value": "production"
+    }
+  }
+}

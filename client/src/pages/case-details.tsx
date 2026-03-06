@@ -27,6 +27,7 @@ export default function CaseDetails() {
   });
 
   const getStatusColor = (status: string) => {
+    if (!status) return "bg-gray-500/10 text-gray-600 border-gray-500/20";
     switch (status.toLowerCase()) {
       case "active":
         return "bg-green-500/10 text-green-600 border-green-500/20";

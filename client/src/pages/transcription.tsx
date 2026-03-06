@@ -3,7 +3,7 @@ import { SidebarLayout } from "@/components/layout/sidebar-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FileAudio, Upload, Play, Save, Download, FileText, Loader2, CheckCircle, AlertCircle, Clock, Lightbulb, ListChecks, Mic } from "lucide-react";
+import { FileAudio, Upload, Play, Save, Download, FileText, Loader2, CheckCircle, CircleAlert, Clock, Lightbulb, ListChecks, Mic } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";

@@ -17,7 +17,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarLayout } from "@/components/layout/sidebar-layout";
-import { FileText, Mail, FileCheck, Mic, MicOff, Copy, Edit3, Download, Save, Info, Eye, Scale } from "lucide-react";
+import { FileText, Mail, FileCheck, Mic, MicOff, Copy, PenLine, Download, Save, Info, Eye, Scale } from "lucide-react";
 
 interface DocumentGenerationForm {
   documentType: string;
@@ -728,7 +728,7 @@ export default function DocumentGeneration() {
                               onClick={() => setInputMethod('manual')}
                               data-testid="input-method-manual"
                             >
-                              <Edit3 className="h-6 w-6" />
+                              <PenLine className="h-6 w-6" />
                               <span className="font-medium">Manual Filling</span>
                               <span className="text-xs text-center text-muted-foreground">
                                 Fill form fields manually

@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { isAuthenticated } from '../auth';
 import { generateResponse } from '../openai';
 import { storage } from '../storage';
+import multer from 'multer';
+const upload = multer({ storage: multer.memoryStorage() });
 
 const router = Router();
 
@@ -141,7 +143,7 @@ router.post('/virtual-front-desk/speak', isAuthenticated, async (req, res) => {
 });
 
 // Speech-to-Text endpoint for voice input
-router.post('/virtual-front-desk/listen', isAuthenticated, async (req, res) => {
+router.post('/virtual-front-desk/listen', isAuthenticated, upload.single('audio'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Audio file required' });
@@ -153,7 +155,7 @@ router.post('/virtual-front-desk/listen', isAuthenticated, async (req, res) => {
     });
 
     const transcript = await openai.audio.transcriptions.create({
-      file: req.file,
+      file: await import('openai').then(m => m.toFile(req.file!.buffer, req.file!.originalname, { type: req.file!.mimetype })),
       model: 'whisper-1',
     });
 

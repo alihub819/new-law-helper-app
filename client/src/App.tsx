@@ -26,6 +26,34 @@ import AppointmentsPage from "@/pages/appointments";
 import IntakePage from "@/pages/intake-form";
 import AttorneySettings from "@/pages/attorney-settings";
 import PracticeInterview from "@/pages/practice-interview";
+import React, { Component, ReactNode } from "react";
+
+class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error: Error | null}> {
+  constructor(props: {children: ReactNode}) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error("ErrorBoundary caught:", error.message, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{padding: '20px', margin: '20px', border: '1px solid red', backgroundColor: '#fee'}}>
+          <h1 style={{color: 'red'}}>Something went wrong in React.</h1>
+          <p>Please send this error to support:</p>
+          <pre style={{backgroundColor: '#fff', padding: '10px', overflow: 'auto'}}>{this.state.error?.message}</pre>
+          <pre style={{backgroundColor: '#fff', padding: '10px', overflow: 'auto'}}>{this.state.error?.stack}</pre>
+          <button onClick={() => window.location.href='/'}>Return to Home</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function Router() {
   return (
@@ -56,17 +84,19 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <VoiceControlProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-            <VirtualFrontDesk />
-          </TooltipProvider>
-        </VoiceControlProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <VoiceControlProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+              <VirtualFrontDesk />
+            </TooltipProvider>
+          </VoiceControlProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

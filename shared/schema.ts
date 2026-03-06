@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, jsonb, integer, decimal, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, jsonb, json, integer, decimal, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -141,6 +141,7 @@ export const insertSearchHistorySchema = createInsertSchema(searchHistory).pick(
 
 export const insertCaseSchema = createInsertSchema(cases).omit({
   id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 }).extend({
@@ -150,6 +151,7 @@ export const insertCaseSchema = createInsertSchema(cases).omit({
 
 export const insertDocumentSchema = createInsertSchema(savedDocuments).omit({
   id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 }).extend({
@@ -159,11 +161,13 @@ export const insertDocumentSchema = createInsertSchema(savedDocuments).omit({
 
 export const insertKnowledgeBaseSchema = createInsertSchema(knowledgeBase).omit({
   id: true,
+  userId: true,
   createdAt: true,
 });
 
 export const insertMedicalRecordSchema = createInsertSchema(medicalRecords).omit({
   id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 });
@@ -208,6 +212,7 @@ export const intakeForms = pgTable("intake_forms", {
 
 export const insertAppointmentSchema = createInsertSchema(appointments).omit({
   id: true,
+  userId: true,
   createdAt: true,
 });
 
@@ -220,3 +225,9 @@ export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type Appointment = typeof appointments.$inferSelect;
 export type InsertIntakeForm = z.infer<typeof insertIntakeFormSchema>;
 export type IntakeForm = typeof intakeForms.$inferSelect;
+
+export const session = pgTable("session", {
+  sid: varchar("sid").primaryKey(),
+  sess: json("sess").notNull(),
+  expire: timestamp("expire", { precision: 6 }).notNull(),
+});

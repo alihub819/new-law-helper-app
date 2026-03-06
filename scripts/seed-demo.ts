@@ -1,5 +1,6 @@
 import { storage } from "../server/storage";
 import { CaseType, CaseStatus, DocumentType } from "../shared/schema";
+import { hashPassword } from "../server/auth";
 
 async function seed() {
     console.log("🌱 Seeding demo data...");
@@ -12,7 +13,7 @@ async function seed() {
         user = await storage.createUser({
             name: "Alex Sterling",
             email: demoEmail,
-            password: "demo-password-123",
+            password: await hashPassword("demo-password-123"),
         });
         console.log(`✅ Created demo user: ${user.name}`);
     } else {

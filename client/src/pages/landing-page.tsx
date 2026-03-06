@@ -10,13 +10,13 @@ import {
   Zap,
   Shield,
   Clock,
-  CheckCircle2,
+  CircleCheck,
   Sparkles,
   TrendingUp,
   DollarSign,
   FileText,
   Search,
-  AlertTriangle,
+  TriangleAlert,
   Loader2,
   Brain,
   FileSearch,
@@ -83,7 +83,7 @@ const AiDemo = () => {
       title: "Analyze Risk",
       input: "Review this lease agreement for tenant liabilities.",
       output: "RISK ANALYSIS REPORT\n\n1. Indemnification Clause: High Risk. The tenant is required to indemnify the landlord for ALL claims, regardless of fault.\n2. Maintenance: Moderate Risk. Tenant responsible for HVAC replacement.\n3. Termination: Low Risk. Standard 30-day notice required.",
-      icon: AlertTriangle,
+      icon: TriangleAlert,
       color: "text-orange-400"
     },
     search: {
@@ -194,7 +194,7 @@ const FeatureCard = ({ icon: Icon, title, description, features, color }: any) =
     <ul className="space-y-2">
       {features.map((feature: string, idx: number) => (
         <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
+          <CircleCheck className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
           <span>{feature}</span>
         </li>
       ))}
@@ -446,7 +446,7 @@ export default function LandingPage() {
               { icon: FileText, text: "Draft a demand letter", color: "text-blue-400", bg: "bg-blue-400/10" },
               { icon: Stethoscope, text: "Analyze medical records", color: "text-emerald-400", bg: "bg-emerald-400/10" },
               { icon: Search, text: "Research case law", color: "text-purple-400", bg: "bg-purple-400/10" },
-              { icon: AlertTriangle, text: "Review contracts for risks", color: "text-orange-400", bg: "bg-orange-400/10" },
+              { icon: TriangleAlert, text: "Review contracts for risks", color: "text-orange-400", bg: "bg-orange-400/10" },
               { icon: FileText, text: "Create discovery responses", color: "text-indigo-400", bg: "bg-indigo-400/10" },
               { icon: BookOpen, text: "Generate legal memos", color: "text-pink-400", bg: "bg-pink-400/10" },
               { icon: MessageSquare, text: "Practice client interviews", color: "text-cyan-400", bg: "bg-cyan-400/10" },
@@ -601,15 +601,15 @@ export default function LandingPage() {
                         <div className="text-sm text-slate-400 mb-2">Recent Activity</div>
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center gap-2 text-slate-300">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                            <CircleCheck className="w-4 h-4 text-emerald-400" />
                             Generated demand letter
                           </div>
                           <div className="flex items-center gap-2 text-slate-300">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                            <CircleCheck className="w-4 h-4 text-emerald-400" />
                             Analyzed medical records
                           </div>
                           <div className="flex items-center gap-2 text-slate-300">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                            <CircleCheck className="w-4 h-4 text-emerald-400" />
                             Conducted case law search
                           </div>
                         </div>
@@ -658,7 +658,7 @@ export default function LandingPage() {
                   "Manage case strategy and timelines"
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+                    <CircleCheck className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
                     <span className="text-slate-300">{item}</span>
                   </li>
                 ))}
@@ -689,7 +689,7 @@ export default function LandingPage() {
                   "Track case status and updates"
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-purple-400 mt-0.5 shrink-0" />
+                    <CircleCheck className="w-5 h-5 text-purple-400 mt-0.5 shrink-0" />
                     <span className="text-slate-300">{item}</span>
                   </li>
                 ))}
@@ -832,7 +832,7 @@ export default function LandingPage() {
               <CardContent className="p-6 space-y-4">
                 <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
                   <div className="flex items-center gap-2 text-red-400 font-medium mb-2">
-                    <AlertTriangle className="w-5 h-5" />
+                    <TriangleAlert className="w-5 h-5" />
                     AI Risk Alert
                   </div>
                   <p className="text-sm text-slate-300">
@@ -841,21 +841,21 @@ export default function LandingPage() {
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                    <CircleCheck className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
                     <div>
                       <div className="font-medium text-white">Identified 3 High-Risk Clauses</div>
                       <p className="text-sm text-slate-400">Indemnification, maintenance obligations, and auto-renewal terms.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                    <CircleCheck className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
                     <div>
                       <div className="font-medium text-white">Suggested Negotiation Points</div>
                       <p className="text-sm text-slate-400">AI provided specific counter-language and legal justification.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                    <CircleCheck className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
                     <div>
                       <div className="font-medium text-white">Client Protected</div>
                       <p className="text-sm text-slate-400">Avoided $50K+ in potential liability exposure.</p>
@@ -936,21 +936,21 @@ export default function LandingPage() {
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                    <CircleCheck className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
                     <div>
                       <div className="font-medium text-white">Chronology Created</div>
                       <p className="text-sm text-slate-400">AI generated detailed timeline from initial ER visit through 8 surgeries over 18 months.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                    <CircleCheck className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
                     <div>
                       <div className="font-medium text-white">Treatment Gaps Identified</div>
                       <p className="text-sm text-slate-400">Flagged 3-week delay in post-surgical care that worsened outcome.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                    <CircleCheck className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
                     <div>
                       <div className="font-medium text-white">Expert Witness Ready</div>
                       <p className="text-sm text-slate-400">Organized records by issue for expert review. Case settled for $2.4M.</p>
@@ -1049,7 +1049,7 @@ export default function LandingPage() {
               ].map((feat, i) => (
                 <div key={i} className="flex items-center gap-3 text-lg text-slate-300">
                   <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <CircleCheck className="w-4 h-4 text-emerald-400" />
                   </div>
                   <span>{feat}</span>
                 </div>
