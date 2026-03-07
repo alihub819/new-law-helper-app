@@ -17,10 +17,13 @@ import { apiRequest } from "@/lib/queryClient";
 import { FileUpload } from "@/components/ui/file-upload";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarLayout } from "@/components/layout/sidebar-layout";
-import { Search, FileText, TrendingUp, Scale, Globe, Info, MessageCircle } from "lucide-react";
+import { Search, FileText, TrendingUp, Scale, Globe, Info, MessageCircle, Database, Trash2, CircleCheck } from "lucide-react";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface LegalSearchForm {
   query: string;
+  useKnowledgeBase?: boolean;
 }
 
 interface RiskAnalysisForm {
@@ -170,6 +173,26 @@ const tabsMetadata = {
       'Follow-up questions',
       'Casual legal consultations'
     ]
+  },
+  'knowledge-base': {
+    id: 'knowledge-base',
+    title: 'Knowledge Base',
+    icon: Database,
+    shortDescription: 'Train AI on documents',
+    description: 'Upload your own legal documents to create a custom knowledge base. The AI will use this context to provide more accurate and relevant answers.',
+    features: [
+      'Document context integration',
+      'Custom AI training',
+      'Private knowledge base',
+      'Enhanced search accuracy',
+      'Context-aware responses'
+    ],
+    useCases: [
+      'Researching company-specific documents',
+      'Analyzing case-specific files',
+      'Building a private legal library',
+      'Training AI on specific regulations'
+    ]
   }
 };
 
@@ -177,6 +200,7 @@ export default function AISearch() {
   const { tab } = useParams<{ tab?: string }>();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Redirect to default tab if no tab specified
   useEffect(() => {
@@ -195,7 +219,7 @@ export default function AISearch() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   const legalSearchForm = useForm<LegalSearchForm>({
-    defaultValues: { query: "" }
+    defaultValues: { query: "", useKnowledgeBase: false }
   });
 
   const riskAnalysisForm = useForm<RiskAnalysisForm>({
@@ -380,6 +404,44 @@ export default function AISearch() {
 
     // Send to API
     quickQuestionMutation.mutate(data);
+  };
+
+  const { data: kbEntries } = useQuery<any[]>({
+    queryKey: ["/api/knowledge-base"],
+    enabled: activeTab === 'knowledge-base' || activeTab === 'legal-research'
+  });
+
+  const uploadToKBMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const res = await fetch("/api/knowledge-base", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to upload to knowledge base");
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/knowledge-base"] });
+      toast({ title: "Knowledge Base Updated", description: "Your document has been added successfully." });
+    },
+  });
+
+  const deleteKBMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/knowledge-base/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/knowledge-base"] });
+      toast({ title: "Entry Deleted", description: "The document has been removed from your knowledge base." });
+    },
+  });
+
+  const handleKBFileUpload = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const formData = new FormData();
+    formData.append('document', files[0]);
+    uploadToKBMutation.mutate(formData);
   };
 
   return (
@@ -629,6 +691,32 @@ export default function AISearch() {
                               Enter your legal research question to search U.S. statutes, case law, and regulations
                             </p>
                             <FormMessage role="alert" />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={legalSearchForm.control}
+                        name="useKnowledgeBase"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                disabled={!kbEntries || kbEntries.length === 0}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>
+                                Use Custom Knowledge Base
+                              </FormLabel>
+                              <p className="text-sm text-muted-foreground">
+                                {kbEntries && kbEntries.length > 0
+                                  ? `AI will use your ${kbEntries.length} uploaded documents as context.`
+                                  : "Upload documents to the Knowledge Base to use this feature."}
+                              </p>
+                            </div>
                           </FormItem>
                         )}
                       />
@@ -1271,6 +1359,67 @@ export default function AISearch() {
                       <p className="text-muted-foreground">Enter a search query to find legal information</p>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'knowledge-base' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Database className="h-5 w-5" />
+                    Knowledge Base Training
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Upload case-specific documents, company policies, or legal references to "train" your AI assistant.
+                      Once uploaded, you can enable "Use Custom Knowledge Base" during searches.
+                    </p>
+                    <FileUpload
+                      onFileChange={handleKBFileUpload}
+                      accept=".pdf,.doc,.docx,.txt"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Documents</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {kbEntries && kbEntries.length > 0 ? (
+                      kbEntries.map((entry: any) => (
+                        <div key={entry.id} className="flex items-center justify-between p-3 border rounded-lg group">
+                          <div className="flex items-center gap-3">
+                            <CircleCheck className="h-5 w-5 text-green-500" />
+                            <div>
+                              <p className="text-sm font-medium">{entry.title}</p>
+                              <p className="text-xs text-muted-foreground">{new Date(entry.createdAt).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => deleteKBMutation.mutate(entry.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Database className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                        <p>No documents in your knowledge base yet.</p>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </div>

@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-02-07T23:24:32.431Z",
+  "url": "http://localhost:5000",
+  "checks": [
+    {
+      "name": "Landing Page Load",
+      "status": "PASS",
+      "details": "Title: , Brand Visible: true"
+    },
+    {
+      "name": "Auth Page Navigation",
+      "status": "FAIL",
+      "details": "Login link not found"
+    },
+    {
+      "name": "Auth Page Loaded",
+      "status": "FAIL",
+      "details": "Login form not found"
+    }
+  ],
+  "errors": []
+}

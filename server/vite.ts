@@ -1,12 +1,10 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
-import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
-import viteConfig from "../vite.config";
-import { nanoid } from "nanoid";
-
-const viteLogger = createLogger();
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -20,6 +18,13 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
+  // Hard dynamic imports for dev-only dependencies to prevent production crashes
+  const { createServer: createViteServer, createLogger } = await import("vite");
+  const { nanoid } = await import("nanoid");
+  const viteConfigModule = "../vite.config";
+  const viteConfig = (await import(viteConfigModule)).default;
+  const viteLogger = createLogger();
+
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
@@ -46,7 +51,7 @@ export async function setupVite(app: Express, server: Server) {
 
     try {
       const clientTemplate = path.resolve(
-        import.meta.dirname,
+        __dirname,
         "..",
         "client",
         "index.html",
@@ -68,18 +73,48 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(import.meta.dirname, "public");
+  const possiblePaths = [
+    path.resolve(__dirname, "public"),
+    path.resolve(__dirname, "..", "dist", "public"),
+    path.resolve(process.cwd(), "dist", "public"),
+    path.resolve(process.cwd(), "public")
+  ];
 
-  if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+  let finalPath = "";
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      finalPath = p;
+      break;
+    }
   }
 
-  app.use(express.static(distPath));
+  try {
+    log(`DEBUG: /var/task contents: ${fs.readdirSync("/var/task").join(", ")}`, "vite");
+    if (fs.existsSync("/var/task/server")) {
+      log(`DEBUG: /var/task/server contents: ${fs.readdirSync("/var/task/server").join(", ")}`, "vite");
+    }
+  } catch (e) {
+    log(`DEBUG: Error listing directories: ${e}`, "vite");
+  }
 
-  // fall through to index.html if the file doesn't exist
+  if (!finalPath) {
+    log(`Warning: Could not find static build directory after checking: ${possiblePaths.join(", ")}`, "vite");
+    // Fallback for API-only operation or debug
+    app.get("/", (_req, res) => {
+      res.send("<h1>Server is running</h1><p>Static assets missing. Check logs.</p>");
+    });
+    return;
+  }
+
+  log(`Serving static files from: ${finalPath}`, "vite");
+  app.use(express.static(finalPath));
+
   app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+    const indexPath = path.resolve(finalPath, "index.html");
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).send("Frontend build not found.");
+    }
   });
 }

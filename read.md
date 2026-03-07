@@ -34,7 +34,7 @@ Preferred communication style: Simple, everyday language.
 - **Migrations**: Drizzle Kit for database schema migrations and version control
 
 ### AI Integration
-- **Service**: OpenAI GPT-5 for legal research, document analysis, and risk assessment
+- **Service**: OpenAI GPT-4o for legal research, document analysis, and risk assessment
 - **Functions**: Dedicated modules for legal database search, document summarization, and risk analysis
 - **Response Format**: Structured JSON responses for consistent data handling
 - **Search History**: Persistent storage of AI-generated results for user reference
@@ -56,7 +56,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Core Technologies
 - **Database**: Neon PostgreSQL serverless database for cloud-native data storage
-- **AI Service**: OpenAI API for GPT-5 language model integration
+- **AI Service**: OpenAI API for GPT-4o language model integration
 - **Authentication**: Passport.js ecosystem for flexible authentication strategies
 
 ### UI and Styling

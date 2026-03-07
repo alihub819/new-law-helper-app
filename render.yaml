@@ -1,6 +1,13 @@
-services:
-  - type: web
-    name: new-law-helper-app
-    env: node
-    buildCommand: npm install --include=dev && npm run build:full
-    startCommand: npm start
+{
+  "name": "new-law-helper-app",
+  "buildCommand": "npm install --include=dev && npm run build:full",
+  "startCommand": "npm run start",
+  "env": {
+    "DATABASE_URL": {
+      "description": "PostgreSQL connection string"
+    },
+    "NODE_ENV": {
+      "value": "production"
+    }
+  }
+}

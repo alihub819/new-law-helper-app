@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
+import { ensureDatabase } from "./init-db";
 import {
   searchLegalDatabase,
   summarizeDocument,
@@ -10,13 +11,15 @@ import {
   performWebSearch,
   generateDocument,
   analyzeDocument,
-  improveDocumentSection
+  improveDocumentSection,
+  generateResponse
 } from "./openai";
-import { insertCaseSchema, insertDocumentSchema, insertMedicalRecordSchema } from "@shared/schema";
+import { insertCaseSchema, insertDocumentSchema, insertMedicalRecordSchema, insertKnowledgeBaseSchema, insertAppointmentSchema, insertIntakeFormSchema } from "../shared/schema";
 import multer from "multer";
 import mammoth from "mammoth";
+import { PDFParse } from "pdf-parse";
 import { generatePDF, generateDOCX, generateTXT, type ExportContent } from "./document-export";
-import { runMedicalIntelligence, generateDemandLetter, generateDiscoveryResponse } from "./openai";
+import { runMedicalIntelligence, generateDemandLetter, generateDiscoveryResponse, transcribeWithAnalysis } from "./openai";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -33,21 +36,37 @@ function isAuthenticated(req: any, res: any, next: any) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint
+    app.get("/api/db-status", async (req, res) => {
+    try {
+      const userCount = await storage.getUserByEmail("demo@lawhelper.com");
+      res.json({ status: "connected", demoUserExists: !!userCount });
+    } catch (e: any) {
+      res.status(500).json({ status: "error", message: e.message || e.toString() });
+    }
+  });
+
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   // Setup authentication routes
   setupAuth(app);
 
   // Demo Login endpoint
   app.post("/api/demo-login", async (req, res, next) => {
     try {
+      await ensureDatabase();
       const demoEmail = "demo@lawhelper.com";
       let user = await storage.getUserByEmail(demoEmail);
 
       if (!user) {
         // Create demo user if doesn't exist
+        const hashedPassword = await hashPassword("demo-password-123");
         user = await storage.createUser({
           name: "Demo Attorney",
           email: demoEmail,
-          password: "demo-password-123", // In a real app, this would be hashed
+          password: hashedPassword,
         });
       }
 
@@ -55,21 +74,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (err) return next(err);
         res.json(user);
       });
-    } catch (error) {
-      res.status(500).json({ error: "Demo login failed" });
+    } catch (error: any) {
+      console.error("DEMO LOGIN ERROR:", error.message || error);
+      res.status(500).json({ error: "Demo login failed: " + (error.message || error) });
     }
   });
 
   // AI Legal Research endpoint
   app.post("/api/legal-search", isAuthenticated, async (req, res) => {
     try {
-      const { query, filters } = req.body;
+      const { query, filters, useKnowledgeBase } = req.body;
 
       if (!query) {
         return res.status(400).json({ error: "Query is required" });
       }
 
-      const results = await searchLegalDatabase(query, filters);
+      let context = "";
+      if (useKnowledgeBase) {
+        const kbEntries = await storage.getKnowledgeBaseByUser(req.user!.id);
+        context = kbEntries.map(e => `Document: ${e.title}\nContent: ${e.content}`).join("\n\n");
+      }
+
+      const results = await searchLegalDatabase(query, filters, context);
 
       // Save to search history
       await storage.createSearchHistory({
@@ -110,9 +136,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (fileType === 'text/plain' || req.file.originalname.endsWith('.txt')) {
         // Plain text files
         documentText = req.file.buffer.toString('utf-8');
+      } else if (fileType === 'application/pdf') {
+        const parser = new PDFParse({ data: req.file.buffer });
+        const data = await parser.getText();
+        documentText = data.text;
       } else {
         // Try UTF-8 conversion for other formats
         documentText = req.file.buffer.toString('utf-8');
+      }
+
+      if (!documentText.trim()) {
+        return res.status(400).json({ error: "Could not extract content from the document" });
       }
 
       const summary = await summarizeDocument(documentText, summaryType);
@@ -307,96 +341,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileBuffer = req.file.buffer;
       const fileName = req.file.originalname;
 
-      // For now, handle text files directly, PDF and Word files would need additional processing
+      // Use proper extraction where possible
       if (req.file.mimetype === 'text/plain') {
         documentContent = fileBuffer.toString('utf-8');
-      } else if (req.file.mimetype.includes('word') || req.file.mimetype.includes('document')) {
-        // For Word documents, we'll create a formatted demo version
-        documentContent = `BUSINESS LETTER SAMPLE
-
-[Company Letterhead Area]
-
-Date: ${new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })}
-
-[Recipient Name]
-[Recipient Title]
-[Company Name]
-[Address Line 1]
-[Address Line 2]
-[City, State ZIP Code]
-
-Dear [Recipient Name],
-
-I am writing to [state the purpose of your letter clearly and concisely]. This document demonstrates how a properly formatted business letter should appear with appropriate spacing, professional tone, and clear structure.
-
-BODY PARAGRAPHS:
-
-The main body of your letter should contain the essential information you want to convey. Each paragraph should focus on a specific point or topic. Use clear, professional language that is appropriate for your audience.
-
-• First key point or important information
-• Second key point with supporting details  
-• Third key point if applicable
-
-CONCLUSION:
-
-In closing, please feel free to contact me at [phone number] or [email address] if you have any questions or need additional information. I look forward to hearing from you soon.
-
-Sincerely,
-
-[Your Signature]
-[Your Printed Name]
-[Your Title]
-[Your Contact Information]
-
----
-Note: This is a demonstration of a properly formatted business document. In a production environment, this would show the actual content of your uploaded Word document with preserved formatting, headers, and document structure.`;
+      } else if (req.file.mimetype.includes('word') || req.file.mimetype.includes('document') || fileName.endsWith('.docx')) {
+        const result = await mammoth.extractRawText({ buffer: fileBuffer });
+        documentContent = result.value;
       } else if (req.file.mimetype === 'application/pdf') {
-        // For PDF documents, create a formatted demo version
-        documentContent = `LEGAL DOCUMENT SAMPLE
-
-CONFIDENTIAL AGREEMENT
-
-PARTIES:
-Party A: [Company/Individual Name]
-Party B: [Company/Individual Name]
-
-EFFECTIVE DATE: ${new Date().toLocaleDateString()}
-
-WHEREAS, the parties wish to enter into this agreement for the following purposes:
-
-1. PURPOSE AND SCOPE
-   This agreement establishes the terms and conditions under which the parties will collaborate and share information.
-
-2. CONFIDENTIALITY OBLIGATIONS
-   Each party agrees to maintain the confidentiality of any proprietary information received from the other party.
-
-3. TERM AND TERMINATION
-   This agreement shall remain in effect for a period of [duration] unless terminated earlier in accordance with the provisions herein.
-
-4. GOVERNING LAW
-   This agreement shall be governed by the laws of [State/Country].
-
-ADDITIONAL TERMS:
-- All communications shall be in writing
-- Any modifications must be agreed upon by both parties
-- This agreement constitutes the entire understanding between the parties
-
-IN WITNESS WHEREOF, the parties have executed this agreement as of the date first written above.
-
-SIGNATURES:
-
-_________________________           _________________________
-[Party A Signature]                  [Party B Signature]
-[Printed Name]                       [Printed Name]
-[Title]                             [Title]
-[Date]                              [Date]
-
----
-Note: This is a demonstration of a legal document format. In a production environment, this would display the actual content of your uploaded PDF document with preserved formatting, legal structure, and original text.`;
+        const parser = new PDFParse({ data: fileBuffer });
+        const data = await parser.getText();
+        documentContent = data.text;
       } else {
         return res.status(400).json({ error: "Unsupported file type. Please upload a Word document, PDF, or text file." });
       }
@@ -516,7 +470,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
         ...req.body,
         userId: req.user!.id, // Always set userId from authenticated user
       });
-      const newCase = await storage.createCase(validatedData);
+      const newCase = await storage.createCase(req.user!.id, validatedData);
       res.json(newCase);
     } catch (error) {
       console.error("Create case error:", error);
@@ -536,7 +490,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
       // Validate and prevent userId modification
       const { userId: _ignored, ...updateData } = req.body;
       const validatedData = insertCaseSchema.partial().parse(updateData);
-      const updatedCase = await storage.updateCase(req.params.id, validatedData);
+      const updatedCase = await storage.updateCase(req.params.id, req.user!.id, validatedData);
       res.json(updatedCase);
     } catch (error) {
       console.error("Update case error:", error);
@@ -553,7 +507,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
       if (!existingCase || existingCase.userId !== req.user!.id) {
         return res.status(404).json({ error: "Case not found" });
       }
-      await storage.deleteCase(req.params.id);
+      await storage.deleteCase(req.params.id, req.user!.id);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete case error:", error);
@@ -599,7 +553,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
         ...req.body,
         userId: req.user!.id,
       });
-      const newDoc = await storage.createDocument(validatedData);
+      const newDoc = await storage.createDocument(req.user!.id, validatedData);
       res.json(newDoc);
     } catch (error) {
       console.error("Create document error:", error);
@@ -616,7 +570,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
       if (!doc || doc.userId !== req.user!.id) {
         return res.status(404).json({ error: "Document not found" });
       }
-      await storage.deleteDocument(req.params.id);
+      await storage.deleteDocument(req.params.id, req.user!.id);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete document error:", error);
@@ -651,7 +605,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
         ...req.body,
         userId: req.user!.id,
       });
-      const newRecord = await storage.createMedicalRecord(validatedData);
+      const newRecord = await storage.createMedicalRecord(req.user!.id, validatedData);
       res.json(newRecord);
     } catch (error) {
       console.error("Create medical record error:", error);
@@ -668,7 +622,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
       if (!record || record.userId !== req.user!.id) {
         return res.status(404).json({ error: "Medical record not found" });
       }
-      await storage.deleteMedicalRecord(req.params.id);
+      await storage.deleteMedicalRecord(req.params.id, req.user!.id);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete medical record error:", error);
@@ -756,7 +710,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
       else if (mode === "bills") docType = "medical-bill-analysis";
       else if (mode === "summary") docType = "medical-summary";
 
-      await storage.createDocument({
+      await storage.createDocument(req.user!.id, {
         userId: req.user!.id,
         caseId: payload.caseId || null,
         documentType: docType,
@@ -779,7 +733,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
       // Save the generated demand letter to the database
       const caseType = req.body.caseType || "Personal Injury";
       const claimantName = req.body.claimantName || "Unknown";
-      await storage.createDocument({
+      await storage.createDocument(req.user!.id, {
         userId: req.user!.id,
         caseId: req.body.caseId || null,
         documentType: "demand-letter",
@@ -808,11 +762,70 @@ Note: This is a demonstration of a legal document format. In a production enviro
   // Delete Saved Document Route
   app.delete("/api/saved-documents/:id", isAuthenticated, async (req, res) => {
     try {
-      await storage.deleteDocument(req.params.id);
+      const doc = await storage.getDocument(req.params.id);
+      if (!doc || doc.userId !== req.user!.id) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      await storage.deleteDocument(req.params.id, req.user!.id);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete saved document error:", error);
       res.status(500).json({ error: "Failed to delete document" });
+    }
+  });
+
+  // Knowledge Base Routes
+  app.get("/api/knowledge-base", isAuthenticated, async (req, res) => {
+    try {
+      const entries = await storage.getKnowledgeBaseByUser(req.user!.id);
+      res.json(entries);
+    } catch (error) {
+      console.error("Get knowledge base error:", error);
+      res.status(500).json({ error: "Failed to get knowledge base" });
+    }
+  });
+
+  app.post("/api/knowledge-base", isAuthenticated, upload.single('document'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Document file is required" });
+      }
+
+      let content = "";
+      if (req.file.mimetype === 'text/plain') {
+        content = req.file.buffer.toString('utf-8');
+      } else if (req.file.mimetype.includes('word') || req.file.mimetype.includes('document')) {
+        const result = await mammoth.extractRawText({ buffer: req.file.buffer });
+        content = result.value;
+      } else if (req.file.mimetype === 'application/pdf') {
+        const parser = new PDFParse({ data: req.file.buffer });
+        const data = await parser.getText();
+        content = data.text;
+      } else {
+        content = req.file.buffer.toString('utf-8');
+      }
+
+      const entry = await storage.createKnowledgeBase(req.user!.id, {
+        userId: req.user!.id,
+        title: req.body.title || req.file.originalname,
+        content: content,
+        fileName: req.file.originalname,
+      });
+
+      res.json(entry);
+    } catch (error) {
+      console.error("Create knowledge base error:", error);
+      res.status(500).json({ error: "Failed to create knowledge base entry" });
+    }
+  });
+
+  app.delete("/api/knowledge-base/:id", isAuthenticated, async (req, res) => {
+    try {
+      await storage.deleteKnowledgeBase(req.params.id, req.user!.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete knowledge base error:", error);
+      res.status(500).json({ error: "Failed to delete knowledge base entry" });
     }
   });
 
@@ -840,7 +853,7 @@ Note: This is a demonstration of a legal document format. In a production enviro
       else if (type === "requests") docType = "request-for-production";
       else if (type === "admissions") docType = "other"; // Admissions not in enum yet, using other
 
-      await storage.createDocument({
+      await storage.createDocument(req.user!.id, {
         userId: req.user!.id,
         caseId: payload.caseId || null,
         documentType: docType,
@@ -852,6 +865,147 @@ Note: This is a demonstration of a legal document format. In a production enviro
     } catch (error) {
       console.error("Discovery response generation error:", error);
       res.status(500).json({ error: "Failed to generate discovery response" });
+    }
+  });
+
+  // ============================================
+  // Transcription Route (OpenAI Whisper)
+  // ============================================
+  app.post("/api/transcribe", isAuthenticated, upload.single('audio'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Audio/video file required" });
+      }
+
+      // File size check (Whisper max 25MB)
+      if (req.file.size > 25 * 1024 * 1024) {
+        return res.status(400).json({ error: "File too large. Maximum 25MB for transcription." });
+      }
+
+      // Transcribe with analysis
+      const result = await transcribeWithAnalysis(req.file.buffer, req.file.originalname);
+
+      // Optionally save to search history
+      await storage.createSearchHistory({
+        userId: req.user!.id,
+        type: 'transcription',
+        query: req.file.originalname,
+        results: {
+          transcript: result.formattedTranscript.substring(0, 500) + "...",
+          duration: result.duration
+        },
+      });
+
+      res.json({
+        success: true,
+        transcript: result.formattedTranscript,
+        rawText: result.rawText,
+        segments: result.segments,
+        duration: result.duration,
+        analysis: {
+          summary: result.summary,
+          keyPoints: result.keyPoints,
+          actionItems: result.actionItems
+        },
+        fileName: req.file.originalname,
+        fileSize: req.file.size
+      });
+    } catch (error: any) {
+      console.error("Transcription error:", error);
+      res.status(500).json({ error: error.message || "Failed to transcribe audio" });
+    }
+  });
+
+  // ============================================
+  // Appointment Scheduler Routes
+  // ============================================
+
+  app.get("/api/appointments", isAuthenticated, async (req, res) => {
+    try {
+      const appointments = await storage.getAppointments(req.user!.id);
+      res.json(appointments);
+    } catch (error) {
+      console.error("Get appointments error:", error);
+      res.status(500).json({ error: "Failed to fetch appointments" });
+    }
+  });
+
+  app.post("/api/appointments", isAuthenticated, async (req, res) => {
+    try {
+      const data = insertAppointmentSchema.parse({
+        ...req.body,
+        userId: req.user!.id,
+        status: "scheduled"
+      });
+
+      const appointment = await storage.createAppointment(req.user!.id, data);
+
+      // Create intake form link
+      const intakeForm = await storage.createIntakeForm({
+        appointmentId: appointment.id,
+        clientName: appointment.clientName,
+        clientEmail: appointment.clientEmail,
+        caseType: appointment.type || "consultation",
+        status: "pending",
+        data: {}
+      });
+
+      res.json({
+        success: true,
+        appointment,
+        intakeLink: `/intake/${intakeForm.id}`
+      });
+    } catch (error) {
+      console.error("Create appointment error:", error);
+      res.status(400).json({ error: "Invalid appointment data" });
+    }
+  });
+
+
+  // ============================================
+  // Client Intake Forms (Public Access for Client)
+  // ============================================
+
+  app.get("/api/intake/:id", async (req, res) => {
+    try {
+      const form = await storage.getIntakeForm(req.params.id);
+      if (!form) return res.status(404).json({ error: "Intake form not found" });
+      res.json(form);
+    } catch (error) {
+      console.error("Get intake form error:", error);
+      res.status(500).json({ error: "Failed to fetch intake form" });
+    }
+  });
+
+  app.post("/api/intake/:id", async (req, res) => {
+    try {
+      const { formData } = req.body;
+      const form = await storage.getIntakeForm(req.params.id);
+
+      if (!form) return res.status(404).json({ error: "Intake form not found" });
+
+      // Run AI Analysis on submission
+      let analysis = null;
+      try {
+        const aiResponse = await generateResponse([
+          { role: "system", content: "You are a legal intake specialist. Analyze this client intake form." },
+          { role: "user", content: `Analyze the following intake data and provide a brief summary and potential legal issues:\n${JSON.stringify(formData, null, 2)}` }
+        ]);
+        analysis = aiResponse;
+      } catch (e) {
+        console.error("AI Analysis failed:", e);
+      }
+
+      const updatedForm = await storage.updateIntakeForm(req.params.id, {
+        data: formData,
+        status: "completed",
+        aiAnalysis: analysis
+      });
+
+      res.json({ success: true, form: updatedForm });
+    } catch (error) {
+      console.error("Submit intake form error:", error);
+      res.status(500).json({ error: "Failed to submit intake form" });
     }
   });
 

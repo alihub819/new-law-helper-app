@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SidebarLayout } from "@/components/layout/sidebar-layout";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Upload, FileText, AlertCircle, CheckCircle, TrendingUp, AlertTriangle, Lightbulb, Star, Scale, Wand2, Copy, X, GripVertical } from "lucide-react";
+import { Upload, FileText, CircleAlert, CheckCircle, TrendingUp, TriangleAlert, Lightbulb, Star, Scale, Wand2, Copy, X, GripVertical } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -213,8 +213,11 @@ export default function DocumentAnalyzer() {
       });
       
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to generate improvement");
+        if (res.headers.get("content-type")?.includes("application/json")) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to generate improvement");
+        }
+        throw new Error("Failed to generate improvement");
       }
       
       return await res.json();
@@ -254,6 +257,13 @@ export default function DocumentAnalyzer() {
         body: formData,
         credentials: "include"
       });
+      if (!res.ok) {
+        if (res.headers.get("content-type")?.includes("application/json")) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to analyze document");
+        }
+        throw new Error("Failed to analyze document");
+      }
       return await res.json();
     },
     onSuccess: (data) => {
@@ -395,9 +405,9 @@ export default function DocumentAnalyzer() {
   const getInsightIcon = (type: string) => {
     switch (type) {
       case 'compliance': return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'risk': return <AlertTriangle className="h-4 w-4 text-red-600" />;
+      case 'risk': return <TriangleAlert className="h-4 w-4 text-red-600" />;
       case 'best-practice': return <Lightbulb className="h-4 w-4 text-blue-600" />;
-      case 'warning': return <AlertCircle className="h-4 w-4 text-yellow-600" />;
+      case 'warning': return <CircleAlert className="h-4 w-4 text-yellow-600" />;
       default: return <FileText className="h-4 w-4 text-gray-600" />;
     }
   };
@@ -592,14 +602,14 @@ export default function DocumentAnalyzer() {
                         {/* Weak Points */}
                         <div>
                           <h3 className="font-semibold text-red-700 mb-3 flex items-center gap-2">
-                            <AlertCircle className="h-5 w-5" />
+                            <CircleAlert className="h-5 w-5" />
                             Areas of Concern ({analysis.weakPoints.length})
                           </h3>
                           <div className="space-y-3">
                             {analysis.weakPoints.map((point, index) => (
                               <div key={index} className={`border-l-4 p-3 rounded-r-lg ${getSeverityColor(point.severity)}`}>
                                 <div className="flex items-center gap-2 mb-1">
-                                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                                  <TriangleAlert className="h-4 w-4 text-red-600" />
                                   <span className="font-medium text-red-800">{point.point}</span>
                                   <Badge variant="outline" className="text-xs">{point.category}</Badge>
                                   {getPriorityBadge(point.severity)}
@@ -726,7 +736,7 @@ export default function DocumentAnalyzer() {
                 <div className="space-y-4">
                   <div className="bg-muted/50 p-4 rounded-lg border">
                     <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4" />
+                      <CircleAlert className="h-4 w-4" />
                       Original Issue:
                     </h4>
                     <p className="text-sm text-muted-foreground">

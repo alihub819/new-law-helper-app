@@ -4,7 +4,9 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
+import { VoiceControlProvider } from "@/hooks/use-voice-control";
 import { ProtectedRoute } from "./lib/protected-route";
+import { VirtualFrontDesk } from "@/components/virtual-front-desk";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
@@ -18,6 +20,40 @@ import DemandLetter from "@/pages/demand-letter";
 import DiscoveryTools from "@/pages/discovery-tools";
 import CaseDetails from "@/pages/case-details";
 import SavedDocuments from "@/pages/saved-documents";
+import Transcription from "@/pages/transcription";
+import VideoCall from "@/pages/video-call";
+import AppointmentsPage from "@/pages/appointments";
+import IntakePage from "@/pages/intake-form";
+import AttorneySettings from "@/pages/attorney-settings";
+import PracticeInterview from "@/pages/practice-interview";
+import React, { Component, ReactNode } from "react";
+
+class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error: Error | null}> {
+  constructor(props: {children: ReactNode}) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error("ErrorBoundary caught:", error.message, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{padding: '20px', margin: '20px', border: '1px solid red', backgroundColor: '#fee'}}>
+          <h1 style={{color: 'red'}}>Something went wrong in React.</h1>
+          <p>Please send this error to support:</p>
+          <pre style={{backgroundColor: '#fff', padding: '10px', overflow: 'auto'}}>{this.state.error?.message}</pre>
+          <pre style={{backgroundColor: '#fff', padding: '10px', overflow: 'auto'}}>{this.state.error?.stack}</pre>
+          <button onClick={() => window.location.href='/'}>Return to Home</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function Router() {
   return (
@@ -33,22 +69,34 @@ function Router() {
       <ProtectedRoute path="/demand-letter" component={DemandLetter} />
       <ProtectedRoute path="/discovery-tools" component={DiscoveryTools} />
       <ProtectedRoute path="/saved-documents" component={SavedDocuments} />
+      <ProtectedRoute path="/transcription" component={Transcription} />
+      <ProtectedRoute path="/video-call" component={VideoCall} />
+      <ProtectedRoute path="/appointments" component={AppointmentsPage} />
+      <ProtectedRoute path="/attorney-settings" component={AttorneySettings} />
+      <ProtectedRoute path="/practice-interview" component={PracticeInterview} />
+      <Route path="/intake/:id" component={IntakePage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
+
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <VoiceControlProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+              <VirtualFrontDesk />
+            </TooltipProvider>
+          </VoiceControlProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

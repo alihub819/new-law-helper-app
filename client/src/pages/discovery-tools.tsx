@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileQuestion, FileText, CheckSquare, Download, Loader2 } from "lucide-react";
+import { FileQuestion, FileText, SquareCheck, Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarLayout } from "@/components/layout/sidebar-layout";
 
@@ -74,14 +74,53 @@ export default function DiscoveryTools() {
     });
   };
 
+
   const handleExport = (format: string) => {
     const result = results[activeTab];
     if (!result) return;
 
+    const typeLabel = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
+    const sections = [];
+
+    // Format responses professionally
+    if (result.responses && Array.isArray(result.responses)) {
+      sections.push({
+        heading: `${typeLabel} Responses`,
+        content: result.responses.map((resp: any) => {
+          let text = `Response #${resp.number || 'N/A'}\n`;
+          text += `Question/Request: ${resp.question || resp.request || 'N/A'}\n`;
+
+          if (resp.objections && resp.objections.length > 0) {
+            text += `Objections: ${resp.objections.join('; ')}\n`;
+          }
+
+          text += `Response: ${resp.response || 'N/A'}`;
+
+          if (resp.explanation) {
+            text += `\nExplanation: ${resp.explanation}`;
+          }
+
+          return text;
+        }).join('\n\n---\n\n'),
+      });
+    }
+
+    // Add privilege log if present
+    if (result.privilegeLog && Array.isArray(result.privilegeLog)) {
+      sections.push({
+        heading: "Privilege Log",
+        content: result.privilegeLog.map((item: any) =>
+          `Document: ${item.document || 'N/A'}\n` +
+          `Privilege: ${item.privilege || 'N/A'}\n` +
+          `Description: ${item.description || 'N/A'}`
+        ).join('\n\n'),
+      });
+    }
+
     const content = {
-      title: `Discovery Responses - ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`,
-      sections: [{ heading: "Discovery Responses", content: JSON.stringify(result, null, 2) }],
-      subject: `Discovery - ${activeTab}`,
+      title: `Discovery Responses - ${typeLabel}`,
+      sections: sections.length > 0 ? sections : [{ content: "No discovery responses available." }],
+      subject: `Discovery - ${typeLabel}`,
       keywords: ["discovery", activeTab, "responses"],
     };
 
@@ -90,7 +129,10 @@ export default function DiscoveryTools() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ format, content }),
     })
-      .then((res) => res.blob())
+      .then((res) => {
+        if (!res.ok) throw new Error("Export failed");
+        return res.blob();
+      })
       .then((blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -99,6 +141,7 @@ export default function DiscoveryTools() {
         a.click();
       });
   };
+
 
   const updateFormData = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -132,7 +175,7 @@ export default function DiscoveryTools() {
                   Requests for Production
                 </TabsTrigger>
                 <TabsTrigger value="admissions" data-testid="tab-admissions">
-                  <CheckSquare className="w-4 h-4 mr-2" />
+                  <SquareCheck className="w-4 h-4 mr-2" />
                   Requests for Admission
                 </TabsTrigger>
               </TabsList>

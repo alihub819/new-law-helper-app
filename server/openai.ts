@@ -1,14 +1,33 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({ 
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key",
   timeout: 30000,
   maxRetries: 2,
 });
 
-export async function searchLegalDatabase(query: string, filters?: any): Promise<any> {
+export async function generateResponse(messages: any[]): Promise<string> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: messages,
+    });
+    return response.choices[0].message.content || "";
+  } catch (error) {
+    console.error("OpenAI generation error:", error);
+    throw new Error("Failed to generate response");
+  }
+}
+
+export async function searchLegalDatabase(query: string, filters?: any, context?: string): Promise<any> {
+
   try {
     const prompt = `You are a legal research assistant. Search for relevant legal information based on this query: "${query}".
+
+${context ? `Use the following custom knowledge base context to enhance your search results:
+---
+${context}
+---` : ''}
 
 Please provide a comprehensive response that includes:
 1. Relevant case law with citations
@@ -277,7 +296,7 @@ export async function generateDocument(documentType: string, inputMethod: 'voice
   try {
     let contentDescription = '';
     let documentSpecificInstructions = '';
-    
+
     // Build content description based on input method
     if (inputMethod === 'voice' || inputMethod === 'paste') {
       contentDescription = textContent || '';
@@ -303,7 +322,7 @@ BUSINESS LETTER SPECIFIC REQUIREMENTS:
 - Professional closing: "Sincerely," "Best regards," or "Respectfully,"
 - 4 line spaces for signature, then typed name and title`;
         break;
-      
+
       case 'cover-letter':
         documentSpecificInstructions = `
 COVER LETTER SPECIFIC REQUIREMENTS:
@@ -470,7 +489,7 @@ Return the response in JSON format:
     });
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
-    
+
     // Add current timestamp and ensure proper structure
     return {
       ...result,
@@ -489,13 +508,13 @@ Return the response in JSON format:
 }
 
 export async function improveDocumentSection(
-  type: string, 
-  item: any, 
+  type: string,
+  item: any,
   documentContent: string
 ): Promise<{ improvedText: string; explanation: string }> {
   try {
     let prompt = '';
-    
+
     if (type === 'weak-point') {
       prompt = `You are an expert legal document editor. A document has been analyzed and a specific weak point has been identified. Your task is to provide an improved version of the relevant section.
 
@@ -555,11 +574,11 @@ Respond with ONLY the example improved text that demonstrates how to implement t
     });
 
     const improvedText = response.choices[0].message.content || '';
-    
+
     return {
       improvedText: improvedText.trim(),
-      explanation: type === 'weak-point' 
-        ? `Improved version addressing: ${item.point}` 
+      explanation: type === 'weak-point'
+        ? `Improved version addressing: ${item.point}`
         : `Example implementation for: ${item.area}`
     };
 
@@ -1009,5 +1028,164 @@ Provide response in JSON format:
   } catch (error) {
     console.error("Discovery response generation error:", error);
     throw new Error("Failed to generate discovery response");
+  }
+}
+
+// ============================================
+// Audio Transcription with OpenAI Whisper
+// ============================================
+export async function transcribeAudio(audioBuffer: Buffer, fileName: string, options?: {
+  language?: string;
+  prompt?: string;
+  responseFormat?: 'json' | 'text' | 'srt' | 'verbose_json' | 'vtt';
+}): Promise<{
+  text: string;
+  segments?: Array<{
+    id: number;
+    start: number;
+    end: number;
+    text: string;
+  }>;
+  duration?: number;
+  language?: string;
+}> {
+  try {
+    // Create a File-like object from the buffer
+    // Convert Buffer to ArrayBuffer for proper BlobPart compatibility
+    const { toFile } = await import('openai');
+    const file = await toFile(audioBuffer, fileName, { type: getMimeType(fileName) });
+
+    const response = await openai.audio.transcriptions.create({
+      file: file,
+      model: "whisper-1",
+      language: options?.language,
+      prompt: options?.prompt || "Legal deposition, meeting, or consultation. Transcribe with accurate legal terminology.",
+      response_format: options?.responseFormat || "verbose_json",
+      timestamp_granularities: ["segment"]
+    });
+
+    // Handle different response formats
+    if (typeof response === 'string') {
+      return { text: response };
+    }
+
+    return {
+      text: response.text,
+      segments: (response as any).segments?.map((seg: any, index: number) => ({
+        id: index,
+        start: seg.start,
+        end: seg.end,
+        text: seg.text
+      })),
+      duration: (response as any).duration,
+      language: (response as any).language
+    };
+  } catch (error) {
+    console.error("OpenAI transcription error:", error);
+    throw new Error("Failed to transcribe audio");
+  }
+}
+
+// Helper function to get MIME type
+function getMimeType(fileName: string): string {
+  const ext = fileName.toLowerCase().split('.').pop();
+  const mimeTypes: Record<string, string> = {
+    'mp3': 'audio/mpeg',
+    'mp4': 'video/mp4',
+    'm4a': 'audio/m4a',
+    'wav': 'audio/wav',
+    'webm': 'audio/webm',
+    'ogg': 'audio/ogg',
+    'flac': 'audio/flac'
+  };
+  return mimeTypes[ext || ''] || 'audio/mpeg';
+}
+
+// Format transcript with timestamps
+export function formatTranscriptWithTimestamps(segments: Array<{
+  id: number;
+  start: number;
+  end: number;
+  text: string;
+}>): string {
+  return segments.map(seg => {
+    const startTime = formatTime(seg.start);
+    return `[${startTime}] ${seg.text.trim()}`;
+  }).join('\n');
+}
+
+function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Enhanced transcription with speaker diarization (post-processing)
+export async function transcribeWithAnalysis(audioBuffer: Buffer, fileName: string): Promise<{
+  rawText: string;
+  formattedTranscript: string;
+  segments: Array<{ id: number; start: number; end: number; text: string }>;
+  duration: number;
+  summary?: string;
+  keyPoints?: string[];
+  actionItems?: string[];
+}> {
+  try {
+    // First, get the raw transcription
+    const transcription = await transcribeAudio(audioBuffer, fileName, {
+      responseFormat: 'verbose_json'
+    });
+
+    if (!transcription.segments || transcription.segments.length === 0) {
+      return {
+        rawText: transcription.text,
+        formattedTranscript: transcription.text,
+        segments: [],
+        duration: transcription.duration || 0
+      };
+    }
+
+    // Format with timestamps
+    const formattedTranscript = formatTranscriptWithTimestamps(transcription.segments);
+
+    // Analyze the transcript for legal content
+    const analysisPrompt = `Analyze this legal meeting/deposition transcript and provide:
+1. A brief summary (2-3 sentences)
+2. Key points discussed (bullet points)
+3. Action items or follow-ups mentioned
+
+Transcript:
+${transcription.text}
+
+Respond in JSON format:
+{
+  "summary": "Brief summary",
+  "keyPoints": ["point 1", "point 2"],
+  "actionItems": ["action 1", "action 2"]
+}`;
+
+    const analysisResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: "You are a legal transcription analyst. Extract key information from meeting transcripts." },
+        { role: "user", content: analysisPrompt }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    const analysis = JSON.parse(analysisResponse.choices[0].message.content || '{}');
+
+    return {
+      rawText: transcription.text,
+      formattedTranscript,
+      segments: transcription.segments,
+      duration: transcription.duration || 0,
+      summary: analysis.summary,
+      keyPoints: analysis.keyPoints,
+      actionItems: analysis.actionItems
+    };
+  } catch (error) {
+    console.error("Transcription with analysis error:", error);
+    throw new Error("Failed to transcribe and analyze audio");
   }
 }

@@ -50,9 +50,77 @@ export default function SavedDocuments() {
   });
 
   const handleExport = (doc: SavedDocument, format: string) => {
-    const content = {
+    // Format content based on document type
+    const formatContent = () => {
+      const content = doc.content as any;
+      const sections = [];
+
+      // For demand letters, use the letter content directly
+      if (doc.documentType === 'demand-letter' && content.letterContent) {
+        sections.push({ heading: "Demand Letter", content: content.letterContent });
+        if (content.damagesBreakdown) {
+          sections.push({
+            heading: "Damages Summary",
+            content: `Medical Expenses: $${content.damagesBreakdown.medicalExpenses?.toFixed(2) || '0.00'}\n` +
+              `Lost Wages: $${content.damagesBreakdown.lostWages?.toFixed(2) || '0.00'}\n` +
+              `Total Demand: $${content.damagesBreakdown.total?.toFixed(2) || '0.00'}`,
+          });
+        }
+        return sections;
+      }
+
+      // For medical chronology
+      if (doc.documentType === 'medical-chronology' && content.entries) {
+        sections.push({
+          heading: "Medical Treatment Timeline",
+          content: content.entries.map((entry: any, idx: number) =>
+            `${idx + 1}. ${entry.date || 'N/A'} - ${entry.provider || 'Unknown'}\n` +
+            `   Diagnosis: ${entry.diagnosis || 'N/A'}\n` +
+            `   Treatment: ${entry.treatment || 'N/A'}`
+          ).join('\n\n'),
+        });
+        return sections;
+      }
+
+      // For discovery responses
+      if ((doc.documentType === 'discovery-response' || doc.documentType === 'interrogatories') && content.responses) {
+        sections.push({
+          heading: "Discovery Responses",
+          content: content.responses.map((resp: any) =>
+            `Response #${resp.number || 'N/A'}\n` +
+            `Question: ${resp.question || resp.request || 'N/A'}\n` +
+            `Response: ${resp.response || 'N/A'}`
+          ).join('\n\n---\n\n'),
+        });
+        return sections;
+      }
+
+      // For medical summaries
+      if (doc.documentType === 'medical-summary') {
+        if (content.chiefComplaint) sections.push({ heading: "Chief Complaint", content: content.chiefComplaint });
+        if (content.currentStatus) sections.push({ heading: "Current Status", content: content.currentStatus });
+        if (content.totalMedicalExpenses) sections.push({ heading: "Total Medical Expenses", content: `$${content.totalMedicalExpenses?.toFixed(2)}` });
+        return sections;
+      }
+
+      // Fallback: try to format object keys nicely
+      if (typeof content === 'object') {
+        for (const [key, value] of Object.entries(content)) {
+          const heading = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+          sections.push({
+            heading,
+            content: typeof value === 'string' ? value : JSON.stringify(value, null, 2),
+          });
+        }
+        return sections;
+      }
+
+      return [{ content: typeof content === 'string' ? content : JSON.stringify(content, null, 2) }];
+    };
+
+    const exportContent = {
       title: doc.title,
-      sections: [{ heading: doc.title, content: JSON.stringify(doc.content, null, 2) }],
+      sections: formatContent(),
       subject: doc.title,
       keywords: [doc.documentType],
     };
@@ -61,9 +129,12 @@ export default function SavedDocuments() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ format, content }),
+      body: JSON.stringify({ format, content: exportContent }),
     })
-      .then((res) => res.blob())
+      .then((res) => {
+        if (!res.ok) throw new Error("Export failed");
+        return res.blob();
+      })
       .then((blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -88,12 +159,16 @@ export default function SavedDocuments() {
       "medical-summary": "Medical Summary",
       "interrogatories": "Interrogatory Responses",
       "request-for-production": "Document Requests",
+      "discovery-response": "Discovery Response",
+      "legal-brief": "Legal Brief",
+      "contract": "Contract",
       "other": "Other Document",
     };
     return labels[type] || type;
   };
 
   const getDocumentTypeBadgeColor = (type: string) => {
+    if (!type) return "bg-gray-500/10 text-gray-600 border-gray-500/20";
     if (type.startsWith("medical")) return "bg-blue-500/10 text-blue-600 border-blue-500/20";
     if (type.startsWith("discovery")) return "bg-purple-500/10 text-purple-600 border-purple-500/20";
     if (type === "demand-letter") return "bg-green-500/10 text-green-600 border-green-500/20";

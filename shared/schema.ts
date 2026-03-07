@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, jsonb, integer, decimal, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, jsonb, json, integer, decimal, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -96,6 +96,15 @@ export const savedDocuments = pgTable("saved_documents", {
   userDocIdx: index("user_doc_idx").on(table.userId, table.caseId, table.documentType),
 }));
 
+export const knowledgeBase = pgTable("knowledge_base", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  fileName: text("file_name"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const medicalRecords = pgTable("medical_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -132,6 +141,7 @@ export const insertSearchHistorySchema = createInsertSchema(searchHistory).pick(
 
 export const insertCaseSchema = createInsertSchema(cases).omit({
   id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 }).extend({
@@ -141,6 +151,7 @@ export const insertCaseSchema = createInsertSchema(cases).omit({
 
 export const insertDocumentSchema = createInsertSchema(savedDocuments).omit({
   id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 }).extend({
@@ -148,8 +159,15 @@ export const insertDocumentSchema = createInsertSchema(savedDocuments).omit({
   fileFormat: FileFormat.optional(),
 });
 
+export const insertKnowledgeBaseSchema = createInsertSchema(knowledgeBase).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+});
+
 export const insertMedicalRecordSchema = createInsertSchema(medicalRecords).omit({
   id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 });
@@ -164,3 +182,52 @@ export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type SavedDocument = typeof savedDocuments.$inferSelect;
 export type InsertMedicalRecord = z.infer<typeof insertMedicalRecordSchema>;
 export type MedicalRecord = typeof medicalRecords.$inferSelect;
+export type InsertKnowledgeBase = z.infer<typeof insertKnowledgeBaseSchema>;
+export type KnowledgeBase = typeof knowledgeBase.$inferSelect;
+
+export const appointments = pgTable("appointments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  clientId: varchar("client_id"), // Optional linkage to existing client
+  clientName: text("client_name").notNull(),
+  clientEmail: text("client_email").notNull(),
+  date: timestamp("date").notNull(),
+  status: text("status").notNull().default("scheduled"), // scheduled, completed, cancelled
+  type: text("type").notNull().default("consultation"), // consultation, review, court
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const intakeForms = pgTable("intake_forms", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  appointmentId: varchar("appointment_id").references(() => appointments.id, { onDelete: "cascade" }),
+  clientName: text("client_name").notNull(),
+  clientEmail: text("client_email").notNull(),
+  caseType: text("case_type").notNull(),
+  data: jsonb("data").notNull(), // Flexible form data
+  aiAnalysis: jsonb("ai_analysis"), // AI-generated insights
+  status: text("status").notNull().default("pending"), // pending, submitted, analyzed
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAppointmentSchema = createInsertSchema(appointments).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+});
+
+export const insertIntakeFormSchema = createInsertSchema(intakeForms).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
+export type Appointment = typeof appointments.$inferSelect;
+export type InsertIntakeForm = z.infer<typeof insertIntakeFormSchema>;
+export type IntakeForm = typeof intakeForms.$inferSelect;
+
+export const session = pgTable("session", {
+  sid: varchar("sid").primaryKey(),
+  sess: json("sess").notNull(),
+  expire: timestamp("expire", { precision: 6 }).notNull(),
+});
