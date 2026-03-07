@@ -16,16 +16,26 @@ if (!databaseUrl) {
 // Check if we're using Neon (serverless) or Railway/standard PostgreSQL
 const isNeon = databaseUrl.includes('neon.tech') || databaseUrl.includes('neondb');
 
+let connectionString: string;
+
+if (isNeon) {
+  // Neon Serverless
+  connectionString = databaseUrl.includes('sslmode=')
+    ? databaseUrl
+    : `${databaseUrl}${databaseUrl.includes('?') ? '&' : '?'}sslmode=require`;
+} else {
+  // Railway or standard PostgreSQL (Render)
+  connectionString = databaseUrl.includes('sslmode=')
+    ? databaseUrl
+    : `${databaseUrl}${databaseUrl.includes('?') ? '&' : '?'}sslmode=require`;
+}
+
 let pool: Pool | PgPool;
 let db: ReturnType<typeof drizzle> | ReturnType<typeof drizzlePg>;
 
 if (isNeon) {
   // Neon Serverless
   neonConfig.webSocketConstructor = ws;
-  
-  const connectionString = databaseUrl.includes('sslmode=')
-    ? databaseUrl
-    : `${databaseUrl}${databaseUrl.includes('?') ? '&' : '?'}sslmode=require`;
   
   pool = new Pool({ connectionString });
   db = drizzle({ client: pool as any, schema });
