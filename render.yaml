@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: new-law-helper-app
+    env: node
+    buildCommand: npm install --include=dev && npm run build:full
+    startCommand: npm start
