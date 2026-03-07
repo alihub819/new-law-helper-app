@@ -78,7 +78,7 @@ async function seed() {
         const exists = existingCases.find(ec => ec.caseName === c.caseName);
 
         if (!exists) {
-            const newCase = await storage.createCase({ ...c, userId: user.id });
+            const newCase = await storage.createCase(user.id, c);
             createdCases.push(newCase);
             console.log(`✅ Created case: ${newCase.caseName}`);
         } else {
@@ -125,7 +125,7 @@ async function seed() {
             const exists = existingRecords.find(er => er.providerName === r.providerName && er.serviceDate?.getTime() === r.serviceDate.getTime());
 
             if (!exists) {
-                await storage.createMedicalRecord(r);
+                await storage.createMedicalRecord(user.id, r);
                 console.log(`✅ Created medical record for: ${r.providerName}`);
             }
         }
@@ -158,7 +158,7 @@ async function seed() {
         const exists = existingDocs.find(ed => ed.title === d.title);
 
         if (!exists) {
-            await storage.createDocument({ ...d, userId: user.id });
+            await storage.createDocument(user.id, d);
             console.log(`✅ Created document: ${d.title}`);
         }
     }
