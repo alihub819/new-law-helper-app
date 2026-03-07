@@ -1,5 +1,10 @@
 import "./polyfill";
 import express, { type Request, Response, NextFunction } from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { ensureDatabase } from "./init-db";
@@ -55,6 +60,15 @@ const initPromise: Promise<void> = (async () => {
     await setupVite(app, server);
   } else {
     serveStatic(app);
+  }
+
+  // Setup static serving for production directly in index.ts
+  if (isProduction) {
+    const publicPath = path.join(__dirname, "public");
+    app.use(express.static(publicPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(publicPath, "index.html"));
+    });
   }
 
   // For local development, start listening
