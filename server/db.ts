@@ -40,12 +40,13 @@ if (isNeon) {
   pool = new Pool({ connectionString });
   db = drizzle({ client: pool as any, schema });
 } else {
-  // Railway or standard PostgreSQL
+  // Railway or standard PostgreSQL (Render)
   const poolConfig: PoolConfig = {
     connectionString,
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
+    ssl: { rejectUnauthorized: false },
   };
   
   pool = new PgPool(poolConfig);
