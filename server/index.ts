@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import { registerRoutes } from "./routes";
+import fs from 'fs';
 import { setupVite, serveStatic, log } from "./vite";
 import { ensureDatabase } from "./init-db";
 
@@ -75,12 +76,32 @@ const initPromise: Promise<void> = (async () => {
   }
 
   // Setup static serving for production directly in index.ts
+  // Be robust about multiple possible public output directories (Render's layout varies)
   if (isProduction) {
-    const publicPath = path.join(__dirname, "public");
-    app.use(express.static(publicPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(publicPath, "index.html"));
-    });
+    const publicPaths = [
+      path.resolve(__dirname, "public"), // server/public
+      path.resolve(process.cwd(), "dist/public"), // dist/public
+      path.resolve(process.cwd(), "server/public"), // server/public
+    ];
+    let served = false;
+    for (const p of publicPaths) {
+      try {
+        if (fs.existsSync(p)) {
+          app.use(express.static(p));
+          app.get("*", (_req, res) => {
+            res.sendFile(path.join(p, "index.html"));
+          });
+          log(`Serving static from ${p}`);
+          served = true;
+          break;
+        }
+      } catch {
+        // ignore and try next path
+      }
+    }
+    if (!served) {
+      log("No static public path found for production; falling back to default behavior may cause 404s for SPA routes.");
+    }
   }
 
 // Bind to PORT if provided (Render/Open environments). This helps ensure the app stays alive
