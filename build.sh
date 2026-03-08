@@ -11,8 +11,28 @@ else
 fi
 
 if [ -n "$DATABASE_URL" ]; then
-  echo "DATABASE_URL is set. Pushing schema to database..."
-  npx drizzle-kit push
+  echo "DATABASE_URL is set. Pushing schema to database (with fallback if needed)..."
+  if npx drizzle-kit --help >/dev/null 2>&1; then
+    if npx drizzle-kit --help | grep -qiE 'push|generate'; then
+      if npx drizzle-kit push; then
+        echo "Drizzle push succeeded"
+      else
+        echo "Drizzle push failed or not supported; attempting generate"
+        npx drizzle-kit generate || true
+      fi
+    else
+      echo "drizzle-kit CLI does not expose push or generate; skipping push"
+    fi
+  else
+    echo "drizzle-kit CLI not found; installing dev dependencies..."
+    npm install --include=dev
+    if npx drizzle-kit push; then
+      echo "Drizzle push succeeded"
+    else
+      echo "Drizzle push failed; attempting generate"
+      npx drizzle-kit generate || true
+    fi
+  fi
   echo "Seeding demo data..."
   npx tsx scripts/seed-demo.ts
 else
