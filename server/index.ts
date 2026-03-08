@@ -20,9 +20,9 @@ import { ensureDatabase } from "./init-db";
 app.get("/health", async (_req, res) => {
   try {
     await ensureDatabase();
-    res.json({ status: "ok" });
+    res.json({ status: "ok", service: "VEREDICTA Backend", timestamp: new Date().toISOString() });
   } catch (err) {
-    res.status(503).json({ status: "unhealthy", error: (err as any)?.message ?? String(err) });
+    res.status(503).json({ status: "unhealthy", service: "VEREDICTA Backend", timestamp: new Date().toISOString(), error: (err as any)?.message ?? String(err) });
   }
 });
 
