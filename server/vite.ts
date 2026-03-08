@@ -89,9 +89,19 @@ export function serveStatic(app: Express) {
   }
 
   try {
-    log(`DEBUG: /var/task contents: ${fs.readdirSync("/var/task").join(", ")}`, "vite");
-    if (fs.existsSync("/var/task/server")) {
-      log(`DEBUG: /var/task/server contents: ${fs.readdirSync("/var/task/server").join(", ")}`, "vite");
+    if (fs.existsSync("/var/task")) {
+      try {
+        log(`DEBUG: /var/task contents: ${fs.readdirSync("/var/task").join(", ")}`, "vite");
+      } catch (e) {
+        // Ignore read errors in ephemeral environments
+      }
+      if (fs.existsSync("/var/task/server")) {
+        try {
+          log(`DEBUG: /var/task/server contents: ${fs.readdirSync("/var/task/server").join(", ")}`, "vite");
+        } catch (e) {
+          // Ignore read errors in ephemeral environments
+        }
+      }
     }
   } catch (e) {
     log(`DEBUG: Error listing directories: ${e}`, "vite");
