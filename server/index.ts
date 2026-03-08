@@ -71,16 +71,17 @@ const initPromise: Promise<void> = (async () => {
     });
   }
 
-  // For local development, start listening
-  if (process.env.NODE_ENV !== 'production') {
-    const port = parseInt(process.env.PORT || '5000', 10);
-    server.listen({
-      port,
-      host: "0.0.0.0",
-    }, () => {
-      log(`serving on port ${port}`);
-    });
-  }
+// Bind to PORT if provided (Render/Open environments). This helps ensure the app stays alive
+// in hosted environments that require a port, while allowing serverless environments to continue
+// to work where PORT may not be set.
+const deployPort = process.env.PORT ? parseInt(process.env.PORT, 10) : null;
+if (deployPort) {
+  server.listen({ port: deployPort, host: "0.0.0.0" }, () => {
+    log(`serving on port ${deployPort}`);
+  });
+} else {
+  log("No PORT environment variable found; server may be running in a serverless environment or misconfigured.");
+}
 })();
 
 // Async handler for Vercel serverless: waits for init before handling requests.
