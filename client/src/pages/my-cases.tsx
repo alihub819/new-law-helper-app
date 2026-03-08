@@ -378,7 +378,7 @@ export default function MyCases() {
                   <div>
                     <p className="text-sm text-muted-foreground">Active Cases</p>
                     <p className="text-3xl font-bold mt-1" data-testid="stat-active-cases">
-                      {cases.filter(c => c.status === "active").length}
+                      {Array.isArray(cases) ? cases.filter(c => c.status === "active").length : 0}
                     </p>
                   </div>
                   <Briefcase className="h-10 w-10 text-green-500" />
@@ -391,7 +391,7 @@ export default function MyCases() {
                   <div>
                     <p className="text-sm text-muted-foreground">Pending Cases</p>
                     <p className="text-3xl font-bold mt-1" data-testid="stat-pending-cases">
-                      {cases.filter(c => c.status === "pending").length}
+                      {Array.isArray(cases) ? cases.filter(c => c.status === "pending").length : 0}
                     </p>
                   </div>
                   <Calendar className="h-10 w-10 text-yellow-500" />
@@ -403,7 +403,7 @@ export default function MyCases() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Total Cases</p>
-                    <p className="text-3xl font-bold mt-1" data-testid="stat-total-cases">{cases.length}</p>
+                    <p className="text-3xl font-bold mt-1" data-testid="stat-total-cases">{Array.isArray(cases) ? cases.length : 0}</p>
                   </div>
                   <FileText className="h-10 w-10 text-blue-500" />
                 </div>

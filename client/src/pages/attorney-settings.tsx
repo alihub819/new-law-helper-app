@@ -175,17 +175,17 @@ export default function AttorneySettings() {
 
   const addItem = (field: keyof AttorneyProfile, value: string) => {
     if (!value.trim()) return;
-    setProfile(prev => ({
-      ...prev,
-      [field]: [...(prev[field] as string[]), value.trim()]
-    }));
+    setProfile(prev => {
+      const arr = (prev[field] as string[]) ?? [];
+      return { ...prev, [field]: [...arr, value.trim()] };
+    });
   };
 
   const removeItem = (field: keyof AttorneyProfile, index: number) => {
-    setProfile(prev => ({
-      ...prev,
-      [field]: (prev[field] as string[]).filter((_, i) => i !== index)
-    }));
+    setProfile(prev => {
+      const arr = (prev[field] as string[]) ?? [];
+      return { ...prev, [field]: arr.filter((_, i) => i !== index) };
+    });
   };
 
   const addStaffMember = () => {
@@ -209,7 +209,7 @@ export default function AttorneySettings() {
   const removeStaffMember = (id: string) => {
     setProfile(prev => ({
       ...prev,
-      staffMembers: prev.staffMembers.filter(s => s.id !== id)
+      staffMembers: (prev.staffMembers ?? []).filter(s => s.id !== id)
     }));
   };
 
