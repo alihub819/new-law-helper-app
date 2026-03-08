@@ -99,7 +99,18 @@ const initPromise: Promise<void> = (async () => {
       }
     }
     if (!served) {
-      log("No static public path found for production; falling back to default behavior may cause 404s for SPA routes.");
+      log("No static public path found for production; attempting SPA fallback.");
+      const fallbacks = publicPaths.map(p => path.join(p, "index.html"));
+      const found = fallbacks.find(p => {
+        try { return fs.existsSync(p); } catch { return false; }
+      });
+      if (found) {
+        app.get('*', (_req, res) => {
+          res.sendFile(found);
+        });
+      } else {
+        log("No index.html found in known public paths; 404 will be returned for non-API routes.");
+      }
     }
   }
 
