@@ -16,7 +16,6 @@ app.use(express.urlencoded({ extended: false }));
 
 // Simple health check endpoint for Render / load balancer health probes
 // It also exercises DB connectivity via the existing ensureDatabase helper.
-import { ensureDatabase } from "./init-db";
 app.get("/health", async (_req, res) => {
   try {
     await ensureDatabase();
