@@ -13,6 +13,18 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Simple health check endpoint for Render / load balancer health probes
+// It also exercises DB connectivity via the existing ensureDatabase helper.
+import { ensureDatabase } from "./init-db";
+app.get("/health", async (_req, res) => {
+  try {
+    await ensureDatabase();
+    res.json({ status: "ok" });
+  } catch (err) {
+    res.status(503).json({ status: "unhealthy", error: (err as any)?.message ?? String(err) });
+  }
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
