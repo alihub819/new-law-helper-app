@@ -75,16 +75,23 @@ export async function setupVite(app: Express, server: Server) {
 export function serveStatic(app: Express) {
   const possiblePaths = [
     path.resolve(__dirname, "public"),
+    path.resolve(__dirname, "..", "public"),
     path.resolve(__dirname, "..", "dist", "public"),
     path.resolve(process.cwd(), "dist", "public"),
-    path.resolve(process.cwd(), "public")
+    path.resolve(process.cwd(), "public"),
+    path.resolve(process.cwd(), "server", "public"),
+    path.resolve(__dirname, "..", "server", "public"),
   ];
 
   let finalPath = "";
   for (const p of possiblePaths) {
-    if (fs.existsSync(p)) {
+    const indexPath = path.join(p, "index.html");
+    if (fs.existsSync(p) && fs.existsSync(indexPath)) {
+      log(`Found valid static path: ${p} with index.html`, "vite");
       finalPath = p;
       break;
+    } else if (fs.existsSync(p)) {
+      log(`Path exists but no index.html: ${p}`, "vite");
     }
   }
 
@@ -112,6 +119,9 @@ export function serveStatic(app: Express) {
     // Fallback for API-only operation or debug
     app.get("/", (_req, res) => {
       res.send("<h1>Server is running</h1><p>Static assets missing. Check logs.</p>");
+    });
+    app.get("*", (_req, res) => {
+      res.status(404).send("Frontend build not found.");
     });
     return;
   }

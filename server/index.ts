@@ -6,7 +6,6 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import { registerRoutes } from "./routes";
-import fs from 'fs';
 import { setupVite, serveStatic, log } from "./vite";
 import { ensureDatabase } from "./init-db";
 
@@ -74,44 +73,10 @@ const initPromise: Promise<void> = (async () => {
     serveStatic(app);
   }
 
-  // Setup static serving for production directly in index.ts
-  // Be robust about multiple possible public output directories (Render's layout varies)
+  // Setup static serving for production - use vite's serveStatic for consistency
   if (isProduction) {
-    const publicPaths = [
-      path.resolve(__dirname, "public"), // server/public
-      path.resolve(process.cwd(), "dist/public"), // dist/public
-      path.resolve(process.cwd(), "server/public"), // server/public
-    ];
-    let served = false;
-    for (const p of publicPaths) {
-      try {
-        if (fs.existsSync(p)) {
-          app.use(express.static(p));
-          app.get("*", (_req, res) => {
-            res.sendFile(path.join(p, "index.html"));
-          });
-          log(`Serving static from ${p}`);
-          served = true;
-          break;
-        }
-      } catch {
-        // ignore and try next path
-      }
-    }
-    if (!served) {
-      log("No static public path found for production; attempting SPA fallback.");
-      const fallbacks = publicPaths.map(p => path.join(p, "index.html"));
-      const found = fallbacks.find(p => {
-        try { return fs.existsSync(p); } catch { return false; }
-      });
-      if (found) {
-        app.get('*', (_req, res) => {
-          res.sendFile(found);
-        });
-      } else {
-        log("No index.html found in known public paths; 404 will be returned for non-API routes.");
-      }
-    }
+    // vite.ts serveStatic already handles this, but we log for visibility
+    log("Production mode: using vite serveStatic for SPA fallback", "express");
   }
 
 // Bind to PORT if provided (Render/Open environments). This helps ensure the app stays alive
